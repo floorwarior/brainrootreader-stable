@@ -1,0 +1,15 @@
+{
+    "name": "PiperReader",
+    "type": "builtin",
+    "comment": "To use this you can pick either *builtin* or if you want to use a selfmade reader you need to use *custom*",
+    "comment2": "The name also have to match the name of the class you want to import",
+    "commnet3": "Add the ClassName and its config filename to readerconfigs.json",
+    "fallbackorder": [
+        "PiperReader",
+        "SherpaReader",
+        "WinReader",
+        "AndroidReader",
+        "BrowserReader"
+    ],
+    "comment4": "We set the correct order for the readers"
+}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+<dialog id="voicedownloadeddialog">
+    <button onclick="this.parentElement.close();" class="bnt btn-close float-end"></button>
+    <h2 id="voicedownloadeddialogtitle">Your voice model has been downloaded</h2>
+</dialog>
+<div class="row">
+    {% for store in voicestores %}
+        <div class="col-sm-12 col-lg-4">
+        <h1>{{store.name}}</h1>
+        <ul class="list-group">
+            {% for voicemodel in store.get_cached_voices().keys() %}
+                <li class="list-group-item  bg-dark text-light text-align-left">{{voicemodel}} <i type="button" data-reader="{{store.name}}" data-voicemodel="{{voicemodel}}" onclick="downloadmodel(this);" class="bi bi-download"></i></li>
+            {% endfor %}
+        </ul>
+        </div>
+    {% endfor %}
+</div>
+<script>
+    function downloadmodel(that){
+        var modeltoget = that.getAttribute("data-voicemodel")
+        var reader = that.getAttribute("data-reader")
+        var url = `/api/downloadvoicemodel/${modeltoget}?reader=${reader}`
+        fetch(url).then(response=>{
+            data = response.json()
+            return data
+        }).then(data=>{
+            document.getElementById("voicedownloadeddialogtitle").textContent = `Your voice model: ${modeltoget} was successfully downloaded.`
+            document.getElementById("voicedownloadeddialog").showModal()
+            console.log(data)
+        }   
+        )
+    }
+</script>
+
+{% endblock %}

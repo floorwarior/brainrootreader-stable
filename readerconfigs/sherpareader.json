@@ -1,0 +1,6 @@
+{
+    "model":"vits-piper-en_US-amy-medium/en_US-amy-medium.onnx",
+    "model_folder":"sherpastuff",
+    "data_dir":"vits-piper-en_US-amy-medium/espeak-ng-data",
+    "tokens":"vits-piper-en_US-amy-medium/tokens.txt"
+}

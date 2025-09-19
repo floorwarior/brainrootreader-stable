@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+
+
+{% block body %}
+
+<form class="form-control bg-dark text-light" enctype="multipart/form-data" action="addvideo" method="post">
+    <div class="mb-3">
+        <label class="form-label" for="video">Upload a short video</label>
+        <input class="form-control" id="video" name="video" type="file" accept="video/*">
+    </div>
+    <div class="mb-3">
+        <label for="videolink">Add a video link, example: https://www.youtube.com/embed/mxHIFijxTZY</label>
+        <input class="form-control" name="videolink" id="videolink"  type="text">
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>        
+
+
+{% endblock %}

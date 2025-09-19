@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+
+
+{% block body %}
+<script src="{{url_for('static',filename='js/videorelated.js')}}" ></script>
+
+<!--
+Things to have:
+> select reading method
+> select reading model for piper only!
+> select reader model for the browser version
+-->
+<h1>Reader Settings</h1>
+<form action="{{url_for('settings')}}" method="post">
+    {% for reader in all_readers.values() %}
+
+        {% if reader.__name__ != "BrowserReader"  %}
+        <div class="card bg-dark text-light">
+            <div class="card-header">
+                <h2>{{reader.__name__}}</h2>
+            </div>
+            <h3>{{reader.__name__}} voices</h3>
+                {% set og_data= get_readers_config(base_path,reader.__name__)  %}
+                {% set config = dict(og_data, base_path=base_path) %}
+                {% set thereader =reader(**config) %}
+                
+                {% if thereader.imported_ok %}
+                    <select class="form-control text-light bg-dark" name="{{reader.__name__}}_model" id="{{reader.__name__}}_model">
+                        <option value="empty">--Select-a-Voice--</option>
+                        {% for descriptor , value in thereader.get_voices().items() %}
+                            <option value="{{value}}">{{descriptor}}</option>
+                        {% endfor %}
+                    </select>
+                {% else  %}
+                    <h4>Your system does not support or have missing dependecies for this reader:</h4>
+                    <p>{{thereader.error}}</p>
+                {% endif %}
+        </div>
+        {% endif %}
+    {% endfor %}
+    <div class="card bg-dark text-light">
+        <div class="card-header">
+            <h2 class="text-center">Global Reader</h2>
+        </div>
+        <select class="form-control text-light bg-dark" name="global_reader" id="globalreadersettings">
+            <option value="empty">--Select-a-Reader--</option>
+            {% for reader, reader_class in all_readers.items() %}
+            <option value="{{reader}}">
+                {{reader}}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+<div class="card bg-dark text-light">
+    <div class="card-header">
+        <h2>Browser ( fallback )</h2>
+    </div>
+    <h2>Browser voices</h2>
+    <select class="form-control bg-dark text-light"  id="browser-voices">
+        <option value="empty">--Select-a-Voice--</option>
+    </select>
+</div>
+<div class="card bg-dark text-light">
+    <div class="card-header">
+        <h2>Video Settings</h2>
+    </div>
+    <select class="form-control bg-dark text-light" onchange="change_default_video(this);" id="videooptions">
+        {% for vid in videos %}
+            <option value="{{vid}}">{{vid}}</option>
+        {% endfor %}
+    </select>
+
+</div>
+<button type="submit" class="btn btn-outline-light">Save</button>
+</form>
+
+
+{% endblock %}

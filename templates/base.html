@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Root Reader</title>
+    <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
+    <!--bootstrap style sheet-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='bootstrap/icons/bootstrap-icons.css')}}">
+
+    
+</head>
+<body class="bg-dark">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="{{url_for('static',filename='brainrootreadericon.png')}}" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
+        </a>
+
+        <a class="navbar-brand" href="#">Brain Root Reader</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="{{url_for('home')}}">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{url_for('settings')}}">Settings</a> 
+            </li>
+
+        </ul>
+        </div>
+    </div>
+    </nav>
+    {% block body %}
+    {% endblock %}
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

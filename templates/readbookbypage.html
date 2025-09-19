@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+
+
+{% block body %}
+<script src="{{url_for('static',filename='js/fuckedtts.js')}}"></script>
+<h1 id="books_name">{{readable_name}}</h1>
+<div class="parent-container">
+    <div>
+        <audio class="d-none" id="pageaudio" src="#"></audio>
+        <video muted autoplay src="/static/videos/minecraft.mp4"></video>
+    </div>
+    <div class="text-container">
+        <h1  id="pagedata">Overlay text here</h1>
+    </div>
+</div>
+<div class="d-flex justify-content-center gap-2">
+    <h2>Jump to: </h2>
+    <input id="jumpto" type="number">
+</div>
+<button onclick="jumptopage()" class="btn btn-outline-light">
+    Jump
+</button>
+
+
+<div class="d-flex justify-content-center">
+    <h2 id="page_indicator"></h2>
+</div>
+
+
+<script>
+    var pageData = {{page|tojson}}
+    const speak_synthesys = window.speechSynthesis
+    const shown_image = document.getElementById("pagedata")
+    var current_page = {{current_page|tojson}}
+    const bookname = {{bookname|tojson}}
+    const thevideo = document.getElementById("thevideo")
+    var test_number = 0;
+    var voices = speak_synthesys.getVoices()
+    var voice_input = document.getElementById("lang")
+    var selected_lang = "en-US"
+    var jumpto = document.getElementById("jumpto")
+
+
+    var current_sentence = 0
+    var sentences;
+
+    var pageaudio =document.getElementById("pageaudio") 
+
+
+
+
+    function load_available_langs(){
+        voices.forEach(voice=>{
+            let new_option = document.createElement("option")
+            new_option.setAttribute("value",voice.lang)
+            new_option.textContent = voice.name
+            console.log(voice)
+            voice_input.appendChild(new_option)
+            })        
+    }
+
+
+
+
+    function jumptopage(){
+        var current_url = window.location.href
+        console.log(current_url)
+        var url_ = new URL(current_url)
+        var searchparams = url_.searchParams
+        searchparams.set("page",jumpto.value)
+        url_.search= searchparams.toString()
+        var new_url = url_.toString()
+        window.location.href = new_url
+        read_page()
+}
+
+
+    function getPreviousPage(){
+        current_page --;
+        jumpto.value = current_page
+        jumptopage()
+    }
+
+    function getNextPage(){
+        current_page++;
+        jumpto.value = current_page
+        jumptopage()
+    }
+
+    function load_book_data(){
+        var stored_current_page = localStorage.getItem(`current_page_${bookname}`,0)
+        if (stored_current_page){
+            current_page = stored_current_page;
+            
+        }
+
+        page_indicator.textContent = current_page
+
+    }
+
+
+
+    load_available_langs()
+
+    speechSynthesis.onvoiceschanged = () => {
+        voices = speechSynthesis.getVoices();
+        load_available_langs();
+    };
+ 
+    voice_input.addEventListener("change",()=>{
+        selected_lang = voice_input.value
+    })
+
+
+    function pause_unpause_read(that){
+        if (!speak_synthesys.paused){
+            that.textContent = "Resume"
+            speak_synthesys.pause()
+        }
+        else{
+            that.textContent = "Pause"
+            speak_synthesys.resume()
+        }
+    }
+
+    function pull_next_page(){
+        current_page++;
+        //gets the next page to play
+        var url = `/api/${bookname}/${current_page}`
+        fetch(url).then(response=>response.json()).then((data)=>{
+            pageData=data
+            read_page()
+        })
+    }
+
+    function show_text(start_index){
+        let current_end = start_index+1
+        let the_text = [pageData[start_index]]
+        while (pageData[current_end] != " " && pageData[current_end] != undefined){
+            the_text.push(pageData[current_end])
+            current_end++;
+        }
+        return the_text.join("")
+    }
+
+
+
+    async function make_page(){
+        // reads the current page and shows the text as well
+        var url = `/api/makepage/${bookname}/${current_page}`
+        console.log(url)
+        return new Promise((resolve,reject)=>{
+            fetch(url).then(response=>{
+                return response.json()
+            }).then(
+                data =>{
+                    console.log("got back the data")
+                    console.log(data)
+                    resolve(data)
+                } 
+            ).catch(error=>{
+                reject(error)
+            }) 
+
+        })
+    }
+
+
+    async function l_audio(sentence_num){
+        var url = `/api/getpage/${bookname}?sentence=${sentence_num}`
+        return new Promise((resolve,reject)=>{
+            fetch(url).then(
+                response =>{
+                    return response.json()
+                }
+            ).then(
+                resolve(data)
+            )
+        }).catch(error=>{
+            reject(error)
+        })
+    }
+
+
+
+    async function read_page(){
+        pageaudio.pause()
+        let data = await make_page(current_page)
+        current_sentence = 0
+        await l_audio(current_sentence)
+        sentences = data.sentences
+        pageaudio.addEventListener("ended",async ()=>{
+            if (current_sentence < sentences.length){
+                current_sentence++
+                pageaudio.pause()
+                await l_audio(sentences[current_sentence])
+                pageaudio.play()
+                pageaudio.addEventListener("ended",()=>{
+                    current_sentence++
+                    l_audio()
+                },{once:true})
+            }
+            else{
+                current_page++;
+                read_page()
+            }
+
+        },{once: true})
+        pageaudio.play()                
+        }
+
+
+    function show_current_page(){
+        // shows which page you are on currently
+
+    }
+
+
+
+</script>
+{% endblock %}

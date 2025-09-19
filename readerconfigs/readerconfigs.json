@@ -1,0 +1,10 @@
+{
+    "PiperReader":"piperconfig.json",
+    "WinReader":"winconfig.json",
+    "MyReader":"myreader.json",
+    "ThisIsTest":"thisistest.json",
+    "GoogleReader":"googlereader.json",
+    "AndroidReader":"androidreader.json",
+    "BrowserReader":"browserreader.json",
+    "SherpaReader":"sherpareader.json"
+}

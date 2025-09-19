@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+
+
+{% block body %}
+<dialog id="deletebook" class="bg-dark text-light">
+    <div class="container">
+        <button type="button" class="btn-close float-end bg-dark text-light" onclick="closedeletebookdialog();" aria-label="Close"></button>
+        <h2 id="booktodeletetitle">Are you sure you want to delete this book? THEBOOK?</h2>
+        <div class="d-flex">
+        <button onclick="closedeletebookdialog();" class="btn btn-outline-light">cancel</button>
+        <a id="booktodelete" class="btn btn-outline-light" href="/deletebook/{{book_page}}_readable.json" >yes</a>
+        </div>
+    </div>
+</dialog>
+
+
+    <form class="bg-dark text-light" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label title="for more information look for the MANUAL.md file" class="from-label text-light h2" onclick="document.getElementById('book').click()" for="book">Select a book to read <br> [ zip, epub, pdf ]</label>
+            <input required class="form-control bg-dark text-light" name="book" id="book" type="file">
+        </div>
+        <button class="btn btn-sm btn-outline-light">Read <i class="bi bi-book"></i></button>
+    </form>
+    <hr>
+    <div class="row">
+        <div class="col-sm-12 col-lg-6">
+            <h2 title="This converts your book on the go, by sentence, this way you do not have to wait">Listen to your book</h2>
+            <ul class="list-group">
+                {% for safe_bookname,book in books.items() %}
+                    <li class="list-group-item bg-dark text-light">
+                        <div class="d-flex justify-content-between">
+                            <a class="text-wrap" href="/{{safe_bookname}}_readable.json">{{book}}</a>
+                            <i class="bi bi-trash float-end" data-book-name="{{book}}" data-book="{{safe_bookname}}" onclick="opendeletebookdialog(this);"></i>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-sm-12 col-lg-6">
+            <h2 title="converts the whole book into a playlist which you can then put on your device and listen to anywhere, depending on your system and booksize this might take 20-30 minutes">Convert the book to a playlist</h2>
+            <ul class="list-group">
+                {% for safe_bookname,book in books.items() %}
+                    <li class="list-group-item bg-dark text-light">
+                        <div class="d-flex justify-content-between">
+                            <a class="text-wrap" href="/converttoaudio/{{safe_bookname}}_readable.json">{{book}}</a>
+                            <i class="bi bi-trash float-end" data-book-name="{{book}}" data-book="{{safe_bookname}}" onclick="opendeletebookdialog(this);"></i>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+<script>
+    var deletedialog = document.getElementById("deletebook")
+    var booktodelete = document.getElementById("booktodelete")
+    function opendeletebookdialog(that){
+        var book_id = that.getAttribute("data-book")
+        var book_name = that.getAttribute("data-book-name")
+        var booktodeletetitle = document.getElementById("booktodeletetitle")
+        booktodeletetitle.textContent = `Are you sure you want to delete this book: ${book_name}?`
+        booktodelete.setAttribute("href",`/deletebook/${book_id}_readable.json`)
+        deletedialog.showModal();
+    }
+    function closedeletebookdialog(){
+        deletedialog.close()
+    }
+
+
+</script>
+
+
+{% endblock %}

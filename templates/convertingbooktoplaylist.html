@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+
+
+{% block body %}
+<h1>Be patient your book is converting . . .</h1>
+<h2 id="pageindicator"></h2>
+<p id="page"></p>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+    var total_pages = {{page_count}}
+    var book_id = {{book_id|tojson}}
+    socket.on('progress', function(data) {
+        if (data.book_id == book_id){
+            document.getElementById("pageindicator").textContent = `converted: ${data.page_num} / ${total_pages}`;
+            document.getElementById("page").textContent = data.page;
+        }
+
+    });
+    socket.on('finished',function(data){
+        if (data.book_id == book_id){
+            document.getElementById("pageindicator").innerHTML = `The book has been converted, you can find it at: ${data.book_folder}`
+        }
+    })
+
+
+</script>
+
+
+
+{% endblock %}

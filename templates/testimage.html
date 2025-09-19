@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+
+
+{% block body %}
+<h2>Upload the test image</h2>
+<form class="form-control" enctype="multipart/form-data" method="POST"  action="/testimage">
+    <div class="mb-3">
+        <label class="form-label" for="image"></label>
+        <input class="form-control" id="image" name="image" type="file" accept="images/*" capture="enviroment">
+    </div>
+    <button type="submit" class="btn bg-dark text-light border">Submit</button>
+</form>
+{% endblock %}

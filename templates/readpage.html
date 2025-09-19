@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+
+
+{% block body %}
+<script src="{{url_for('static',filename='js/fuckedtts.js')}}"></script>
+<script src="{{url_for('static',filename='js/read_in_browser.js')}}"></script>
+<script src="{{url_for('static',filename='js/videorelated.js')}}"></script>
+<h3 onclick="showtitlefull(this);" data-show="false" data-text-short="{{readable_name[:20]}}" data-text-full="{{readable_name}}" id="books_name">{{readable_name[:20]}}</h3>
+<hr>
+
+<dialog id="gotopagedialog" class="bg-dark text-light">
+    
+    <div class="container">
+        <button type="button" class="btn-close float-end bg-dark text-light" onclick="closegoto();" aria-label="Close"></button>
+        <h2>What page do you want to visit:</h2>
+        <div class="d-flex">
+            <input id="jumpto" type="number">
+            <button class="btn btn-outline-light" onclick="jumptopage();" >Visit</button>      
+        </div>
+  
+    </div>
+
+</dialog>
+<div class="pb-3 " id="lastpageindicator">
+    <!--
+    Show the last page you were listening too and it also shows the bookmark
+    -->
+    <div class="d-flex justify-content-around py-2">
+        <small id="lastpageindicatortitle"></small>
+        <small id="bookmarkindicator"></small>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12 col-lg-6">
+        <audio id="pageaudio" src="#"></audio>
+        <video id="thevideo" class="cover-page-video" autoplay loop muted src="{{url_for('static',filename='videos/spinningfish.mp4')}}"></video>
+
+    </div>
+    <div class="col-sm-12 col-lg-6">
+        <div class="container">
+            <p class="subtitle" id="pagedata"></p>
+        </div>
+        <div class="d-flex justify-content-around">
+            <div class="d-flex justify-content-between">
+                <i class="bi bi-volume-up px-3"></i>
+                <input class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
+            </div>
+            <div class="mb-3">
+                <i type="button" onclick="setbookmark(this);" class="bi bi-bookmark"></i>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="fake-footer">
+    <hr>
+    <div class="d-flex justify-content-between px-4 py-2" id="controlls">
+        <i class="bi bi-chevron-left h3" onclick="getPreviousPage()"></i>
+        <i class="bi bi-chevron-right h3" onclick="getNextPage()" ></i>
+        <i class="bi bi-play h3" onclick="read_page();" ></i>
+        <i id="pause_reading_btn" class="bi bi-pause h3" onclick="pause_reading();"></i>
+        <i class="bi bi-box-arrow-up-right h3" onclick="opengoto();"></i>
+    </div>
+    <p class="text-center mx-2" id="pageindicator">Current Page {{current_page}}</p>
+</div>
+
+
+<script>
+    var volume = document.getElementById('volume')
+    var bookmarkpageindicatortitle = document.getElementById("lastpageindicatortitle")
+
+
+
+    var player;
+    var pageData = {{page|tojson}}
+    const speak_synthesys = window.speechSynthesis
+    const sentence_text = document.getElementById("pagedata")
+    var current_page = {{current_page|tojson}}
+    const bookname = {{bookname|tojson}}
+    const thevideo = document.getElementById("thevideo")
+    const pause_reading_btn = document.getElementById("pause_reading_btn")
+    var test_number = 0;
+
+    var jumpto = document.getElementById("jumpto")
+    var pauseaudio = false
+    var sentence_data;
+    var page_data = null
+    var current_sentence = 0
+    var pageaudio =document.getElementById("pageaudio")
+    var gotopagedialog = document.getElementById("gotopagedialog")
+    var pageindicator = document.getElementById("pageindicator")
+
+
+    function setvolumeofspeaker(that){
+        pageaudio.volume = that.value / 100
+    }
+
+
+    function setbookmark(that){
+        // saves the current page as a bookmark, the next time you open the book it show that page on the top of the page
+        that.title = `Bookmaked page ${current_page}.`
+        that.classList.replace("bi-bookmark","bi-bookmark-fill")
+        localStorage.setItem(`${bookname}_bookmark`,current_page)
+    }
+
+    function getlastvisited(){
+        // set the last visited page in the top
+        var pagevisited = localStorage.getItem(bookname)
+        var bookmarked = localStorage.getItem(`${bookname}_bookmark`)
+
+
+        bookmarkpageindicatortitle.innerHTML = `last visited page: <a href="/${bookname}?page=${pagevisited}">[ ${pagevisited} ]</a>`
+        document.getElementById("bookmarkindicator").innerHTML = `last bookmark placed on page: <a href="/${bookname}?page=${bookmarked}">[ ${bookmarked} ]</a>`
+    }
+
+
+    function setlastvisited(){
+        localStorage.setItem(bookname,current_page)
+    }
+
+
+    function pause_reading(){
+        if (!pageaudio.paused){
+            pageaudio.pause()
+            if (player){
+                pauseVideo()
+            }
+            thevideo.pause()
+
+        }
+        else{
+            pageaudio.play()
+            if (player){
+                playVideo()
+            }
+            thevideo.play()
+
+        }
+        
+    }
+
+
+    function closegoto(){
+        gotopagedialog.close()
+
+
+
+
+
+    }
+    function openoptionsmenu(){
+        // shows a small menu wher you can place a bookmark for the current page
+        // allows jumping to an other page
+        // volume control
+    }
+
+
+
+
+
+
+    function opengoto(){
+        gotopagedialog.showModal()
+    }
+
+    function getPreviousPage(){
+        pauseaudio = true
+        pageaudio.pause()
+        current_page --;
+        jumpto.value = current_page
+        jumptopage()
+    }
+
+    function getNextPage(){
+        pauseaudio = true
+        pageaudio.pause()
+        current_page++;
+        jumpto.value = current_page
+        jumptopage()
+
+    }
+
+
+
+    function showtitlefull(that){
+        if (that.getAttribute("data-show") == "true"){
+            that.setAttribute("data-show",false)
+            that.textContent = that.getAttribute("data-text-full")
+
+        }
+        else{
+            that.textContent = that.getAttribute("data-text-short")
+            that.setAttribute("data-show",true)
+        }
+    }
+
+
+    function indicate_page(){
+        pageindicator.textContent = `Current Page ${current_page}` 
+    }
+
+    function make_page(what_page){
+        if (!what_page){
+            var url = `/api/makepage/${bookname}/${current_page}`
+        }
+        else{
+            var url = `/api/makepage/${bookname}/${what_page}`
+
+        }
+        return new Promise((resolve,reject)=>{
+            fetch(url).then(
+                response =>{
+                    return response.json()
+                }
+            ).then(data=>{
+                resolve(data)
+            }).catch(error=>{
+                reject(error)
+            })
+        })
+    }
+
+
+
+
+
+
+
+    function jumptopage(){
+        var current_url = window.location.href
+        console.log(current_url)
+        var url_ = new URL(current_url)
+        var searchparams = url_.searchParams
+        searchparams.set("page",jumpto.value)
+        url_.search= searchparams.toString()
+        var new_url = url_.toString()
+        synth.cancel()
+        window.location.href = new_url
+}
+
+    function load_page_data(sentence_d){
+        filename = sentence_d.filename
+        sentence = sentence_d.sentence 
+        console.log("filename in load page:",filename)
+        console.log("the sentence in load page:",sentence)
+        sentence_text.textContent = sentence
+        
+        return new Promise((resolve,reject)=>{
+            pageaudio.onerror = async ()=>{
+                await monkey_patch_reader(sentence,pause_reading_btn)
+                resolve(true)
+            }
+            pageaudio.setAttribute("src",filename)
+            pageaudio.addEventListener("ended",()=>{
+                if (!pauseaudio){
+                    resolve(true)
+                }
+                else{
+                    reject()
+                }
+            },{ once: true })
+            pageaudio.play()
+        })
+    }
+
+    async function read_page(){
+        setlastvisited()
+        pauseaudio = false
+        if (player && player.getPlayerState() === YT.PlayerState.PAUSED) {
+            playVideo();
+        }
+
+        //playVideo()
+        var data = await make_page()
+        setTimeout(()=>{
+            console.log("second read page is running.")
+            make_page(Number(current_page)+1)
+        },10000)
+        setTimeout(()=>{
+            make_page(Number(current_page)+2)
+        },20000)
+        console.log(data)
+        sentence_data = data.sentence_data
+        indicate_page()
+        var keys = Object.keys(sentence_data)
+        for (let i = 0; i < keys.length; i++ ){
+            let key = keys[i.toString()] 
+            console.log("reading sentence:", sentence_data[key])
+            if (!pauseaudio){
+                await load_page_data(sentence_data[key])
+            }
+            else{
+                return
+            }
+        }
+        current_page++;
+        jumpto.value = current_page
+        read_page();
+    }
+
+    function hidebookmarkindicator(){
+        setTimeout(()=>{
+            document.getElementById("lastpageindicator").remove()
+        },7000)
+    }
+
+    getlastvisited()
+    hidebookmarkindicator()
+    set_video_source("thevideo")
+
+
+
+
+</script>
+{% endblock %}
