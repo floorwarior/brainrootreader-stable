@@ -29,6 +29,13 @@ python.exe background.py #if you want a more portable build (exe), you want to l
 python3 -m background.py
 
 ```
+# Dependencies:
+## piper-tts depends on [espeak-ng](https://github.com/espeak-ng/espeak-ng):
+- to run BRR you will have to install the latest release of espeak-ng
+- without this the app/project will not run
+- [espeak-ng releases](https://github.com/espeak-ng/espeak-ng/releases)
+- look for assets, download and install espeak-ng.msi on windows
+
 
 # Once BRR is running:
 - visit http://localhost:5003
