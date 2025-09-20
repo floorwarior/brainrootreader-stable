@@ -281,7 +281,6 @@ class PiperReader(BaseReader):
 
         
         for i in models_files:
-            i:str
             if i.endswith(".onnx"):
                 name_of_model = i 
                 models[name_of_model] = name_of_model

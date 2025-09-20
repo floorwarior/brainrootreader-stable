@@ -143,7 +143,7 @@ def settings():
         from helpers.loadreader import all_readers
         from helpers.videos import get_video_list
         # Gets all the voices from all readers except of the browser one that is handled in the browser
-        return render_template("settings.html",all_readers = all_readers(custom_readers,builtin_readers),get_readers_config=get_readers_config,base_path=BASE_PATH,videos=get_video_list(BASE_PATH))
+        return render_template("settings.html",all_readers = all_readers(custom_readers,builtin_readers),get_readers_config=get_readers_config,base_path=BASE_PATH,videos=get_video_list(BASE_PATH),selected_reader=SELECTED_READER)
 
 @app.route("/deletebook/",methods=["POST","GET"])
 @app.route("/deletebook/<book>",methods=["POST","GET"])

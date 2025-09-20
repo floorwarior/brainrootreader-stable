@@ -26,10 +26,14 @@ Things to have:
                 {% set thereader =reader(**config) %}
                 
                 {% if thereader.imported_ok %}
-                    <select class="form-control text-light bg-dark" name="{{reader.__name__}}_model" id="{{reader.__name__}}_model">
+                    <select autocomplete="off" class="form-control text-light bg-dark" name="{{reader.__name__}}_model" id="{{reader.__name__}}_model">
                         <option value="empty">--Select-a-Voice--</option>
                         {% for descriptor , value in thereader.get_voices().items() %}
-                            <option value="{{value}}">{{descriptor}}</option>
+                            {% if value==config.get('model') %}
+                                <option selected  value="{{value}}">{{descriptor}}</option>
+                            {% else %}
+                                <option  value="{{value}}">{{descriptor}}</option>
+                            {% endif %} 
                         {% endfor %}
                     </select>
                 {% else  %}
@@ -43,12 +47,18 @@ Things to have:
         <div class="card-header">
             <h2 class="text-center">Global Reader</h2>
         </div>
-        <select class="form-control text-light bg-dark" name="global_reader" id="globalreadersettings">
+        <select autocomplete="off" class="form-control text-light bg-dark" name="global_reader" id="globalreadersettings">
             <option value="empty">--Select-a-Reader--</option>
             {% for reader, reader_class in all_readers.items() %}
-            <option value="{{reader}}">
-                {{reader}}
-            </option>
+                {% if reader==selected_reader.__name__ %}
+                    <option selected value="{{reader}}">
+                        {{reader}}
+                    </option>
+                {% else %}
+                    <option value="{{reader}}">
+                        {{reader}}
+                    </option>
+                {% endif %}
             {% endfor %}
         </select>
     </div>

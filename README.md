@@ -55,12 +55,12 @@ python3 -m background.py
 ## There are a few different ways to do it:
 - to sample the voices you can checkout this [link](https://rhasspy.github.io/piper-samples/) you can either download one from there and place the files inside the readers models folder in this case: [pipermodels](./pipermodels/)
 
-- alternativly you can try try the built in downloader at [VoiceBag](http://localhost:5003/voicebag) if you combaine these 2 you can sample the voice and then look for its name on the right:
+- alternativly you can try the built in downloader [VoiceBag](http://localhost:5003/voicebag) if you combaine these 2, you can sample the voice and then look for its name on the right:
 
 ![find a voice you like](./examples/pipersvoicepage.png)
 
 
-- download it in the [voicebag](http://localhost:5003/voicebag)
+- download from the [VoiceBag](http://localhost:5003/voicebag)
 
 ![VoicebagPage](./examples/localvoicebag.png):
 
