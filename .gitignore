@@ -19,3 +19,5 @@ pipermodels/*
 !pipermodels/en_US-amy-medium.onnx
 !pipermodels/en_US-amy-medium.onnx.json
 !pipermodels/en_US-amy-medium_MODEL
+bookslist.json
+
