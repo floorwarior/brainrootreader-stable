@@ -4,10 +4,11 @@ import nltk
 from nltk import sent_tokenize
 import json
 import pypdf
+from functools import lru_cache
 
 try:
     from helpers.book_converter import return_cache
-    from helpers.remove_book import remove_bookname,remove_pdf
+    from helpers.remove_book import remove_bookname,remove_doc
     from helpers.book_converter import update_booknames
 except:
     from book_converter import return_cache
@@ -150,7 +151,7 @@ class ReadBook():
         """removes the book from the booklist, removes the uploaded pdf,"""
         import shutil
         shutil.rmtree(self.books_folder)
-        remove_pdf(base_path=self.base_path,safe_bookname=self.safe_bookname)
+        remove_doc(base_path=self.base_path,safe_bookname=self.safe_bookname)
         remove_bookname(base_path=self.base_path,safe_bookname=self.safe_bookname)
         os.remove(self.this_books_json)
         return True

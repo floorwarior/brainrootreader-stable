@@ -75,7 +75,7 @@ class ConvertFromEbook():
         with open(books_json_path,"w") as converted:
             json.dump(book_data,converted,indent=4)
 
-        update_booknames(safe_name,self.ebookname.removesuffix(".epub"),basepath=self.base_path)
+        update_booknames(safe_name,self.ebookname,basepath=self.base_path)
         return book_data,f"{safe_name}_readable.json"
 
 

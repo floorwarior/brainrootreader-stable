@@ -1,5 +1,5 @@
 {
-    "name": "PiperReader",
+    "name": "CoquiReader",
     "type": "builtin",
     "comment": "To use this you can pick either *builtin* or if you want to use a selfmade reader you need to use *custom*",
     "comment2": "The name also have to match the name of the class you want to import",

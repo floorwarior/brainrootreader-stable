@@ -6,5 +6,6 @@
     "GoogleReader":"googlereader.json",
     "AndroidReader":"androidreader.json",
     "BrowserReader":"browserreader.json",
-    "SherpaReader":"sherpareader.json"
+    "SherpaReader":"sherpareader.json",
+    "CoquiReader":"coquireader.json"
 }

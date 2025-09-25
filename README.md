@@ -23,7 +23,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # run the background.py file on windows:
-python.exe background.py #if you want a more portable build (exe), you want to look at the binaries for this project
+python.exe background.py #if you want a more portable build (exe), you want to look at the [releases](https://github.com/floorwarior/brainrootreader-stable/releases)
 
 # run the backgroun.py file on linux:
 python3 -m background.py
@@ -35,7 +35,7 @@ python3 -m background.py
 - without this the app/project will not run
 - [espeak-ng releases](https://github.com/espeak-ng/espeak-ng/releases)
 - look for assets, download and install espeak-ng.msi on windows
-
+## zip conversion depends on [pytesseract](https://github.com/)
 
 # Once BRR is running:
 - visit http://localhost:5003

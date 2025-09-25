@@ -7,9 +7,9 @@
     <div class="container">
         <button type="button" class="btn-close float-end bg-dark text-light" onclick="closedeletebookdialog();" aria-label="Close"></button>
         <h2 id="booktodeletetitle">Are you sure you want to delete this book? THEBOOK?</h2>
-        <div class="d-flex">
-        <button onclick="closedeletebookdialog();" class="btn btn-outline-light">cancel</button>
-        <a id="booktodelete" class="btn btn-outline-light" href="/deletebook/{{book_page}}_readable.json" >yes</a>
+        <div class="d-flex gap-2">
+            <button onclick="closedeletebookdialog();" class="btn btn-outline-light">cancel</button>
+            <a id="booktodelete" class="btn btn-outline-light" href="/deletebook/{{book_page}}_readable.json" >yes</a>
         </div>
     </div>
 </dialog>
@@ -17,7 +17,7 @@
 
     <form class="bg-dark text-light" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
         <div class="mb-3">
-            <label title="for more information look for the MANUAL.md file" class="from-label text-light h2" onclick="document.getElementById('book').click()" for="book">Select a book to read <br> [ zip, epub, pdf ]</label>
+            <label title="for more information look for the MANUAL.md file" class="from-label text-light h2" onclick="document.getElementById('book').click()" for="book">Select a book to read <br> [ zip, epub, pdf, txt ]</label>
             <input required class="form-control bg-dark text-light" name="book" id="book" type="file">
         </div>
         <button class="btn btn-sm btn-outline-light">Read <i class="bi bi-book"></i></button>

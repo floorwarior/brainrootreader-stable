@@ -24,8 +24,7 @@ class ConvertFromImages():
         self._make_missing_folders()
         self.starting_page = starting_page
         self.ending_page = ending_page
-
-
+        self._on_conversion_fail = lambda *args, **kwargs: print("books conversion failed, install pytesseract: ")
 
     def _make_missing_folders(self):
         """creates the missing folders for the zip book"""
@@ -54,10 +53,9 @@ class ConvertFromImages():
 
 
     def conversion_fail(self,*args,**kwargs):
-        print("try to install pytesseract in your system, this way of reading books is also only supported on desktop not android for now")
-        raise kwargs.get("error")
+        if self._on_conversion_fail:
+            self._on_conversion_fail(*args,**kwargs)
     
-
 
     @pan.panic(on_panic="conversion_fail",class_method=True)
     def convert_from_zip(self):
@@ -85,7 +83,7 @@ class ConvertFromImages():
         with open(books_json_path,"w") as converted:
             json.dump(page_data,converted,indent=4)
 
-        update_booknames(safe_name,self.zip_files_name.removesuffix(".zip"),basepath=self.base_path)
+        update_booknames(safe_name,self.zip_files_name,basepath=self.base_path)
         return page_data,f"{safe_name}_readable.json"
 
 

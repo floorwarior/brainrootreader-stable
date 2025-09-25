@@ -20,4 +20,5 @@ pipermodels/*
 !pipermodels/en_US-amy-medium.onnx.json
 !pipermodels/en_US-amy-medium_MODEL
 booklist.json
-
+foolingaroud.py
+other

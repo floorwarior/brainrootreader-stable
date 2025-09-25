@@ -1,5 +1,5 @@
 import logging
-
+import traceback
 class PanTheGuyofPanics():
 
 
@@ -20,6 +20,7 @@ class PanTheGuyofPanics():
                 except Exception as e:
                     print(f"""**Thank you for chosing Panic** you choose this function to handle the panic: {on_panic}""")
                     print(f"we caught this error for you:", e)
+                    traceback.print_exc()
                     pan.logger.info(e)
                     if class_method:
                         return args[0].__getattribute__(on_panic)(error=e)

@@ -53,7 +53,7 @@ class ConvertFromPdf():
         books_folder = "books"
 
 
-        stripped_name = self.pdf_name.removesuffix(".pdf")
+        stripped_name = self.pdf_name
         for i,page in enumerate(book_data.pages):
             text = page.extract_text()
             if text != "":
@@ -100,6 +100,12 @@ def make_permanent_by_page(*args,book:str,basename=None,**kwargs):
                 zip_filename=book,
                 book_lang=kwargs.get("lang","hun")
             ).convert_from_zip()
+        case "txt":
+            from helpers.book_conversion_from_txt import ConvertFromTxt
+            res = ConvertFromTxt(
+                basepath=basename,
+                txtfilename=book,
+            ).convert_txt_file()
         case _:
             raise BaseException(f"book {book} does not have one of the accepted ending: {accepted_endings}")
     return res

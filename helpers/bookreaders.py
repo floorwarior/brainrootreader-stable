@@ -8,6 +8,8 @@ except:
     from thepanic import Pan as pan
 
 
+import traceback
+
 
 NoVoicesGetterError = "This reader does not support getting voices, make sure this is intended behavior."
 NoSpeakerError = "This reader does not support speaking on this device, make sure this is intended behavior."
@@ -30,10 +32,6 @@ class BaseReader(ABC):
     
     def is_ready(self):
         return self.imported_ok and self.ready
-
-
-
-
 
     @abstractmethod
     def save_audio(self):
@@ -214,8 +212,52 @@ class AndroidReader(BaseReader):
         self.tts_engine.speak(text, self.TextToSpeech.QUEUE_FLUSH, None)
 
 
+class CoquiReader(BaseReader):
+
+    def __init__(self, *args, speaker="there was no speaker specified",model_folder="coquimodels",model="", **kwargs):
+        super().__init__(*args, speaker=speaker, **kwargs)
+        try:
+            import torch
+            import sounddevice as sd
+            self.sd = sd
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            print(device)
+            from TTS.api import TTS
+            self.model = model
+            self.tts = TTS(self.model).to(device)
+            self.imported_ok = True
+            self.ready = True
+        except Exception as e:
+            traceback.print_exc()
+            self.imported_ok = False
+            self.ready = False
+            self.error = e
 
 
+    def on_audio_panic(self, *args, **kwargs):
+        return super().on_audio_panic(*args, **kwargs)
+
+
+    def _make_placeholder(self,*args,**kwargs):
+        """makes a palceholder file so other threads do not try to make the same file multiple time"""
+        filename = kwargs.get("filename")
+        with open(filename,"w") as f:
+            print(f"made dummy file {filename}")
+
+    @pan.panic(on_panic="on_audio_panic",class_method=True)
+    def save_audio(self,*args,**kwargs):
+        filename = kwargs.get("filename")
+        text = kwargs.get("text")
+        self._make_placeholder(filename=filename)
+        self.tts.tts_to_file(text=text,file_path = filename)
+        return filename
+
+    def Speak(self,*args,**kwargs):
+        """speaks"""
+        text = kwargs.get("text")
+        wav = self.tts.tts(text)
+        self.sd.play(wav, samplerate=self.tts.synthesizer.output_sample_rate)  # samplerate depends on the model
+        self.sd.wait()
 
 
 class PiperReader(BaseReader):
@@ -317,9 +359,13 @@ readers = {
     "PiperReader":PiperReader,
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
+    "CoquiReader":CoquiReader
 }
 
-
 if __name__ == "__main__":
-    piper = PiperReader()
-    piper.Speak("this should not work?")
+
+    c = CoquiReader(
+        model="tts_models/en/jenny/jenny"
+    )
+    c.Speak(text="Hello there general kenobi")
+    c.save_audio(filename="thisisatest.wav",text="this is testing the save audio func")
