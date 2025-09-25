@@ -35,7 +35,10 @@ python3 -m background.py
 - without this the app/project will not run
 - [espeak-ng releases](https://github.com/espeak-ng/espeak-ng/releases)
 - look for assets, download and install espeak-ng.msi on windows
-## zip conversion depends on [pytesseract](https://github.com/)
+## zip conversion depends on [pytesseract](https://pypi.org/project/pytesseract/) which requires [tesseract](https://github.com/UB-Mannheim/tesseract/wiki) to be installed.
+- **NOTE: this is not needed for any other type of conversion**
+
+
 
 # Once BRR is running:
 - visit http://localhost:5003
@@ -50,7 +53,8 @@ python3 -m background.py
 | Epub ( should pretty much always work )        |   Yes [X]   | No image/diagram/table conversion |
 | Pdf ( true pdf not image )        |   Yes [X]   | same as epub |
 | Pdf ( made from images )           |   Yes [X]   | you first have to convert the pages into images then convert this to a zip file |
-| Zip ( from images of old books)    |  Can, but not reliable [X]   | Bad Image quality, Bad lighting, Shadows, Wrinkles |
+| Zip ( from images of old books )    |  Can, but not reliable [X]   | Bad Image quality, Bad lighting, Shadows, Wrinkles |
+| Txt (simple .txt files ) | Yes [X] | Should be okay to use for videos as long as you check if the voice can be used in such fashion |
 
 ## Tips for zip:
     - you want to first take a picture of every page of a book.

@@ -271,7 +271,7 @@ def yieldbooktext(book,page):
     if success:
         return jsonify(nltk.sent_tokenize(data[str(page)]))
     else:
-        return "some error happend, make sure the books name is typed correctly"
+        return "some error happened, make sure the books name is typed correctly"
 
 
 @app.route("/api/getpage/<book>")
