@@ -4,6 +4,8 @@
 
 {% block body %}
 <script src="{{url_for('static',filename='js/videorelated.js')}}" ></script>
+<script src="{{url_for('static',filename='js/getbrowservoices.js')}}"></script>
+<script src="{{url_for('static',filename='js/read_in_browser.js')}}"></script>
 
 <!--
 Things to have:
@@ -68,7 +70,7 @@ Things to have:
         <h2>Browser ( fallback )</h2>
     </div>
     <h2>Browser voices</h2>
-    <select class="form-control bg-dark text-light"  id="browser-voices">
+    <select onchange="onbrowservoice(this);" class="form-control bg-dark text-light"  id="browser-voices">
         <option value="empty">--Select-a-Voice--</option>
     </select>
 </div>
@@ -85,6 +87,24 @@ Things to have:
 </div>
 <button type="submit" class="btn btn-outline-light">Save</button>
 </form>
+<script>
+    var browservoiceselect = document.getElementById("browser-voices")
+    function select_current(){
+        var voc = localStorage.getItem("brainrootreader-browser-voice")
+        console.log("previously selected value was",voc)
+        browservoiceselect.value = voc
+        console.log(browservoiceselect.value)
+    }
+
+    function onbrowservoice(that){
+        var voice = that.value
+        console.log("selecting voice",voice)
+        localStorage.setItem("brainrootreader-browser-voice",voice)
+    }
+    document.addEventListener("DOMContentLoaded",()=>{getbrowservoices("browser-voices");select_current()})
+
+
+</script>
 
 
 {% endblock %}
