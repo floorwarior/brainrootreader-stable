@@ -72,13 +72,13 @@ class ConvertFromPdf():
 
 def make_permanent_by_page(*args,book:str,basename=None,**kwargs):
     """
-    Converts the book form zip, pdf or epub into a json file that has the pages text as key value pairs
-    This is the one that is later used for reading so we do not have to covert the images more times
+    Converts the book form zip, pdf, txt, docx or epub into a json file that has the pages text as key value pairs
+    This is the one that is later used for reading so we only convert to this format this one time
     """
     if not basename:
         raise BaseException("no basename provided for make_permanent_by_page")
     
-    accepted_endings = ["zip","pdf","epub"]
+    accepted_endings = ["zip","pdf","epub","docx","txt"]
     ending = book.rsplit(".")[-1]
     print(ending)
 
@@ -106,6 +106,12 @@ def make_permanent_by_page(*args,book:str,basename=None,**kwargs):
                 basepath=basename,
                 txtfilename=book,
             ).convert_txt_file()
+        case "docx":
+            from helpers.convert_from_docx import ConvertFromDocx
+            res = ConvertFromDocx(
+                basepath=basename,
+                docx_name=book
+            ).convert_from_docx()
         case _:
             raise BaseException(f"book {book} does not have one of the accepted ending: {accepted_endings}")
     return res

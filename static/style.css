@@ -13,6 +13,11 @@ body{
     overflow-x: hidden;
 }
 
+.body-color{
+    background-color:  rgb(24, 24, 24);
+}
+
+
 .parent-container {
     position: relative;
     width: 100vw;
@@ -71,6 +76,7 @@ body{
 .cover-page-video{
     height: 80% !important;
     width: 80% !important;
+    max-height: 600px;
     padding-left: 12px;
     padding-right: 12px;
 
@@ -78,8 +84,8 @@ body{
 
 .iframe-video-sizing{
     aspect-ratio: 16 / 9;
-    max-width: 600px;
-    width: 80%
+    max-width: 1020px;
+    width: 100%
 }
 
 

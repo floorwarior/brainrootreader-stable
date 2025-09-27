@@ -50,19 +50,16 @@
                 <i type="button" onclick="setbookmark(this);" class="bi bi-bookmark"></i>
             </div>
         </div>
-
+        <hr>
+        <div class="d-flex justify-content-between px-4 py-2" id="controlls">
+            <i class="bi bi-chevron-left h3" onclick="getPreviousPage()"></i>
+            <i class="bi bi-chevron-right h3" onclick="getNextPage()" ></i>
+            <i class="bi bi-play h3" onclick="read_page();" ></i>
+            <i id="pause_reading_btn" class="bi bi-pause h3" onclick="pause_reading();"></i>
+            <i class="bi bi-box-arrow-up-right h3" onclick="opengoto();"></i>
+        </div>
+        <p class="text-center mx-2" id="pageindicator">Current Page {{current_page}}</p>
     </div>
-</div>
-<div class="fake-footer">
-    <hr>
-    <div class="d-flex justify-content-between px-4 py-2" id="controlls">
-        <i class="bi bi-chevron-left h3" onclick="getPreviousPage()"></i>
-        <i class="bi bi-chevron-right h3" onclick="getNextPage()" ></i>
-        <i class="bi bi-play h3" onclick="read_page();" ></i>
-        <i id="pause_reading_btn" class="bi bi-pause h3" onclick="pause_reading();"></i>
-        <i class="bi bi-box-arrow-up-right h3" onclick="opengoto();"></i>
-    </div>
-    <p class="text-center mx-2" id="pageindicator">Current Page {{current_page}}</p>
 </div>
 
 
@@ -264,7 +261,7 @@
         })
     }
 
-    async function read_page(){
+    async function read_page(starting_idx=0){
         setlastvisited()
         pauseaudio = false
         if (player && player.getPlayerState() === YT.PlayerState.PAUSED) {
@@ -274,17 +271,19 @@
         //playVideo()
         var data = await make_page()
         setTimeout(()=>{
-            console.log("second read page is running.")
+            console.log("second make page is running.")
             make_page(Number(current_page)+1)
         },10000)
         setTimeout(()=>{
+            console.log("third make page is running")
             make_page(Number(current_page)+2)
         },20000)
         console.log(data)
         sentence_data = data.sentence_data
         indicate_page()
         var keys = Object.keys(sentence_data)
-        for (let i = 0; i < keys.length; i++ ){
+        var i = starting_idx
+        for (i; i < keys.length; i++ ){
             let key = keys[i.toString()] 
             console.log("reading sentence:", sentence_data[key])
             if (!pauseaudio){
@@ -296,7 +295,8 @@
         }
         current_page++;
         jumpto.value = current_page
-        read_page();
+        setTimeout(read_page,0)
+        return
     }
 
     function hidebookmarkindicator(){

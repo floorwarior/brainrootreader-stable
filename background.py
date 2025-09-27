@@ -27,6 +27,9 @@ from ebooklib import epub
 import zipfile
 import PIL 
 import pytesseract
+import TTS
+from TTS.api import TTS
+import docx
 # -- -- -- -- -- -- -- 
 
 from helpers.book_converter import return_cache,get_booknames,make_permanent_by_page
@@ -180,6 +183,13 @@ def test_image_quality():
     return render_template("testimage.html")
 
 
+@app.route("/testnewroutes")
+def check_new_routes():
+    """testing the new route layouts here"""
+    from helpers.book_converter import get_booknames
+    books = get_booknames(basepath=BASE_PATH)
+    return render_template("readpage_v2.html",books=books)
+
 
 @app.route("/convert",methods=["POST"])
 def convert_book():
@@ -240,6 +250,20 @@ def convert_book_to_audio(book):
     return render_template("convertingbooktoplaylist.html",book_id=book,page_count = rd.page_count())
 
 
+@app.route("/openorigin/<book>")
+def open_book_origin(book):
+    """so far this will only ever work with pdfs tracking pages in other formats is rather hard and annoying. Not to mention that i would have to have a way to open them reliably
+    without knowing what system apps are installed
+
+    Opens the book to a certain page when reading, this should be helpfull when you want to looks at some diagramm or image, while listening
+    """
+    if book == None:
+        return "No book specified"
+    page = request.args.get("page",0)
+    from helpers.openorigin import OpenBooksFile
+    res = OpenBooksFile(base_path=BASE_PATH,bookname=book,page=page).open_file()
+    return res
+
 @app.route("/<book>")
 def read_book_(book):
     # load the page of the book, return it as list
@@ -252,7 +276,7 @@ def read_book_(book):
         current_page +=1
         current_page = str(current_page)
 
-    return render_template("readpage.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=get_booknames(basepath=BASE_PATH).get(book.removesuffix("_readable.json")))
+    return render_template("readpage_v2.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=get_booknames(basepath=BASE_PATH).get(book.removesuffix("_readable.json")))
 
 
 

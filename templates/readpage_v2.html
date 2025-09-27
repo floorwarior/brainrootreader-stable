@@ -1,0 +1,448 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Root Reader</title>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
+    <!--bootstrap style sheet-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='bootstrap/icons/bootstrap-icons.css')}}">
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+
+</head>
+<body class="px-2">
+    <!--modal goes here-->
+    <dialog id="gotopagedialog" class="bg-dark text-light">
+        <div class="container">
+            <button type="button" class="btn-close float-end bg-dark text-light" onclick="closegoto();" aria-label="Close"></button>
+            <h2>What page do you want to visit:</h2>
+            <div class="d-flex">
+                <input id="jumpto" type="number">
+                <button class="btn btn-outline-light" onclick="jumptopage();" >Visit</button>      
+            </div>
+        </div>
+    </dialog>
+    <div class="row">
+        <!--
+        contains the side panel that can be toggled off or on
+        -->
+        <div class="offcanvas offcanvas-start body-color" tabindex="-1" id="brainrootoffcanvas" aria-labelledby="offcanvasExampleLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title text-light text-center" >Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item body-color" ><a class="icon-link" href="">
+                    <i class="bi bi-house"></i>
+                    Home
+                </a></li>                
+                <li class="list-group-item body-color" ><a class="icon-link" href="">
+                    <i class="bi bi-gear"></i>
+                    Settings
+                </a></li>
+            </ul>
+        </div>
+        </div>
+        <div class="col-lg-9 col-sm-12  border border-dark">
+            <!--
+            contains the player and the overlay text    
+            contains the player bar
+            -->
+            <div class="d-flex">
+                <!--containes  the side line and the the play itself-->
+                <div class="d-flex d-none d-md-flex flex-column flex-shrink-0 text-white p-3 body-color border-end border-dark gap-3" style="width: 60px; height: 100vh;">
+                    <a class="navbar-brand" href="/">
+                        <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
+                    </a>
+
+
+                    <a class="bi mb-3" data-bs-toggle="offcanvas" href="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas">
+                        <i class="bi bi-layout-sidebar">
+                        </i>
+                    </a>
+                    <i class="bi bi-box-arrow-up-right mb-3" onclick="opengoto();"></i>
+                    <div class="mb-3">
+                        <i type="button" onclick="setbookmark(this);" class="bi bi-bookmark"></i>
+                    </div>
+
+                    <i type="button" onclick="open_page_origin();" class="bi bi-eye"></i>
+                </div>
+                <div class="d-flex flex-column justify-content-between vh-100 flex-grow-1">
+                <div class="player_container">
+                    <div class="pb-3 " id="lastpageindicator">
+                        <!--
+                        Show the last page you were listening too and it also shows the bookmark
+                        -->
+                        <div class="d-flex justify-content-around py-2">
+                            <small id="lastpageindicatortitle"></small>
+                            <small id="bookmarkindicator"></small>
+                        </div>
+
+                    </div>
+                    <h3 onclick="showtitlefull(this);" data-show="false" data-text-short="{{readable_name[:20]}}" data-text-full="{{readable_name}}" id="books_name">{{readable_name[:50]}}</h3>
+                    <audio id="pageaudio" src="#"></audio>
+                    <video id="thevideo" class="cover-page-video" autoplay loop muted src="{{url_for('static',filename='videos/dancingskeletons.mp4')}}"></video>
+                    <div class="container">
+                        <p class="subtitle" id="pagedata"></p>
+                    </div>
+                </div>
+                    <div>
+                        <div class="d-flex justify-content-between px-4 py-2 border-top border-dark" id="controlls">
+                            <i class="bi bi-chevron-left" onclick="getPreviousPage()"></i>
+                            <i class="bi bi-play" onclick="read_page();" ></i>
+                            <i class="bi bi-chevron-right" onclick="getNextPage()" ></i>
+                            <i id="pause_reading_btn" class="bi bi-pause" onclick="pause_reading();"></i>
+                            <div class="d-flex justify-content-between">
+                                <i onclick="mutereading();" class="bi bi-volume-up px-3"></i>
+                                <input class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
+                            </div>
+                            <i class="bi bi-box-arrow-up-right" onclick="opengoto();"></i>
+                        </div>
+                </div>
+
+            </div>
+
+            </div>
+
+        </div>
+        <div class="col-lg-3 col-sm-12 border border-dark vh-100 overflow-auto">
+            <!--
+            right side should contain the sentences data so you can rewind
+            -->
+
+            <h5 id="pageindicator">current page: {{current_page}}</h5>
+            <hr>
+            <div id="sentence_scroll_container"  class="list-flush px-2">
+                <!--side indicator that shows the current pages sentences-->
+
+            </div>
+        </div>
+    </div>
+    <script src="{{url_for('static',filename='js/fuckedtts.js')}}"></script>
+    <script src="{{url_for('static',filename='js/read_in_browser.js')}}"></script>
+    <script src="{{url_for('static',filename='js/videorelated.js')}}"></script>
+    <script>
+    var volume = document.getElementById('volume')
+    var bookmarkpageindicatortitle = document.getElementById("lastpageindicatortitle")
+
+
+
+    var player;
+    var pageData = {{page|tojson}}
+    const speak_synthesys = window.speechSynthesis
+    const sentence_text = document.getElementById("pagedata")
+    var current_page = {{current_page|tojson}}
+    const bookname = {{bookname|tojson}}
+    const thevideo = document.getElementById("thevideo")
+    const pause_reading_btn = document.getElementById("pause_reading_btn")
+    const sentence_scroll_container = document.getElementById("sentence_scroll_container")
+    var test_number = 0;
+
+    var jumpto = document.getElementById("jumpto")
+    var pauseaudio = false
+    var sentence_data;
+    var page_data = null
+    var current_sentence = 0
+    var pageaudio =document.getElementById("pageaudio")
+    var gotopagedialog = document.getElementById("gotopagedialog")
+    var pageindicator = document.getElementById("pageindicator")
+
+
+    function setvolumeofspeaker(that){
+        pageaudio.volume = that.value / 100
+    }
+
+
+    function setbookmark(that){
+        // saves the current page as a bookmark, the next time you open the book it show that page on the top of the page
+        that.title = `Bookmaked page ${current_page}.`
+        that.classList.replace("bi-bookmark","bi-bookmark-fill")
+        localStorage.setItem(`${bookname}_bookmark`,current_page)
+    }
+
+    function getlastvisited(){
+        // set the last visited page in the top
+        var pagevisited = localStorage.getItem(bookname)
+        var bookmarked = localStorage.getItem(`${bookname}_bookmark`)
+
+
+        bookmarkpageindicatortitle.innerHTML = `last visited page: <a href="/${bookname}?page=${pagevisited}">[ ${pagevisited} ]</a>`
+        document.getElementById("bookmarkindicator").innerHTML = `last bookmark placed on page: <a href="/${bookname}?page=${bookmarked}">[ ${bookmarked} ]</a>`
+    }
+
+
+    function setlastvisited(){
+        localStorage.setItem(bookname,current_page)
+    }
+
+
+
+    function open_page_origin(){
+        var url = `/openorigin/{{readable_name}}?page=${current_page}`
+        fetch(url).then(
+            response=>{
+                response.json()
+            }
+        ).then(data=>{
+            console.log(data)
+        })
+    }
+
+
+
+
+
+    function pause_reading(){
+        if (!pageaudio.paused){
+            pageaudio.pause()
+            if (player){
+                pauseVideo()
+            }
+            thevideo.pause()
+
+        }
+        else{
+            pageaudio.play()
+            if (player){
+                playVideo()
+            }
+            thevideo.play()
+
+        }
+        
+    }
+
+
+    function closegoto(){
+        gotopagedialog.close()
+
+
+
+
+
+    }
+    function openoptionsmenu(){
+        // shows a small menu wher you can place a bookmark for the current page
+        // allows jumping to an other page
+        // volume control
+    }
+
+
+
+
+
+
+    function opengoto(){
+        gotopagedialog.showModal()
+    }
+
+    function getPreviousPage(){
+        pauseaudio = true
+        pageaudio.pause()
+        current_page --;
+        jumpto.value = current_page
+        jumptopage()
+    }
+
+    function getNextPage(){
+        pauseaudio = true
+        pageaudio.pause()
+        current_page++;
+        jumpto.value = current_page
+        jumptopage()
+
+    }
+
+
+
+    function showtitlefull(that){
+        if (that.getAttribute("data-show") == "true"){
+            that.setAttribute("data-show",false)
+            that.textContent = that.getAttribute("data-text-full")
+
+        }
+        else{
+            that.textContent = that.getAttribute("data-text-short")
+            that.setAttribute("data-show",true)
+        }
+    }
+
+    function indicate_sentence(){
+        // highlights the current sentence that is being read
+        // idea: either scrollspy and scroll to the sentence
+        //<div class="py-2 mx-2">
+        //    <p class="small">Lorem ipsum dolor sit amet consectetur adipisicing elit. Rem quibusdam corporis necessitatibus a excepturi, eos sunt delectus, incidunt quo non neque soluta praesentium, dolorum cum suscipit eum nam? Architecto, optio.</p>
+        //</div>
+        console.log("sentence indicator not implemented yet")
+    }
+
+
+    function fill_sentence_list(sentences_){
+        // fills the right side sentence list with
+        sentence_scroll_container.innerHTML = ""
+        for (var s in sentences_){
+            let thediv = document.createElement("div")
+            let thepara = document.createElement("p")
+
+            thediv.classList.add("py-2")
+            thediv.classList.add("mx-2")
+
+            thepara.classList.add("small")
+
+            thepara.textContent = sentences_[s]
+            thediv.appendChild(thepara)
+            sentence_scroll_container.appendChild(thediv)
+        }
+    }
+
+
+
+    function indicate_page(){
+        pageindicator.textContent = `Current Page ${current_page}` 
+    }
+
+    function make_page(what_page){
+        if (!what_page){
+            var url = `/api/makepage/${bookname}/${current_page}`
+        }
+        else{
+            var url = `/api/makepage/${bookname}/${what_page}`
+
+        }
+        return new Promise((resolve,reject)=>{
+            fetch(url).then(
+                response =>{
+                    return response.json()
+                }
+            ).then(data=>{
+                resolve(data)
+            }).catch(error=>{
+                reject(error)
+            })
+        })
+    }
+
+
+
+
+
+
+    function jumptopage(){
+        var current_url = window.location.href
+        console.log(current_url)
+        var url_ = new URL(current_url)
+        var searchparams = url_.searchParams
+        searchparams.set("page",jumpto.value)
+        url_.search= searchparams.toString()
+        var new_url = url_.toString()
+        synth.cancel()
+        window.location.href = new_url
+}
+
+    function load_page_data(sentence_d){
+        filename = sentence_d.filename
+        sentence = sentence_d.sentence 
+        console.log("filename in load page:",filename)
+        console.log("the sentence in load page:",sentence)
+        sentence_text.textContent = sentence
+        
+        return new Promise((resolve,reject)=>{
+            pageaudio.onerror = async ()=>{
+                await monkey_patch_reader(sentence,pause_reading_btn)
+                resolve(true)
+            }
+            pageaudio.setAttribute("src",filename)
+            pageaudio.addEventListener("ended",()=>{
+                if (!pauseaudio){
+                    resolve(true)
+                }
+                else{
+                    reject()
+                }
+            },{ once: true })
+            pageaudio.play()
+        })
+    }
+    function extract_sentences(data){
+        var local_sentence_data = data.sentence_data
+        var keys = Object.keys(local_sentence_data)
+        var i = 0
+        var local_sentences = Array() 
+        for (i; i < keys.length; i++ ){
+            let key = keys[i.toString()] 
+            console.log("reading sentence:", local_sentence_data[key])
+            local_sentences.push(local_sentence_data[key].sentence)
+        }
+        console.log("extact setences found:", local_sentences)
+        return local_sentences
+    }
+
+
+
+
+    async function read_page(starting_idx=0){
+        setlastvisited()
+        pauseaudio = false
+        if (player && player.getPlayerState() === YT.PlayerState.PAUSED) {
+            playVideo();
+        }
+
+        //playVideo()
+        var data = await make_page()
+ 
+
+
+
+        setTimeout(()=>{
+            console.log("second make page is running.")
+            make_page(Number(current_page)+1)
+        },10000)
+        setTimeout(()=>{
+            console.log("third make page is running")
+            make_page(Number(current_page)+2)
+        },20000)
+        console.log(data)
+        sentence_data = data.sentence_data
+        indicate_page()
+        fill_sentence_list(extract_sentences(data))
+        
+        var keys = Object.keys(sentence_data)
+        var i = starting_idx
+        for (i; i < keys.length; i++ ){
+            let key = keys[i.toString()] 
+            console.log("reading sentence:", sentence_data[key])
+            if (!pauseaudio){
+                // perfect place to a call sentence indicator here
+                await load_page_data(sentence_data[key])
+            }
+            else{
+                return
+            }
+        }
+        current_page++;
+        jumpto.value = current_page
+        setTimeout(read_page,0)
+        return
+    }
+
+    function hidebookmarkindicator(){
+        setTimeout(()=>{
+            document.getElementById("lastpageindicator").remove()
+        },7000)
+    }
+
+    getlastvisited()
+    hidebookmarkindicator()
+    set_video_source("thevideo")
+    </script>
+
+
+</body>
+</html>
+

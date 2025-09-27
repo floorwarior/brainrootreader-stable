@@ -221,7 +221,7 @@ class CoquiReader(BaseReader):
             import sounddevice as sd
             self.sd = sd
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            print(device)
+            print(device)            
             from TTS.api import TTS
             self.model = model
             self.tts = TTS(self.model).to(device)

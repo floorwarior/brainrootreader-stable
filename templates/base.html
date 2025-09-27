@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brain Root Reader</title>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
     <!--bootstrap style sheet-->
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
@@ -36,8 +37,11 @@
         </div>
     </div>
     </nav>
-    {% block body %}
-    {% endblock %}
+    <main class="px-2 py-2">
+        {% block body %}
+        {% endblock %}
+    </main>
+
     <!-- Bootstrap JS Bundle (includes Popper) -->
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 </body>

@@ -13,10 +13,7 @@ class PanTheGuyofPanics():
         def decorator(func):
             def wrapper(*args,**kwargs):
                 try:
-                    if class_method:
-                        return func(*args,**kwargs)
-                    else:
-                        return func(*args,**kwargs)
+                    return func(*args,**kwargs)
                 except Exception as e:
                     print(f"""**Thank you for chosing Panic** you choose this function to handle the panic: {on_panic}""")
                     print(f"we caught this error for you:", e)
