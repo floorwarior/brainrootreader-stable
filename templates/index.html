@@ -18,14 +18,14 @@
     <form class="bg-dark text-light" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
         <div class="mb-3">
             <label title="for more information look for the MANUAL.md file" class="from-label text-light h2" onclick="document.getElementById('book').click()" for="book">Select a book to read <br> [ zip, epub, pdf, txt, docx ]</label>
-            <input required class="form-control bg-dark text-light" name="book" id="book" type="file">
+            <input title="this is the input field for uploading files to BRR, you can use o to open this in the future" required class="form-control bg-dark text-light" name="book" id="book" type="file">
         </div>
-        <button class="btn btn-sm btn-outline-light">Read <i class="bi bi-book"></i></button>
+        <button id="readbtn" title="click this to submit your document for reading" class="btn btn-sm btn-outline-light">Read <i class="bi bi-book"></i></button>
     </form>
     <hr>
     <div class="row">
         <div class="col-sm-12 col-lg-6">
-            <h2 title="This converts your book on the go, by sentence, this way you do not have to wait">Listen to your book</h2>
+            <h2 title="this converts your book on the go, by sentence, this way you do not have to wait">Listen to your book</h2>
             <ul class="list-group">
                 {% for safe_bookname,book in books.items() %}
                     <li class="list-group-item bg-dark text-light">
@@ -54,6 +54,21 @@
 <script>
     var deletedialog = document.getElementById("deletebook")
     var booktodelete = document.getElementById("booktodelete")
+    document.addEventListener("keydown",(event)=>{
+        var the_key = event.key
+        var key_code = event.keyCode
+        
+        console.log("pushed key, c")
+
+        if (the_key == "o"){
+            document.getElementById('book').click()
+        }
+
+        if (the_key == "c"){
+            document.getElementById("readbtn").click()
+        }
+    })
+
     function opendeletebookdialog(that){
         var book_id = that.getAttribute("data-book")
         var book_name = that.getAttribute("data-book-name")

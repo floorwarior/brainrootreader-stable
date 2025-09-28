@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brain Root Reader</title>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    
     <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
     <!--bootstrap style sheet-->
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
@@ -37,15 +37,19 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item body-color" ><a class="icon-link" href="">
-                    <i class="bi bi-house"></i>
-                    Home
-                </a></li>                
-                <li class="list-group-item body-color" ><a class="icon-link" href="">
-                    <i class="bi bi-gear"></i>
-                    Settings
-                </a></li>
+            <ul class="list-group list-group-flush">             
+                <li class="list-group-item body-color">
+                    <h5 class="text-light">Your books</h5>
+                    <hr>
+                    <ul class="list-group list-flush body-color">
+                        {% for safe_b_ookname, boo_k_name in books.items() %}
+                        <li class="list-group-item body-color">
+                            <a href="/{{safe_b_ookname}}_readable.json"  onmouseleave="showtitlefull(this);"  data-show="false" data-text-short="{{boo_k_name[:20]}}" data-text-full="{{boo_k_name}}" title="{{boo_k_name}}">{{boo_k_name[:20]}}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+
             </ul>
         </div>
         </div>
@@ -61,17 +65,17 @@
                         <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
                     </a>
 
-
-                    <a class="bi mb-3" data-bs-toggle="offcanvas" href="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas">
-                        <i class="bi bi-layout-sidebar h5">
-                        </i>
-                    </a>
-                    <i class="bi bi-box-arrow-up-right mb-3 h5" onclick="opengoto();"></i>
+                    <i  type="button" data-bs-toggle="offcanvas" data-bs-target="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas" class="bi bi-layout-sidebar h5">
+                    </i>
+                    <i type="button" class="bi bi-box-arrow-up-right mb-3 h5" onclick="opengoto();"></i>
                     <div class="mb-3">
-                        <i type="button" onclick="setbookmark(this);" class="bi bi-bookmark h5"></i>
+                        <i id="bookmarkicon" type="button" onclick="setbookmark();" class="bi bi-bookmark h5"></i>
                     </div>
 
                     <i type="button" onclick="open_page_origin();" class="bi bi-eye h5"></i>
+                    <a href="/settings">
+                        <i type="button" class="bi bi-gear h5"></i>
+                    </a>
                 </div>
                 <div class="d-flex flex-column justify-content-between vh-100 flex-grow-1">
                 <div class="player_container">
@@ -111,18 +115,25 @@
             </div>
 
         </div>
-        <div class="col-lg-3 col-sm-12 border border-dark vh-100 overflow-auto">
+        <div class="col-lg-3 col-sm-12 border border-dark vh-100 d-flex flex-column">
             <!--
             right side should contain the sentences data so you can rewind
             -->
-
-            <h5 id="pageindicator">current page: {{current_page}}</h5>
-            <hr>
-            <div id="sentence_scroll_container"  class="list-flush px-2">
-                <!--side indicator that shows the current pages sentences-->
-
+            <div>
+                <h5 id="pageindicator">current page: {{current_page}}</h5>
+                <hr>
             </div>
+            <div class="flex-grow-1 overflow-auto">
+                <div id="sentence_scroll_container" class="list-flush px-2 double-height">
+                <!-- side indicator that shows the current pages sentences -->
+                </div>
+            </div>
+
         </div>
+
+
+
+
     </div>
     <script src="{{url_for('static',filename='js/fuckedtts.js')}}"></script>
     <script src="{{url_for('static',filename='js/read_in_browser.js')}}"></script>
@@ -143,7 +154,7 @@
     const pause_reading_btn = document.getElementById("pause_reading_btn")
     const sentence_scroll_container = document.getElementById("sentence_scroll_container")
     const speakericon = document.getElementById("speakericon")
-
+    const bookmarkicon = document.getElementById("bookmarkicon")
 
     var test_number = 0;
 
@@ -156,13 +167,31 @@
     var gotopagedialog = document.getElementById("gotopagedialog")
     var pageindicator = document.getElementById("pageindicator")
     var previous_vol
+    var indeterminate_loader_array = ["Making audio - . . ","Making audio . - . ","Making audio . . - "]
+    var indeterminate_loader_current = 0;
+    var user_is_scrolling
+
 
     function setvolumeofspeaker(that){
         if (volume.value != 0){
             speakericon.classList.replace("bi-volume-mute","bi-volume-up")
         }
-        pageaudio.volume = that.value / 100
+        pageaudio.volume = parseInt(volume.value) / 100
     }
+
+    function inpendent_loader(){
+        // cycles the strings  . . -
+        // . - .
+        // - . .
+        if (indeterminate_loader_current == 2){
+            indeterminate_loader_current = 0;
+        }
+        else{
+            indeterminate_loader_current ++;
+        }
+        sentence_text.textContent = indeterminate_loader_array[indeterminate_loader_current]
+    }
+
 
 
     function mutereading(){
@@ -180,10 +209,10 @@
     }
 
 
-    function setbookmark(that){
+    function setbookmark(){
         // saves the current page as a bookmark, the next time you open the book it show that page on the top of the page
-        that.title = `Bookmaked page ${current_page}.`
-        that.classList.replace("bi-bookmark","bi-bookmark-fill")
+        bookmarkicon.title = `Bookmaked page ${current_page}.`
+        bookmarkicon.classList.replace("bi-bookmark","bi-bookmark-fill")
         localStorage.setItem(`${bookname}_bookmark`,current_page)
     }
 
@@ -261,6 +290,8 @@
 
     function opengoto(){
         gotopagedialog.showModal()
+        jumpto.focus()
+
     }
 
     function getPreviousPage(){
@@ -318,6 +349,8 @@
 
             thepara.textContent = sentences_[s]
             thediv.appendChild(thepara)
+
+            thediv.id = s
             sentence_scroll_container.appendChild(thediv)
         }
     }
@@ -355,6 +388,7 @@
 
 
     function jumptopage(){
+        /*jumps to the page that is currently selected in jumpto: the page input dialog*/
         var current_url = window.location.href
         console.log(current_url)
         var url_ = new URL(current_url)
@@ -390,6 +424,23 @@
             pageaudio.play()
         })
     }
+
+    function scroll_sentence_into_view(element_id){
+        var theelement = document.getElementById(element_id)
+        if (!user_is_scrolling){
+            theelement.scrollIntoView(
+            {
+                behavior:"smooth",
+                block:"start",
+                inline:"nearest"
+            }
+        )
+        }
+
+    }
+
+
+
     function extract_sentences(data){
         var local_sentence_data = data.sentence_data
         var keys = Object.keys(local_sentence_data)
@@ -415,9 +466,11 @@
         }
 
         //playVideo()
+        var inpendent_loader_timeout = setInterval(()=>{
+            inpendent_loader()
+        },500)
         var data = await make_page()
- 
-
+        clearInterval(inpendent_loader_timeout)
 
 
         setTimeout(()=>{
@@ -438,6 +491,7 @@
         for (i; i < keys.length; i++ ){
             let key = keys[i.toString()] 
             console.log("reading sentence:", sentence_data[key])
+            scroll_sentence_into_view(key)
             if (!pauseaudio){
                 // perfect place to a call sentence indicator here
                 await load_page_data(sentence_data[key])
@@ -462,14 +516,107 @@
     hidebookmarkindicator()
     set_video_source("thevideo")
 
+
+    function increase_vol(){
+        console.log("increase vol called")
+        volume.value = parseInt(volume.value) + 5
+        setvolumeofspeaker(volume)
+    }
+
+    function decrease_vol(){
+        volume.value = parseInt(volume.value) - 5
+        setvolumeofspeaker(volume)
+    }
+
     // here i am gonna map the buttons to the functions
 
 
 
+    function jumpto_bookmark(){
+        var current_bookmark = localStorage.getItem(`${bookname}_bookmark`)
+        jumpto.value = current_bookmark
+        jumptopage()
+
+    }
 
 
+    sentence_scroll_container.addEventListener("mouseenter",()=>{
+        user_is_scrolling = true
+    }
+    )
+    sentence_scroll_container.addEventListener("mouseleave",()=>{
+        user_is_scrolling = false
+    })
 
 
+    document.addEventListener("keydown",(event)=>{
+        // 
+        var the_key = event.key
+        var key_code = event.keyCode
+        console.log(the_key)
+        console.log(key_code)
+
+
+        if (the_key == " " && key_code == 32)
+        {
+            pause_reading()
+        }
+
+        if (the_key == "m"){
+            mutereading()
+        }
+
+        if (the_key == "+"){
+            increase_vol()
+        }
+
+        if (the_key == "-"){
+            decrease_vol()
+        }
+
+
+        if (the_key == "s"){
+            read_page()
+        }
+
+        if (the_key == "j")
+        {
+            event.preventDefault()
+            opengoto()
+        }
+
+
+        if (the_key == "Enter"){
+            console.log("key is enter")
+            if (document.activeElement == jumpto){
+                jumptopage()
+            }
+        }
+
+
+        if (the_key == "b"){
+
+            if (document.activeElement == jumpto){
+                jumpto_bookmark()
+            }
+            else{
+                setbookmark()
+            }
+        }
+
+
+        if (the_key == "p"){
+            getPreviousPage()
+        }
+
+
+        if (the_key == "n"){
+            getNextPage()
+        }
+
+    })
+
+    jumpto.value = current_page
     </script>
 
 

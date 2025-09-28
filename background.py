@@ -272,6 +272,9 @@ def open_book_origin(book):
 def read_book_(book):
     # load the page of the book, return it as list
     page_data,available = return_cache(book,basepath=BASE_PATH)
+    from helpers.book_converter import get_booknames
+    books = get_booknames(basepath=BASE_PATH)
+
     if not available:
         return "book was not converted before"
     current_page = request.args.get("page","0")
@@ -280,7 +283,7 @@ def read_book_(book):
         current_page +=1
         current_page = str(current_page)
 
-    return render_template("readpage_v2.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=get_booknames(basepath=BASE_PATH).get(book.removesuffix("_readable.json")))
+    return render_template("readpage_v2.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
 
 
 

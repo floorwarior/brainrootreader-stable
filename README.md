@@ -45,7 +45,24 @@ python3 -m background.py
 ![This is what that looks like](./examples/homepage.png)
 
 - upload the book you want to listen to and start listening or converting
-![Listening](./examples/listeningtoabook.png)
+![Listening](./examples/brr_readingpage.png)
+
+# Controlls on Read book page:
+| Button | Controlls: |
+| :----- | ----: | 
+| s | start reading page  |
+| space | pause/continue reading page, will not start the page if there was no s pressed previously |
+| n | next page |
+| p | previous page |
+| b | bookmark page |
+| j then b | jump to bookmarked page |
+| j | open jump to dialog |
+| + | increase volume |
+| - | decrease volume |
+| m | mute/unmute reading |
+
+
+
 
 # What can i convert with BRR?
 | Filetype              | Can it convert | Limitations |
@@ -55,6 +72,7 @@ python3 -m background.py
 | Pdf ( made from images )           |   Yes [X]   | you first have to convert the pages into images then convert this to a zip file |
 | Zip ( from images of old books )    |  Can, but not reliable [X]   | Bad Image quality, Bad lighting, Shadows, Wrinkles |
 | Txt (simple .txt files ) | Yes [X] | Should be okay to use for videos as long as you check if the voice can be used in such fashion |
+| Docx | Yes [X] | same as epub | 
 
 ## Tips for zip:
     - you want to first take a picture of every page of a book.
