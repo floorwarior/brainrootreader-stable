@@ -27,8 +27,12 @@ from ebooklib import epub
 import zipfile
 import PIL 
 import pytesseract
-import TTS
-from TTS.api import TTS
+# import TTS 
+# install it first, the orginal version have soem bugs this fork is maintained
+# git clone https://github.com/idiap/coqui-ai-TTS
+# cd coqui-ai-TTS
+# pip install -e .
+# from TTS.api import TTS
 import docx
 # -- -- -- -- -- -- -- 
 

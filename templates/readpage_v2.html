@@ -58,20 +58,20 @@
                 <!--containes  the side line and the the play itself-->
                 <div class="d-flex d-none d-md-flex flex-column flex-shrink-0 text-white p-3 body-color border-end border-dark gap-3" style="width: 60px; height: 100vh;">
                     <a class="navbar-brand" href="/">
-                        <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
+                        <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
                     </a>
 
 
                     <a class="bi mb-3" data-bs-toggle="offcanvas" href="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas">
-                        <i class="bi bi-layout-sidebar">
+                        <i class="bi bi-layout-sidebar h5">
                         </i>
                     </a>
-                    <i class="bi bi-box-arrow-up-right mb-3" onclick="opengoto();"></i>
+                    <i class="bi bi-box-arrow-up-right mb-3 h5" onclick="opengoto();"></i>
                     <div class="mb-3">
-                        <i type="button" onclick="setbookmark(this);" class="bi bi-bookmark"></i>
+                        <i type="button" onclick="setbookmark(this);" class="bi bi-bookmark h5"></i>
                     </div>
 
-                    <i type="button" onclick="open_page_origin();" class="bi bi-eye"></i>
+                    <i type="button" onclick="open_page_origin();" class="bi bi-eye h5"></i>
                 </div>
                 <div class="d-flex flex-column justify-content-between vh-100 flex-grow-1">
                 <div class="player_container">
@@ -94,15 +94,15 @@
                 </div>
                     <div>
                         <div class="d-flex justify-content-between px-4 py-2 border-top border-dark" id="controlls">
-                            <i class="bi bi-chevron-left" onclick="getPreviousPage()"></i>
-                            <i class="bi bi-play" onclick="read_page();" ></i>
-                            <i class="bi bi-chevron-right" onclick="getNextPage()" ></i>
-                            <i id="pause_reading_btn" class="bi bi-pause" onclick="pause_reading();"></i>
+                            <i type="button" class="bi bi-chevron-left h5" onclick="getPreviousPage()"></i>
+                            <i type="button" class="bi bi-play h5" onclick="read_page();" ></i>
+                            <i type="button" class="bi bi-chevron-right h5" onclick="getNextPage()" ></i>
+                            <i type="button" id="pause_reading_btn" class="bi bi-pause h5" onclick="pause_reading();"></i>
                             <div class="d-flex justify-content-between">
-                                <i onclick="mutereading();" class="bi bi-volume-up px-3"></i>
-                                <input class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
+                                <i type="button" id="speakericon" onclick="mutereading(this);" class="bi bi-volume-up px-3 h5"></i>
+                                <input  class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
                             </div>
-                            <i class="bi bi-box-arrow-up-right" onclick="opengoto();"></i>
+                            <i type="button" class="bi bi-box-arrow-up-right h5" onclick="opengoto();"></i>
                         </div>
                 </div>
 
@@ -142,6 +142,9 @@
     const thevideo = document.getElementById("thevideo")
     const pause_reading_btn = document.getElementById("pause_reading_btn")
     const sentence_scroll_container = document.getElementById("sentence_scroll_container")
+    const speakericon = document.getElementById("speakericon")
+
+
     var test_number = 0;
 
     var jumpto = document.getElementById("jumpto")
@@ -152,10 +155,28 @@
     var pageaudio =document.getElementById("pageaudio")
     var gotopagedialog = document.getElementById("gotopagedialog")
     var pageindicator = document.getElementById("pageindicator")
-
+    var previous_vol
 
     function setvolumeofspeaker(that){
+        if (volume.value != 0){
+            speakericon.classList.replace("bi-volume-mute","bi-volume-up")
+        }
         pageaudio.volume = that.value / 100
+    }
+
+
+    function mutereading(){
+        //mutes the reading or unmutes
+        if (volume.value == 0){
+            volume.value = previous_vol
+            speakericon.classList.replace("bi-volume-mute","bi-volume-up")
+        }
+        else{
+            previous_vol = volume.value
+            volume.value = 0
+            speakericon.classList.replace("bi-volume-up","bi-volume-mute")
+        }
+        setvolumeofspeaker(volume)
     }
 
 
@@ -440,6 +461,15 @@
     getlastvisited()
     hidebookmarkindicator()
     set_video_source("thevideo")
+
+    // here i am gonna map the buttons to the functions
+
+
+
+
+
+
+
     </script>
 
 

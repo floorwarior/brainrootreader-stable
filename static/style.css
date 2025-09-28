@@ -48,7 +48,7 @@ body{
     padding-right: 5px;
     padding-left: 5px;
     background-color: hsl(0, 0%, 33%,25%);
-    height: 80px;
+    height: 100px;
     overflow: auto;
 
 }

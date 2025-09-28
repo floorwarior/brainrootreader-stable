@@ -25,7 +25,7 @@ class OpenBooksFile():
     def open_file(self):
         filepath = "file:///" + os.path.join(self.uploads_folder, self.bookname).replace("\\", "/") + f"#page={self.page}"
         print("attempting to open:",filepath)
-        webbrowser.open(filepath, page=self.page)
+        webbrowser.open(filepath)
         # NOTE: This does not appear to open to book to the correct page unfortunatly, if you have an idea or code to fix this make a pull request
 
 if __name__ == "__main__":

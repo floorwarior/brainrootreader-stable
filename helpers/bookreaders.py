@@ -359,6 +359,7 @@ readers = {
     "PiperReader":PiperReader,
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
+    "CoquiReader":CoquiReader
 }
 
 if __name__ == "__main__":
