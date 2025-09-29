@@ -39,9 +39,11 @@ body{
     color: whitesmoke;
     padding-right: 5px;
     padding-left: 5px;
-    background-color: hsl(0, 0%, 33%,25%);
+    background-color:#1f1f1f;
     height: 100px;
+    font-size: 1.2rem;
     overflow: auto;
+    font-family: sans-serif;
 
 }
 
