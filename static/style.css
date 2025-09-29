@@ -18,6 +18,11 @@ body{
     background-color:  rgb(24, 24, 24);
 }
 
+#statedisplay{
+    height:20px
+}
+
+
 
 .parent-container {
     position: relative;

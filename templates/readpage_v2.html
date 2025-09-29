@@ -65,16 +65,16 @@
                         <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
                     </a>
 
-                    <i  type="button" data-bs-toggle="offcanvas" data-bs-target="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas" class="bi bi-layout-sidebar h5">
+                    <i title="opens the left-sidebar" type="button" data-bs-toggle="offcanvas" data-bs-target="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas" class="bi bi-layout-sidebar h5">
                     </i>
-                    <i type="button" class="bi bi-box-arrow-up-right mb-3 h5" onclick="opengoto();"></i>
+                    <i title="opens the jump to dialog: button j" type="button" class="bi bi-box-arrow-up-right mb-3 h5" onclick="opengoto();"></i>
                     <div class="mb-3">
-                        <i id="bookmarkicon" type="button" onclick="setbookmark();" class="bi bi-bookmark h5"></i>
+                        <i title="bookmark page: button b" id="bookmarkicon" type="button" onclick="setbookmark();" class="bi bi-bookmark h5"></i>
                     </div>
 
-                    <i type="button" onclick="open_page_origin();" class="bi bi-eye h5"></i>
+                    <i title="opens the origin of the current page, only works with pdf : button o" type="button" onclick="open_page_origin();" class="bi bi-eye h5"></i>
                     <a href="/settings">
-                        <i type="button" class="bi bi-gear h5"></i>
+                        <i title="opens the settings page" type="button" class="bi bi-gear h5"></i>
                     </a>
                 </div>
                 <div class="d-flex flex-column justify-content-between vh-100 flex-grow-1">
@@ -94,19 +94,22 @@
                     <video id="thevideo" class="cover-page-video" autoplay loop muted src="{{url_for('static',filename='videos/dancingskeletons.mp4')}}"></video>
                     <div class="container">
                         <p class="subtitle" id="pagedata"></p>
+                        <div class="text-center">
+                            <p id="statedisplay"></p>
+                        </div>
                     </div>
                 </div>
                     <div>
                         <div class="d-flex justify-content-between px-4 py-2 border-top border-dark" id="controlls">
-                            <i type="button" class="bi bi-chevron-left h5" onclick="getPreviousPage()"></i>
-                            <i type="button" class="bi bi-play h5" onclick="read_page();" ></i>
-                            <i type="button" class="bi bi-chevron-right h5" onclick="getNextPage()" ></i>
-                            <i type="button" id="pause_reading_btn" class="bi bi-pause h5" onclick="pause_reading();"></i>
+                            <i type="button" title="previous page: button p" class="bi bi-chevron-left h5" onclick="getPreviousPage()"></i>
+                            <i type="button" title="start reading page: button s " class="bi bi-play h5" onclick="read_page();" ></i>
+                            <i type="button" title="next page: button n" class="bi bi-chevron-right h5" onclick="getNextPage()" ></i>
+                            <i type="button" title="pause/continue page: button space" id="pause_reading_btn" class="bi bi-pause h5" onclick="pause_reading();"></i>
                             <div class="d-flex justify-content-between">
-                                <i type="button" id="speakericon" onclick="mutereading(this);" class="bi bi-volume-up px-3 h5"></i>
-                                <input  class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
+                                <i title="mute page: button m" type="button" id="speakericon" onclick="mutereading(this);" class="bi bi-volume-up px-3 h5"></i>
+                                <input title="audio range elem: buttons increase +, decrease -" class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
                             </div>
-                            <i type="button" class="bi bi-box-arrow-up-right h5" onclick="opengoto();"></i>
+                            <i title="open jump to page dialog: button j" type="button" class="bi bi-box-arrow-up-right h5" onclick="opengoto();"></i>
                         </div>
                 </div>
 
@@ -155,6 +158,7 @@
     const sentence_scroll_container = document.getElementById("sentence_scroll_container")
     const speakericon = document.getElementById("speakericon")
     const bookmarkicon = document.getElementById("bookmarkicon")
+    const statedisplay = document.getElementById("statedisplay")
 
     var test_number = 0;
 
@@ -170,6 +174,7 @@
     var indeterminate_loader_array = ["Making audio - . . ","Making audio . - . ","Making audio . . - "]
     var indeterminate_loader_current = 0;
     var user_is_scrolling
+    var setstatedisplay_timeout
 
 
     function setvolumeofspeaker(that){
@@ -198,11 +203,13 @@
         //mutes the reading or unmutes
         if (volume.value == 0){
             volume.value = previous_vol
+            setstatedisplay("[ unmuted ]",false,2000)
             speakericon.classList.replace("bi-volume-mute","bi-volume-up")
         }
         else{
             previous_vol = volume.value
             volume.value = 0
+            setstatedisplay("[ muted ]",false,2000)
             speakericon.classList.replace("bi-volume-up","bi-volume-mute")
         }
         setvolumeofspeaker(volume)
@@ -213,9 +220,9 @@
         // saves the current page as a bookmark, the next time you open the book it show that page on the top of the page
         bookmarkicon.title = `Bookmaked page ${current_page}.`
         bookmarkicon.classList.replace("bi-bookmark","bi-bookmark-fill")
+        setstatedisplay("[ bookmarked ]",false,3000)
         localStorage.setItem(`${bookname}_bookmark`,current_page)
     }
-
     function getlastvisited(){
         // set the last visited page in the top
         var pagevisited = localStorage.getItem(bookname)
@@ -245,12 +252,32 @@
     }
 
 
-
+    function setstatedisplay(text,permanent,dissapearin=5){
+        // example usage
+        // setstatedisplay("[ paused ]",true)
+        try{
+            clearTimeout(setstatedisplay_timeout)
+        }
+        catch{
+            console.log("was not scheduled previously")
+        }
+        if (permanent == true){
+            statedisplay.textContent = text
+        }
+        else{
+            statedisplay.textContent = text
+            setstatedisplay_timeout =  setTimeout(()=>{
+                statedisplay.textContent = ""
+            },dissapearin)
+        }
+    }
 
 
     function pause_reading(){
         if (!pageaudio.paused){
             pageaudio.pause()
+            // adding visual here
+            setstatedisplay("[ paused ]",permanent=true)
             if (player){
                 pauseVideo()
             }
@@ -258,14 +285,13 @@
 
         }
         else{
+            setstatedisplay("[ play ]",permanent=false,dissapearin=5000)
             pageaudio.play()
             if (player){
                 playVideo()
             }
             thevideo.play()
-
-        }
-        
+        }        
     }
 
 
@@ -466,13 +492,13 @@
         }
 
         //playVideo()
+        setstatedisplay("[ generating audio ]",true)
         var inpendent_loader_timeout = setInterval(()=>{
             inpendent_loader()
         },500)
         var data = await make_page()
         clearInterval(inpendent_loader_timeout)
-
-
+        setstatedisplay("[ play ]",false,2000)
         setTimeout(()=>{
             console.log("second make page is running.")
             make_page(Number(current_page)+1)
@@ -612,6 +638,11 @@
 
         if (the_key == "n"){
             getNextPage()
+        }
+
+
+        if (the_key == "o"){
+            open_page_origin()
         }
 
     })

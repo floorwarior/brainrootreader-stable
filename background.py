@@ -266,7 +266,7 @@ def open_book_origin(book):
     page = request.args.get("page",0)
     from helpers.openorigin import OpenBooksFile
     res = OpenBooksFile(base_path=BASE_PATH,bookname=book,page=page).open_file()
-    return res
+    return jsonify({"success":res})
 
 @app.route("/<book>")
 def read_book_(book):
