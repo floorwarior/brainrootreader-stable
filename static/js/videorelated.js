@@ -5,7 +5,10 @@ function change_default_video(that){
 
 function set_video_source(elem_id){
     var elem = document.getElementById(elem_id)
-    var video_link = localStorage.getItem("prefered-video")
+    var video_link = localStorage.getItem("prefered-video",) 
+    if (!video_link){
+        video_link = "./static/videos/spinningfish.mp4"
+    }
 
     if (video_link[0] === "."){
         elem.id = ""
@@ -25,6 +28,8 @@ function set_video_source(elem_id){
        
         new_elem.id = "thevideo"
         new_elem.setAttribute("src",video_link)
-        elem.replaceWith(new_elem) 
+        elem.replaceWith(new_elem)
     }
+    thevideo = new_elem
 }
+

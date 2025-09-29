@@ -153,7 +153,7 @@
     const sentence_text = document.getElementById("pagedata")
     var current_page = {{current_page|tojson}}
     const bookname = {{bookname|tojson}}
-    const thevideo = document.getElementById("thevideo")
+    var thevideo = document.getElementById("thevideo")
     const pause_reading_btn = document.getElementById("pause_reading_btn")
     const sentence_scroll_container = document.getElementById("sentence_scroll_container")
     const speakericon = document.getElementById("speakericon")
@@ -317,6 +317,7 @@
     function opengoto(){
         gotopagedialog.showModal()
         jumpto.focus()
+        jumpto.select()
 
     }
 
@@ -560,11 +561,10 @@
 
     function jumpto_bookmark(){
         var current_bookmark = localStorage.getItem(`${bookname}_bookmark`)
-        jumpto.value = current_bookmark
+        jumpto.value = current_bookmark ? current_bookmark : 0
         jumptopage()
 
     }
-
 
     sentence_scroll_container.addEventListener("mouseenter",()=>{
         user_is_scrolling = true
@@ -575,8 +575,10 @@
     })
 
 
-    document.addEventListener("keydown",(event)=>{
+    window.addEventListener("keypress",(event)=>{
         // 
+
+
         var the_key = event.key
         var key_code = event.keyCode
         console.log(the_key)
