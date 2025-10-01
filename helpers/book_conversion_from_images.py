@@ -10,6 +10,16 @@ import json
 from helpers.book_converter import update_booknames
 from helpers.thepanic import Pan as pan
 
+def _warn_user(*args,**kwargs):
+    """warns the users on how to install the missing dependecies"""
+    #error = kwargs.get("error")
+    return """the conversion in testimage failed, the most likely reason is that you do not have tesseract installed,
+        you can also check your path, to see if the default path is correct,
+        if tesseract is not installed you can follow the dependecies part of the ./README.md file to solve this issue.
+    """
+
+pan.register_handler("warn_user",_warn_user)
+
 class ConvertFromImages():
     """takes a zip file as its argument, the file should be located in the uploads folder"""
 
@@ -41,6 +51,7 @@ class ConvertFromImages():
         print("cleared tmp of zip")
 
     @staticmethod
+    @pan.panic(on_panic="warn_user",class_method=False)
     def test_one(tesseractlocation=r"C:/Program Files/Tesseract-OCR/tesseract.exe",filename="testimage.jpg",lang="eng"):
         """converts one page randomly so we can see what it looks like"""
         pytesseract.pytesseract.tesseract_cmd = tesseractlocation
@@ -50,7 +61,6 @@ class ConvertFromImages():
         text = pytesseract.image_to_string(img_grayed, lang=lang)
         print("After Conversion: ",text)
         return text
-
 
     def conversion_fail(self,*args,**kwargs):
         if self._on_conversion_fail:

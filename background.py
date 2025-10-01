@@ -183,7 +183,9 @@ def test_image_quality():
             img.save(dst=location)
             from helpers.book_conversion_from_images import ConvertFromImages
             t = ConvertFromImages.test_one(filename=location,lang="hun")
-            return t
+            return f"<p>{t}</p>"
+        
+        
     return render_template("testimage.html")
 
 

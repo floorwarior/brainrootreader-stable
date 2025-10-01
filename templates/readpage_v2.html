@@ -31,7 +31,7 @@
         <!--
         contains the side panel that can be toggled off or on
         -->
-        <div class="offcanvas offcanvas-start body-color" tabindex="-1" id="brainrootoffcanvas" aria-labelledby="offcanvasExampleLabel">
+        <div class="offcanvas offcanvas-start body-color" tabindex="-1" id="brainrootoffcanvas" aria-label="left side panel">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title text-light text-center" >Menu</h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -41,7 +41,7 @@
                 <li class="list-group-item body-color">
                     <h5 class="text-light">Your books</h5>
                     <hr>
-                    <ul class="list-group list-flush body-color">
+                    <ul class="list-group list-group-flush body-color">
                         {% for safe_b_ookname, boo_k_name in books.items() %}
                         <li class="list-group-item body-color">
                             <a href="/{{safe_b_ookname}}_readable.json"  onmouseleave="showtitlefull(this);"  data-show="false" data-text-short="{{boo_k_name[:20]}}" data-text-full="{{boo_k_name}}" title="{{boo_k_name}}">{{boo_k_name[:20]}}</a>
@@ -49,7 +49,12 @@
                         {% endfor %}
                     </ul>
                 </li>
-
+                <li class="list-group-item body-color">
+                    <a href="{{url_for('add_video')}}">Add video</a>
+                </li>
+                <li class="list-group-item body-color">
+                    <a href="{{url_for('test_image_quality')}}">Test image quality</a>
+                </li>
             </ul>
         </div>
         </div>

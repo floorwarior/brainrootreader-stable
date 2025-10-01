@@ -1,4 +1,11 @@
 # How to start using BRR (Brain Root Reader)?
+## For everyday users:
+- first you need to install the [dependencies](#dependencies).
+- once you have the dependencies go to the [releases](https://github.com/floorwarior/brainrootreader-stable/releases/latest) page, look for assets, download the installer exe, **install on your/path/you/Desktop**, this is important.
+- run BRR, it will open a console window, which when closed will stop the app.
+- [when BRR is running](#once-brr-is-running)
+
+## For developers:
 ```
 
 # clone the project: 
@@ -23,10 +30,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # run the background.py file on windows:
-python.exe background.py #if you want a more portable build (exe), you want to look at the [releases](https://github.com/floorwarior/brainrootreader-stable/releases)
+python.exe background.py #if you want a more portable build (exe), you want to look at the [releases](https://github.com/floorwarior/brainrootreader-stable/releases/latest)
 
 # run the backgroun.py file on linux:
-python3 -m background.py
+python3 background.py
 
 ```
 # Dependencies:
@@ -47,8 +54,8 @@ python3 -m background.py
 - upload the book you want to listen to and start listening or converting
 ![Listening](./examples/brr_readingpage.png)
 
-# Controlls on Read book page:
-| Button | Controlls: |
+# Controls on Read book page:
+| Button | Controls: |
 | :----- | ----: | 
 | s | start reading page  |
 | space | pause/continue reading page, will not start the page if there was no s pressed previously |
@@ -70,7 +77,7 @@ python3 -m background.py
 | Epub ( should pretty much always work )        |   Yes [X]   | No image/diagram/table conversion |
 | Pdf ( true pdf not image )        |   Yes [X]   | same as epub |
 | Pdf ( made from images )           |   Yes [X]   | you first have to convert the pages into images then convert this to a zip file |
-| Zip ( from images of old books )    |  Can, but not reliable [X]   | Bad Image quality, Bad lighting, Shadows, Wrinkles |
+| Zip ( from images of old books )    |  Yes [X], but not reliable   | Bad Image quality, Bad lighting, Shadows, Wrinkles |
 | Txt (simple .txt files ) | Yes [X] | Should be okay to use for videos as long as you check if the voice can be used in such fashion |
 | Docx | Yes [X] | same as epub | 
 
@@ -80,11 +87,15 @@ python3 -m background.py
     - take the pictures in good lighting
     - after this you will have to zip this whole folder, NOTE that your zip's name is going to be used as the name of the book after conversion.
 
+# How to add different videos?
+- you can add either use local videos ( mp4, webm ), or video links from youtube, you can add them [here](http://localhost/addvideo)
+
+
 # How to add new voice models?
 ## There are a few different ways to do it:
 - to sample the voices you can checkout this [link](https://rhasspy.github.io/piper-samples/) you can either download one from there and place the files inside the readers models folder in this case: [pipermodels](./pipermodels/)
 
-- alternativly you can try the built in downloader [VoiceBag](http://localhost:5003/voicebag) if you combaine these 2, you can sample the voice and then look for its name on the right:
+- alternativly you can try the built in downloader [VoiceBag](http://localhost:5003/voicebag) if you combine these 2, you can sample the voice and then look for its name on the right:
 
 ![find a voice you like](./examples/pipersvoicepage.png)
 
@@ -94,7 +105,7 @@ python3 -m background.py
 ![VoicebagPage](./examples/localvoicebag.png):
 
 
-- if you are more confident in your skills you can look dirrectly [here](https://huggingface.co/rhasspy/piper-voices/tree/main)
+- if you are more confident in your skills you can look directly [here](https://huggingface.co/rhasspy/piper-voices/tree/main)
 
 after you got your model you need to select it in the [settings](http://localhost:5003/settings), for your reader
 
@@ -117,6 +128,9 @@ in the [globalvoicemodelsettings](./readerconfigs/globalreader.json)
     "comment4": "We set the correct order for the readers, the default selected reader is PiperReader, and in the worst case we use the Browser Reader which should always be available"
 }
 ```
+
+
+
 
 # How to add my own reader?
 your reader should subclass [BaseReader_in_bookreaders.py](./helpers/bookreaders.py)

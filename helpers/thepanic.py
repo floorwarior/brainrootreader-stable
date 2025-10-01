@@ -8,6 +8,38 @@ class PanTheGuyofPanics():
         pan.logger.setLevel(logging.INFO)
         handler = logging.FileHandler(logfiles_name)
         pan.logger.addHandler(handler)
+        pan.attached = {}
+
+
+    def register_handler(pan,name_of_func,func):
+        """if you are using a modul scoped function as handler, you need to register it otherwise it will not be found,
+            example
+            ```
+            # in the submodul somemodul
+
+            def example_handler(*args,**kwargs):
+                print(kwargs.get("error"))
+
+            pan.register_handler('example_handler',example_handler)
+
+
+            ### then later
+            class Dummy():
+            
+                def __init__(self,name):
+                    self.name =  name
+
+                @staticmethod
+                @pan.panic(on_panic="example_handler",class_method=False)
+                def raise_example_Error(self): 
+                    raise BaseException("this is an example")
+            ```
+
+            if you would to import the class, and the event \n was not registered, panic would not find
+            your handler, even if it was imported alongside the class, thats why we need to register it
+        """
+        pan.attached[name_of_func] = func
+
 
     def panic(pan,on_panic,class_method=False):
         def decorator(func):
@@ -15,15 +47,24 @@ class PanTheGuyofPanics():
                 try:
                     return func(*args,**kwargs)
                 except Exception as e:
+                    traceback.print_exc()
                     print(f"""**Thank you for chosing Panic** you choose this function to handle the panic: {on_panic}""")
                     print(f"we caught this error for you:", e)
-                    traceback.print_exc()
+                    print("these values were passed:")
+                    for i,a in enumerate(args):
+                        print(f"i:{i}", a)
+                    for key,val in kwargs.items():
+                        print(f"key: {key}, value: {val}")
+
+                    
                     pan.logger.info(e)
                     if class_method:
-                        return args[0].__getattribute__(on_panic)(error=e)
+                        return args[0].__getattribute__(on_panic)(*args,error=e,**kwargs)
                     else:
                         if on_panic in globals():
                             panic_handler = globals()[on_panic]
+                        elif on_panic in pan.attached:
+                            return pan.attached[on_panic](*args,error=e,**kwargs)
                         else:
                             import builtins
                             panic_handler = getattr(builtins,on_panic)
