@@ -60,21 +60,42 @@
             -->
             <div class="d-flex">
                 <!--containes  the side line and the the play itself-->
-                <div class="d-flex d-none d-md-flex flex-column flex-shrink-0 text-white p-3 body-color border-end border-dark gap-3" style="width: 60px; height: 100vh;">
-                    <a class="navbar-brand" href="/">
-                        <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
+                <div class="d-flex d-none d-md-flex flex-column flex-shrink-0 text-white p-3 body-color border-end border-dark gap-4" style="width: 60px; height: 100vh;">
+                    <a title="home button" aria-label="home button" class="navbar-brand" href="/">
+                        <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="app icon, its a brain with roots at the bottom," width="30" height="30" class="d-inline-block align-text-top">
                     </a>
-
-                    <i title="opens the left-sidebar" type="button" data-bs-toggle="offcanvas" data-bs-target="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas" class="bi bi-layout-sidebar h5">
-                    </i>
-                    <i title="opens the jump to dialog: button j" type="button" class="bi bi-box-arrow-up-right mb-3 h5" onclick="opengoto();"></i>
-                    <div class="mb-3">
-                        <i title="bookmark page: button b" id="bookmarkicon" type="button" onclick="setbookmark();" class="bi bi-bookmark h5"></i>
-                    </div>
-
-                    <i title="opens the origin of the current page, only works with pdf : button o" type="button" onclick="open_page_origin();" class="bi bi-eye h5"></i>
-                    <a href="/settings">
-                        <i title="opens the settings page" type="button" class="bi bi-gear h5"></i>
+                    <button
+                        aria-label="button for opening the left-sidebar"
+                        title="opens the left-sidebar"
+                        class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                        data-bs-toggle="offcanvas" data-bs-target="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas">
+                        <i class="bi bi-layout-sidebar h5"></i>
+                    </button>
+                    <button
+                        aria-label="opens the jump to dialog: button j"
+                        title="opens the jump to dialog: button j"
+                        onclick="opengoto();"
+                        class="btn p-0 border-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                    >
+                        <i class="bi bi-box-arrow-up-right h5"></i>
+                    </button>
+                    <button
+                        class="btn p-0 border-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                        aria-label="bookmark page: button b"
+                        title="bookmark page: button b"
+                        onclick="setbookmark();"
+                    >
+                        <i id="bookmarkicon" class="bi bi-bookmark h5"></i>
+                    </button>
+                    <button
+                        class="btn p-0 border-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                        aria-label="opens the origin of the current page, only works with pdf : button o"
+                        title="opens the origin of the current page, only works with pdf : button o"
+                        onclick="open_page_origin();">
+                        <i  class="bi bi-eye h5"></i>
+                    </button>
+                    <a class="p-0 text-center" href="/settings">
+                        <i aria-label="opens the settings page" title="opens the settings page" type="button" class="bi bi-gear h5"></i>
                     </a>
                 </div>
                 <div class="d-flex flex-column justify-content-between vh-100 flex-grow-1">
@@ -100,16 +121,43 @@
                     </div>
                 </div>
                     <div>
-                        <div class="d-flex justify-content-between px-4 py-2 border-top border-dark" id="controlls">
-                            <i type="button" title="previous page: button p" class="bi bi-chevron-left h5" onclick="getPreviousPage()"></i>
-                            <i type="button" title="start reading page: button s " class="bi bi-play h5" onclick="read_page();" ></i>
-                            <i type="button" title="next page: button n" class="bi bi-chevron-right h5" onclick="getNextPage()" ></i>
-                            <i type="button" title="pause/continue page: button space" id="pause_reading_btn" class="bi bi-pause h5" onclick="pause_reading();"></i>
+                        <div aria-label="bottom control panel" class="d-flex justify-content-between px-4 py-2 border-top border-dark" id="controls">
+                            <button
+                                class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                                aria-label="previous page: button p" title="previous page: button p" onclick="getPreviousPage()"
+                            >
+                            <i class="bi bi-chevron-left h5"></i>
+                            </button>
+                            <button
+                                class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                                aria-label="start reading page: button s" title="start reading page: button s" onclick="read_page();" 
+                            >
+                            <i  class="bi bi-play h5"></i>
+                            </button>
+                            <button
+                                class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                            aria-label="next page: button n" title="next page: button n" onclick="getNextPage()">
+                                <i class="bi bi-chevron-right h5" ></i>
+                            </button>
+                            <button
+                                class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                                aria-label="pause/continue page: button space" title="pause/continue page: button space" id="pause_reading_btn" onclick="pause_reading();">
+                                <i class="bi bi-pause h5" ></i>
+                            </button>
                             <div class="d-flex justify-content-between">
-                                <i title="mute page: button m" type="button" id="speakericon" onclick="mutereading(this);" class="bi bi-volume-up px-3 h5"></i>
-                                <input title="audio range elem: buttons increase +, decrease -" class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
+                                <button
+                                    class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                                    aria-label="mute page: button m" title="mute page: button m" type="button" id="speakericon" onclick="mutereading();"
+                                >
+                                    <i class="bi bi-volume-up px-3 h5"></i>
+                                </button>
+                                <input aria-label="audio range elem: buttons increase +, decrease -" title="audio range elem: buttons increase +, decrease -" class="form-range" id="volume" name="volume" min="0" max="100" value="100" step="5" onchange="setvolumeofspeaker(this)" type="range">
                             </div>
-                            <i title="open jump to page dialog: button j" type="button" class="bi bi-box-arrow-up-right h5" onclick="opengoto();"></i>
+                            <button
+                                class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                                aria-label="open jump to page dialog: button j" title="open jump to page dialog: button j" type="button" onclick="opengoto();">
+                                <i class="bi bi-box-arrow-up-right h5"></i>
+                            </button>
                         </div>
                 </div>
 

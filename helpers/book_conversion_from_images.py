@@ -66,11 +66,11 @@ class ConvertFromImages():
 
         page_data = {} 
         pages = os.listdir(self.tmp_folder)
-
+        from PIL import Image,ImageOps
         pytesseract.pytesseract.tesseract_cmd = r"C:/Program Files/Tesseract-OCR/tesseract.exe"
         for i ,page in enumerate(pages):
             print(f"processing image {i}")
-            from PIL import Image,ImageOps
+            
             img = Image.open(os.path.join(self.tmp_folder,page))
             img_gray = ImageOps.grayscale(img) 
             text = pytesseract.image_to_string(img_gray, lang=self.book_lang)

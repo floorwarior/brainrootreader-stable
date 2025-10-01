@@ -56,6 +56,7 @@ class ConvertFromPdf():
         stripped_name = self.pdf_name
         for i,page in enumerate(book_data.pages):
             text = page.extract_text()
+            # probably gonna add image extraction here
             if text != "":
                 temp[i] = text
         books_json_path =os.path.join(self.base_path,static_folder,books_folder,f"{safe_name}_readable.json") 

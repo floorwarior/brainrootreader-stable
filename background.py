@@ -258,7 +258,6 @@ def convert_book_to_audio(book):
 def open_book_origin(book):
     """so far this will only ever work with pdfs tracking pages in other formats is rather hard and annoying. Not to mention that i would have to have a way to open them reliably
     without knowing what system apps are installed
-
     Opens the book to a certain page when reading, this should be helpfull when you want to looks at some diagramm or image, while listening
     """
     if book == None:
