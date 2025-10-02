@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Root Reader</title>
+    
+    <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
+    <!--bootstrap style sheet-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='bootstrap/icons/bootstrap-icons.css')}}">
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+</head>
+<body class="px-2">
+    <dialog id="deletebook" aria-label="delete book dailog, has 3 iteractive items a close, cancel, and yes which is a link" class="bg-dark text-light">
+        <div class="container">
+            <button type="button" class="btn-close float-end bg-dark text-light" onclick="closedeletebookdialog();" aria-label="Close"></button>
+            <h2 id="booktodeletetitle">Are you sure you want to delete this book? THEBOOK?</h2>
+            <div class="d-flex gap-2">
+                <button onclick="closedeletebookdialog();" class="btn btn-outline-light">cancel</button>
+                <a id="booktodelete" class="btn btn-outline-light" href="/deletebook/{{book_page}}_readable.json" >yes</a>
+            </div>
+        </div>
+    </dialog>
+    <div class="d-flex">
+        <div class="d-flex d-none d-md-flex flex-column flex-shrink-0 text-white p-3 body-color border-end border-dark gap-4" style="width: 60px; height: 100vh;">
+            <a title="home button" aria-label="home button" class="navbar-brand" href="/">
+                <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="app icon, its a brain with roots at the bottom," width="30" height="30" class="d-inline-block align-text-top">
+            </a>
+            <a class="p-0 text-center" href="/settings">
+                <i aria-label="opens the settings page" title="opens the settings page" type="button" class="bi bi-gear h5"></i>
+            </a>
+        </div>
+        <div class="d-flex body-color p-3 flex-shrink-1 flex-grow-1 h-100">
+            <div class="row w-100">
+                <div class="col-12">
+                    <div class="row w-100">
+                        <div class="col-lg-6 col-sm-12 border border-dark">
+                            <!--
+                            contains the drop zone and the dropzones image
+                            -->
+                            
+                            <form id="theform" class="body-color text-light" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
+                                    <label for="book" class="from-label text-light h2" >
+                                        <img id="dropzone" src="/static/doctojsonwhite.png" style="width: 50%" alt="">
+                                    </label>
+                                    <input class="form-control" name="book" id="book" title="this is the input field for uploading files to BRR, you can use o to open this in the future" required  type="file">
+                            </form>
+                                                    
+                        </div>
+                        <div class="col-lg-6 col-sm-12 border border-dark">
+                            <div class="d-flex flex-column justify-content-between gap-5 h-100">
+                                <p class="h4 mt-3">Drop or select the document you want to convert to readable.json</p>
+                                <p id="items_selected" class="h4"></p>
+                                <div class="d-flex justify-content-around mb-4">
+                                    <button onclick="clearfile()" class="btn btn-outline-light mb-3">clear</button>
+                                    <button onclick="submitform()" class="btn btn-outline-light mb-3">convert</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>                    
+                </div>
+                <div class="col-12 overflow-auto">
+                    <h2 class="text-center fw-bold">Your books</h2>
+                    <ul class="list-group list-group-flush body-color overflow-auto" style="max-height:400px">
+                        {% for safe_bookname,book_name in books.items() %}
+                        <li class="list-group-item body-color text-light">
+                            <div class="d-flex body-color justify-content-between flex-wrap ">
+                                <p title="{{book_name}}" class="body-color text-wrap">{{book_name[:45]}}</p>
+                                <div class="d-flex body-color text-light justify-content-around gap-5">
+                                    <a class="body-color d-flex align-items-start" title="reads the book" aria-label="takes you to the read page for {{book_name}}" href="/{{safe_bookname}}_readable.json"><i class="bi bi-book h5"></i></a>
+                                    <a class="body-color align-self-start d-flex align-items-start" title="converts the book into a playlist" aria-label="takes you the the book to audio page, this is where a playlist is made that you can take with you later, for book: {{book}}" href="/converttoaudio/{{safe_bookname}}_readable.json">
+                                        <i class="bi bi-music-note-list h5"></i>
+                                    </a>
+                                    <a id="{{safe_bookname}}" data-book-name="{{book_name}}" data-book="{{safe_bookname}}" href="javascript:opendeletebookdialog('{{safe_bookname}}');"   aria-label="opens up the delete book dialog for the book : {{book}}, the delete dialog, then will take focus">
+                                        <i class="bi bi-trash h5"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var deletedialog = document.getElementById("deletebook")
+        var booktodelete = document.getElementById("booktodelete")
+        var book = document.getElementById("book")
+        var theform = document.getElementById("theform")
+
+        function submitform(){
+            theform.submit()
+
+        }
+
+
+        function clearfile(){
+            book.files = undefined
+            book.value = ""
+            document.getElementById("items_selected").innerHTML = ""
+
+
+        }
+
+
+        document.addEventListener("keydown",(event)=>{
+            var the_key = event.key
+            var key_code = event.keyCode
+            
+            console.log("pushed key, c")
+
+            if (the_key == "o"){
+                document.getElementById('book').click()
+            }
+
+            if (the_key == "c"){
+                document.getElementById("readbtn").click()
+            }
+        })
+
+        var dropzone = document.getElementById("dropzone")
+        dropzone.addEventListener("dragover",(e)=>{
+            e.preventDefault()
+        })
+
+
+
+        dropzone.addEventListener("drop",(e)=>{
+            e.preventDefault()
+            var thefile = e.dataTransfer.files[0]
+            console.log(thefile.path)
+            var datatransfer_ = new DataTransfer()
+            datatransfer_.items.add(thefile)
+            book.files = datatransfer_.files
+            document.getElementById("items_selected").innerHTML = `[ selected file ${thefile.name}]`
+        })
+
+
+
+
+        function opendeletebookdialog(theid){
+            var that = document.getElementById(theid)
+            console.log("selected item",that)
+            var book_id = that.getAttribute("data-book")
+            var book_name = that.getAttribute("data-book-name")
+            var booktodeletetitle = document.getElementById("booktodeletetitle")
+            booktodeletetitle.textContent = `Are you sure you want to delete this book: ${book_name}?`
+            booktodelete.setAttribute("href",`/deletebook/${book_id}_readable.json`)
+            deletedialog.showModal();
+            deletedialog.focus()
+        }
+        function closedeletebookdialog(){
+            deletedialog.close()
+        }
+
+
+    </script>
+
+</body>
+</html>

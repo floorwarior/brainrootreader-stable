@@ -99,7 +99,7 @@ socketed_app = SocketIO(app=app,async_mode="threading")
 @app.route("/")
 def home():
     books = get_booknames(basepath=BASE_PATH)
-    return render_template("index.html",books=books)
+    return render_template("index_v2.html",books=books)
 
 
 @app.route("/api/downloadvoicemodel/<voice>")
@@ -194,7 +194,7 @@ def check_new_routes():
     """testing the new route layouts here"""
     from helpers.book_converter import get_booknames
     books = get_booknames(basepath=BASE_PATH)
-    return render_template("readpage_v2.html",books=books)
+    return render_template("index_v2.html",books=books)
 
 
 @app.route("/convert",methods=["POST"])

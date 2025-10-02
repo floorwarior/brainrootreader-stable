@@ -15,9 +15,9 @@
 </dialog>
 
 
-    <form class="bg-dark text-light" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label title="for more information look for the MANUAL.md file" class="from-label text-light h2" onclick="document.getElementById('book').click()" for="book">Select a book to read <br> [ zip, epub, pdf, txt, docx ]</label>
+    <form class="body-color text-light" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
+        <div class="mb-3 ">
+            <label class="from-label text-light h2" onclick="document.getElementById('book').click()" for="book">Select a book to read <br> [ zip, epub, pdf, txt, docx ]</label>
             <input title="this is the input field for uploading files to BRR, you can use o to open this in the future" required class="form-control bg-dark text-light" name="book" id="book" type="file">
         </div>
         <button id="readbtn" title="click this to submit your document for reading" class="btn btn-sm btn-outline-light">Read <i class="bi bi-book"></i></button>
