@@ -25,4 +25,9 @@ other
 .venvlower
 .venvforcoquitts
 coqui-ai-TTS
+helpers/brr_exporter.py
+helpers/imagerelated.py
+exporter.py
+exported/*
+!exported/keepme.json
 

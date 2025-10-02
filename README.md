@@ -49,7 +49,7 @@ python3 background.py
 
 # Once BRR is running:
 - visit http://localhost:5003
-![This is what that looks like](./examples/homepage.png)
+![This is what that looks like](./examples/homepage_v2.png)
 
 - upload the book you want to listen to and start listening or converting
 ![Listening](./examples/brr_readingpage.png)
