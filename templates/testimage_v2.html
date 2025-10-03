@@ -1,0 +1,65 @@
+{% extends "base_v2.html" %}
+
+
+{% block body %}
+<div class="row mx-1">
+    <div  class="col-sm-12 col-lg-6 border border-light">
+        <!--
+        image shows up here for refrence
+        -->
+        <img id="img_container" src="#" class="img-fluid" alt="">
+        <label for="lang">select a language</label>
+        <input id="lang" name="lang" type="text" placeholder="example, eng, hun, . . .">
+        <label for="img_upload">Upload an image for testing</label>
+        <input capture="user" accept="image/*" id="img_upload" type="file">
+        <button class="btn btn-outline-light" onclick="test_image()">test</button>
+       
+    </div> 
+    <div class="col-sm-12 col-lg-6 border border-light">
+        <!--
+        text shows up here
+        -->
+        <label for="text-size">Change the text size to match the img better</label>
+        <input min=".5" max="4" value=".5" step=".2" onchange="adjust_text_size(this);" id="text-size" name="text-size" type="range">
+        <p id="img_text_container" style="font-size:0.5rem;">
+            Example text
+        </p>
+    </div>
+</div>
+<script>
+    const img_text_container = document.getElementById("img_text_container")
+    const img_upload_input = document.getElementById("img_upload")
+    const img_container = document.getElementById("img_container")
+    const select_lang = document.getElementById("lang")
+
+    function adjust_text_size(that){
+        img_text_container.style.fontSize = `${that.value}rem`
+    }
+
+
+
+
+    function test_image(){
+        // send the img for testing
+        var theform_Data = new FormData()
+        theform_Data.append("image",img_upload_input.files[0])
+        theform_Data.append("lang",select_lang.value)
+        var imgObj = URL.createObjectURL(img_upload_input.files[0])
+
+        var url = `/api/testimage`
+        var options = {
+            method:"POST",
+            body:theform_Data
+        }
+
+        fetch(url,options).then(response=>{
+            return response.json()
+        }).then(data=>{
+            img_text_container.textContent = data.text
+            img_container.setAttribute("src",imgObj)
+        })
+    }
+
+
+</script>
+{% endblock %}

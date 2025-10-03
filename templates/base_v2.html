@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Root Reader</title>
+    
+    <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
+    <!--bootstrap style sheet-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='bootstrap/icons/bootstrap-icons.css')}}">
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+
+</head>
+<body class="px-2">
+    <!--modal goes here-->
+    <dialog id="gotopagedialog" class="bg-dark text-light">
+        <div class="container">
+            <button type="button" class="btn-close" data-bs-theme="dark" onclick="closegoto();" aria-label="Close"></button>
+            <h2>What page do you want to visit:</h2>
+            <div class="d-flex">
+                <input id="jumpto" type="number">
+                <button class="btn btn-outline-light" onclick="jumptopage();" >Visit</button>      
+            </div>
+        </div>
+    </dialog>
+    <div class="row">
+        <!--
+        contains the side panel that can be toggled off or on
+        -->
+        <div class="offcanvas offcanvas-start body-color" tabindex="-1" id="brainrootoffcanvas" aria-label="left side panel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title text-light text-center" >Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="list-group list-group-flush">
+                <h5 class="text-light">Your books</h5>
+                <li class="list-group-item body-color">
+                    <ul class="list-group list-group-flush body-color">
+
+                        {% for safe_b_ookname, boo_k_name in books.items() %}
+                        <li class="list-group-item body-color">
+                            <a href="/{{safe_b_ookname}}_readable.json"  onmouseleave="showtitlefull(this);"  data-show="false" data-text-short="{{boo_k_name[:20]}}" data-text-full="{{boo_k_name}}" title="{{boo_k_name}}">{{boo_k_name[:20]}}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li >
+                <h5 class="text-light">Other</h5>
+                <ul class="list-group list-group-flush body-color">
+                    <li class="list-group-item body-color">
+                        <a href="{{url_for('add_video')}}">Add video</a>
+                    </li>
+                    <li class="list-group-item body-color">
+                        <a href="{{url_for('test_image_quality')}}">Test image quality</a>
+                    </li>                    
+                    <li class="list-group-item body-color">
+                        <a href="{{url_for('voicebag')}}">Voice Bag</a>
+                    </li>
+                </ul>
+            </ul>
+        </div>
+        </div>
+        <div class="col-lg-12 col-sm-12  border border-dark">
+            <!--
+            contains the player and the overlay text    
+            contains the player bar
+            -->
+            <div class="d-flex">
+                <!--containes  the side line and the the play itself-->
+                <div class="d-flex d-none d-md-flex flex-column flex-shrink-0 text-white p-3 body-color border-end border-dark gap-4" style="width: 60px; height: 100vh;">
+                    <a title="home button" aria-label="home button" class="navbar-brand" href="/">
+                        <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="app icon, its a brain with roots at the bottom," width="30" height="30" class="d-inline-block align-text-top">
+                    </a>
+                    <button
+                        aria-label="button for opening the left-sidebar"
+                        title="opens the left-sidebar"
+                        class="btn p-0 bg-transparent text-white text-center focus-ring focus-ring-light"
+                        data-bs-toggle="offcanvas" data-bs-target="#brainrootoffcanvas" role="button" aria-controls="brainrootoffcanvas">
+                        <i class="bi bi-layout-sidebar h5"></i>
+                    </button>
+                    <a class="p-0 text-center" href="/settings">
+                        <i aria-label="opens the settings page" title="opens the settings page" type="button" class="bi bi-gear h5"></i>
+                    </a>
+                </div>
+                <div class="d-flex flex-column justify-content-between vh-100 flex-grow-1">
+                    <main>
+                        {% block body %}
+
+
+
+                        {% endblock %}
+
+                    </main>
+                </div>
+
+
+            </div>
+
+        </div>
+        
+
+
+
+    </div>
+    <script src="{{url_for('static',filename='js/fuckedtts.js')}}"></script>
+    <script src="{{url_for('static',filename='js/read_in_browser.js')}}"></script>
+    <script src="{{url_for('static',filename='js/videorelated.js')}}"></script>
+    <script src="{{url_for('static',filename='js/openpdf.js')}}"></script>
+
+
+</body>
+</html>
+

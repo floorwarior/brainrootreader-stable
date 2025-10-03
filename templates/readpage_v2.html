@@ -37,10 +37,9 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <ul class="list-group list-group-flush">             
+            <ul class="list-group list-group-flush">
+                <h5 class="text-light">Your books</h5>
                 <li class="list-group-item body-color">
-                    <h5 class="text-light">Your books</h5>
-                    <hr>
                     <ul class="list-group list-group-flush body-color">
                         {% for safe_b_ookname, boo_k_name in books.items() %}
                         <li class="list-group-item body-color">
@@ -48,13 +47,19 @@
                         </li>
                         {% endfor %}
                     </ul>
-                </li>
-                <li class="list-group-item body-color">
-                    <a href="{{url_for('add_video')}}">Add video</a>
-                </li>
-                <li class="list-group-item body-color">
-                    <a href="{{url_for('test_image_quality')}}">Test image quality</a>
-                </li>
+                </li >
+                <h5 class="text-light">Other</h5>
+                <ul class="list-group list-group-flush body-color">
+                    <li class="list-group-item body-color">
+                        <a href="{{url_for('add_video')}}">Add video</a>
+                    </li>
+                    <li class="list-group-item body-color">
+                        <a href="{{url_for('test_image_quality')}}">Test image quality</a>
+                    </li>                    
+                    <li class="list-group-item body-color">
+                        <a href="{{url_for('voicebag')}}">Voice Bag</a>
+                    </li>
+                </ul>
             </ul>
         </div>
         </div>
@@ -194,6 +199,7 @@
     <script src="{{url_for('static',filename='js/fuckedtts.js')}}"></script>
     <script src="{{url_for('static',filename='js/read_in_browser.js')}}"></script>
     <script src="{{url_for('static',filename='js/videorelated.js')}}"></script>
+    <script src="{{url_for('static',filename='js/openpdf.js')}}"></script>
     <script>
     var volume = document.getElementById('volume')
     var bookmarkpageindicatortitle = document.getElementById("lastpageindicatortitle")
@@ -228,7 +234,7 @@
     var indeterminate_loader_current = 0;
     var user_is_scrolling
     var setstatedisplay_timeout
-
+    var readable_name = {{readable_name|tojson}}
 
     function setvolumeofspeaker(that){
         if (volume.value != 0){
@@ -241,7 +247,7 @@
         // cycles the strings  . . -
         // . - .
         // - . .
-        if (indeterminate_loader_current == 2){
+        if (indeterminate_loader_current == (indeterminate_loader_array.lenght-1)){
             indeterminate_loader_current = 0;
         }
         else{
@@ -294,14 +300,17 @@
 
 
     function open_page_origin(){
-        var url = `/openorigin/{{readable_name}}?page=${current_page}`
-        fetch(url).then(
+        //var url = `/openorigin/{{readable_name}}?page=${current_page}`
+        openpdf(readable_name,current_page)
+        /*
+         fetch(url).then(
             response=>{
                 response.json()
             }
         ).then(data=>{
             console.log(data)
-        })
+        })       
+        */
     }
 
 

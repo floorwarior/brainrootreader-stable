@@ -13,7 +13,8 @@ class OpenBooksFile():
         "PATH"
     def check_type(self):
         """ we only ever want to open pdf files nothing else"""
-        ending = self.bookname.rsplit()[-1]
+        ending = self.bookname.rsplit(".")[-1]
+        print("ending:",ending)
         match ending:
             case "pdf":
                 return True            
@@ -23,11 +24,12 @@ class OpenBooksFile():
 
 
     def open_file(self):
-        filepath = "file:///" + os.path.join(self.uploads_folder, self.bookname).replace("\\", "/") + f"#page={self.page}"
-        print("attempting to open:",filepath)
-        webbrowser.open(filepath)
-        # NOTE: This does not appear to open to book to the correct page unfortunatly, if you have an idea or code to fix this make a pull request
-
+        if self.check_type():
+            theurl = f"http://localhost:5003/uploads/{self.bookname}#page={self.page}"
+            #filepath = "file:///" + os.path.join(self.uploads_folder, self.bookname).replace("\\", "/") + f"#page={self.page}"
+            webbrowser.open(theurl)
+        else:
+            print("this method is only gonna work with pdfs")
 if __name__ == "__main__":
     openpdf = OpenBooksFile(
         base_path=r"c:/Users/ishall/Desktop/public_brainrootreader/brainrootreader",

@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import request,redirect,url_for,render_template,jsonify,send_file
 from werkzeug.utils import secure_filename
-
+from flask import send_from_directory
 
 import os
 import sys
@@ -123,7 +123,17 @@ def download_voice_dirrectly(voice=None):
         "success":True,
         "downloaded":voice
     })
-    
+
+
+
+@app.route("/uploads/<path:name>")
+def uploads_exposed(name):
+    """used for opening a pdf to a specific page"""
+    return send_from_directory(
+        app.config['UPLOAD_FOLDER'], name, as_attachment=False
+    )
+
+
 
 @app.route("/voicebag/")
 def voicebag():
@@ -174,19 +184,8 @@ def test_image_quality():
     **Tests the image to convert from**
     - opens camera stream on the image and tests it
     """
-    if request.method == "POST":
-        # we check image quality here
-        if request.files.get("image"):
-            img = request.files.get("image")
-            location = os.path.join(app.config["UPLOAD_FOLDER"],img.filename)
-            print(location)
-            img.save(dst=location)
-            from helpers.book_conversion_from_images import ConvertFromImages
-            t = ConvertFromImages.test_one(filename=location,lang="hun")
-            return f"<p>{t}</p>"
-        
-        
-    return render_template("testimage.html")
+    from helpers.book_converter import get_booknames        
+    return render_template("testimage_v2.html",books=get_booknames(basepath=BASE_PATH))
 
 
 @app.route("/testnewroutes")
@@ -194,7 +193,7 @@ def check_new_routes():
     """testing the new route layouts here"""
     from helpers.book_converter import get_booknames
     books = get_booknames(basepath=BASE_PATH)
-    return render_template("index_v2.html",books=books)
+    return render_template("testimage_v2.html",books=books)
 
 
 @app.route("/convert",methods=["POST"])
@@ -304,6 +303,21 @@ def yieldbooktext(book,page):
         return jsonify(nltk.sent_tokenize(data[str(page)]))
     else:
         return "some error happened, make sure the books name is typed correctly"
+
+
+@app.route("/api/testimage",methods = ["POST"])
+def test_image_api():
+    """checks and retunrs the text extracted from the image"""
+    if request.files.get("image"):
+        img = request.files.get("image")
+        lang = request.form.to_dict()["lang"]
+        location = os.path.join(app.config["UPLOAD_FOLDER"],img.filename)
+        print(location)
+        img.save(dst=location)
+        from helpers.book_conversion_from_images import ConvertFromImages
+        t = ConvertFromImages.test_one(filename=location,lang=lang)
+        return jsonify({"text":t})
+
 
 
 @app.route("/api/getpage/<book>")

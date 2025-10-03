@@ -59,7 +59,7 @@ class ConvertFromEbook():
         self.clear_tmp_folder()
         print("convert ebook is running")
         chapters = epub.read_epub(os.path.join(self.upload_folder,self.ebookname))
-        page = 0
+        page = 1
         book_data = {}
         for item in chapters.get_items_of_type(ITEM_DOCUMENT):
             soup = BeautifulSoup(item.get_content(), "html.parser")

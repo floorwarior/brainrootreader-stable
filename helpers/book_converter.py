@@ -54,7 +54,7 @@ class ConvertFromPdf():
 
 
         stripped_name = self.pdf_name
-        for i,page in enumerate(book_data.pages):
+        for i,page in enumerate(book_data.pages,start=1):
             text = page.extract_text()
             # probably gonna add image extraction here
             if text != "":

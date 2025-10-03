@@ -78,7 +78,7 @@ class ConvertFromImages():
         pages = os.listdir(self.tmp_folder)
         from PIL import Image,ImageOps
         pytesseract.pytesseract.tesseract_cmd = r"C:/Program Files/Tesseract-OCR/tesseract.exe"
-        for i ,page in enumerate(pages):
+        for i ,page in enumerate(pages,start=1):
             print(f"processing image {i}")
             
             img = Image.open(os.path.join(self.tmp_folder,page))

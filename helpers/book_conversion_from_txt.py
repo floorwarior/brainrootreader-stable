@@ -36,7 +36,7 @@ class ConvertFromTxt():
         full_file = " ".join(cleaned_data)
         sentences = self.sent_tokenize(full_file)
         pages ={}
-        current_page = 0
+        current_page = 1
         for i in range(0,len(sentences)-1,self.chunksize):
             pages[current_page] = " ".join(sentences[i:i+self.chunksize])
             current_page += 1
