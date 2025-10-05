@@ -30,4 +30,5 @@ helpers/imagerelated.py
 exporter.py
 exported/*
 !exported/keepme.json
+helpers/__pycache__
 

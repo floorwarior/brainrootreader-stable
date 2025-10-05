@@ -12,7 +12,7 @@
 git clone https://github.com/floorwarior/brainrootreader-stable
 
 # move into the folder
-cd brainrootreader
+cd brainrootreader-stable
 
 # make a virtual environment so your packages do not leak
 python.exe -m venv .venv
