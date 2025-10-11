@@ -7,5 +7,6 @@
     "AndroidReader":"androidreader.json",
     "BrowserReader":"browserreader.json",
     "SherpaReader":"sherpareader.json",
-    "CoquiReader":"coquireader.json"
+    "CoquiReader":"coquireader.json",
+    "KokoroReader":"kokororeader.json"
 }

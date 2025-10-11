@@ -84,14 +84,17 @@ class GoogleReader(BaseReader):
     @pan.panic(on_panic="on_audio_panic")
     def save_audio(self,*args,**kwargs):
         """"""
-        page = kwargs.get("text")
+        text = kwargs.get("text")
         audio_out_name = kwargs.get("filename")
-        self.gTTS(page).save(audio_out_name)
+        self.gTTS(text).save(audio_out_name)
 
     @pan.panic(on_panic="on_speak_panic")
-    def Speak(self, text):
-        """[ under review ]"""
-        pass
+    def Speak(self, *args,**kwargs):
+        text = kwargs.get("text")
+        audio_out_name = kwargs.get("filename")
+        self.gTTS(text).save(audio_out_name)
+
+        
 
 
     def get_voices(self,*args,**kwargs):
@@ -304,7 +307,7 @@ class PiperReader(BaseReader):
             stream.stop()
             stream.close()
 
-    @pan.panic(on_panic="on_audio_panic",class_method=True)
+    @pan.panic(on_panic="on_audio_save_panic",class_method=True)
     def save_audio(self,*args,**kwargs):
         text = kwargs.get("text")
         audio_out_name = kwargs.get("filename")
@@ -332,7 +335,53 @@ class PiperReader(BaseReader):
     
 
 
+class KokoroReader(BaseReader):
+    """uses kokoro"""
 
+    def __init__(self, *args, speaker="kokoro", **kwargs):
+        super().__init__(*args, speaker=speaker, **kwargs)
+        try:
+            import soundfile as sf
+            from kokoro import KPipeline
+            import sounddevice as sd
+      
+            self.sf = sf
+            self.sd = sd
+            self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"))
+            self.model = kwargs.get("model")
+            self.imported_ok = True
+            self.ready = True
+        except Exception as e:
+            self.imported_ok = False
+            self.error = e
+
+
+    @pan.panic(on_panic="on_audio_save_panic",class_method=True)
+    def save_audio(self,*args,**kwargs):
+        text = kwargs.get("text")
+        audio_out_name = kwargs.get("filename")
+        generator = self.pipeline(text,voice=self.model)
+        parts = []
+        for i, (gs, ps, audio) in enumerate(generator):
+            #print(i, gs, ps)
+            #display(Audio(data=audio, rate=24000, autoplay=i==0))
+            parts.append(audio)
+            #sf.write(f'{i}.wav', audio, 24000)
+
+        added = np.concatenate(parts)
+        self.sf.write(audio_out_name,added,24000)
+
+    @pan.panic(on_panic="on_audio_panic",class_method=True)
+    def Speak(self,*args,**kwargs):
+        text = kwargs.get("text")
+        generator = self.pipeline(text=text,voice=self.model)
+        parts = []
+        for i, (gs, ps, audio) in enumerate(generator):
+            #print(i, gs, ps)
+            #display(Audio(data=audio, rate=24000, autoplay=i==0))
+            parts.append(audio)
+            self.sd.play(audio, 24000)
+            self.sd.wait()
 
 
 class BrowserReader(BaseReader):
@@ -359,13 +408,16 @@ readers = {
     "PiperReader":PiperReader,
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
+    "KokoroReader":KokoroReader
 }
 # TIP: if you are trying to make a custom build or want a faster stand up time, remove the readers you are not using
 
-if __name__ == "__main__":
 
-    c = CoquiReader(
-        model="tts_models/en/jenny/jenny"
+if __name__ == "__main__":
+    koro = KokoroReader(
+        lang_code = "a",
+        model="af_bella"
     )
-    c.Speak(text="Hello there general kenobi")
-    c.save_audio(filename="thisisatest.wav",text="this is testing the save audio func")
+    #koro.Speak(text="hello there general shinobi")
+    print(koro.get_voices())
+    #koro.save_audio(text="This is some text we are going to save",filename="example.wav")

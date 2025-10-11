@@ -177,7 +177,7 @@ class dbModel():
 
 
 
-    def multi_update(self,datadict:dict,identifier_dict:dict):
+    def multi_update(self,data_dict:dict,identifier_dict:dict):
         """changes multiple values in the same time
         usage
         ```
@@ -188,14 +188,14 @@ class dbModel():
         "overtime":"0"})
         ```
         """
-        keys = list(datadict.keys())
-        vals = list(datadict.values()) + list(identifier_dict.values())
+        keys = list(data_dict.keys())
+        vals = list(data_dict.values()) + list(identifier_dict.values())
         placeholders = [f"{key} = ?" for key in keys]
         search_by_placeholders=  [f"{key} = ?" for key in identifier_dict.keys()]
         command = f"""
             UPDATE {self.table_name} SET
             {' ,'.join(placeholders)}
-            WHERE {'AND'.join(search_by_placeholders)};
+            WHERE {' AND '.join(search_by_placeholders)};
 """
         print("multi update is running with command:")
         print(command)
@@ -269,19 +269,19 @@ class dbModel():
 
 
 
-    def delete(self,col_name,col_value):
+    def delete(self,conditions=["username = '?'"],values =["jeff"]):
+        """based on the conditions it removes the a certain item"""
         cursor,connector = self.get_connection()
-        values = [col_value]
-        thisiswhatweexecute = f"""DELETE FROM {self.table_name} WHERE {col_name} = ?;"""
+        condition_string = " AND ".join(conditions)
+        thisiswhatweexecute = f"""DELETE FROM {self.table_name} WHERE {condition_string};"""
         print("deleting with",thisiswhatweexecute)
         success = False
         try:
-                
             cursor.execute(thisiswhatweexecute,values)
             connector.commit()
             success = True
         except Exception as e:
-            print(f"Could not delete, col_name:{col_name} with val:{col_value} because of: ", e)
+            print(f"Could not delete, conditions:{conditions} with val:{values} because of: ", e)
         cursor.close()
         return success
 

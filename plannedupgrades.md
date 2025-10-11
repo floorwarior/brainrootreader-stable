@@ -7,3 +7,4 @@
 | benchmark: testing your pc-s strenght on a small text set to see how fast it can generate text | 2025 nov |
 | notes: adding notes for any text inside a sentence | 2025 okt |
 | .brr file type: thin for just the text, chunky for images, heavy to include notes and other items | 2025 nov  |
+| kokoro reader  | 2025 okt|
