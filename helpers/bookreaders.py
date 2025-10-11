@@ -360,7 +360,7 @@ readers = {
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
 }
-# TIP: if you are trying to make a custom build or want a faster stand up time, remove the the readers you are not using
+# TIP: if you are trying to make a custom build or want a faster stand up time, remove the readers you are not using
 
 if __name__ == "__main__":
 

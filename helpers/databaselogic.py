@@ -3,13 +3,15 @@ import json
 import datetime
 import os
 
+
+
 class dbModel():
     """
     *db_name* name of the file where your database lives or will live
     *table name* name of the table you want to use, note that a dbmodel only ever works on one table at a time
     *col names* name of the columns of your database
     *col type* one of TEXT, BLOB, INTEGER, REAL, NULL
-    useage:
+    usage:
     ```
     new_db_table = dbModel(
         db_name = "example.db",
@@ -175,15 +177,25 @@ class dbModel():
 
 
 
-    def multi_update(self,datadict:dict,identifier,identifier_val):
-        """changes multiple values in the same time"""
+    def multi_update(self,datadict:dict,identifier_dict:dict):
+        """changes multiple values in the same time
+        usage
+        ```
+        example_db.multi_update(datadict={
+            "status":"terminated"
+        },identifier_dict={
+        "age":"110",
+        "overtime":"0"})
+        ```
+        """
         keys = list(datadict.keys())
-        vals = list(datadict.values()) + [identifier_val]
+        vals = list(datadict.values()) + list(identifier_dict.values())
         placeholders = [f"{key} = ?" for key in keys]
+        search_by_placeholders=  [f"{key} = ?" for key in identifier_dict.keys()]
         command = f"""
             UPDATE {self.table_name} SET
             {' ,'.join(placeholders)}
-            WHERE {identifier} = ?;
+            WHERE {'AND'.join(search_by_placeholders)};
 """
         print("multi update is running with command:")
         print(command)
@@ -201,7 +213,7 @@ class dbModel():
             cursor.close()
             connector.close()
 
-            return success
+        return success
 
 
     def create_new_entry(self,newuser:dict,strict=True):
