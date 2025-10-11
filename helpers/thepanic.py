@@ -1,5 +1,7 @@
 import logging
 import traceback
+import time
+
 class PanTheGuyofPanics():
 
 
@@ -40,6 +42,36 @@ class PanTheGuyofPanics():
         """
         pan.attached[name_of_func] = func
 
+    def try_until(pan,timeout,maxtries,default_value=None):
+        """tries to execute a function until it works, or it hits maximum tries, should be used with network bound tasks"""
+        def decorator(func):
+            def wrapper(*args,**kwargs):
+                success = False
+                tries = 0
+                error = None
+                while not success and tries < maxtries:
+                    try:
+                        return func(*args,**kwargs)
+                    except Exception as e:
+                        error = e
+                        tries += 1
+                        traceback.print_exc()
+                        print(f"{tries} / {maxtries} ")
+
+                        time.sleep(timeout)
+                if not success and not default_value:
+                    print(f"we caught this error for you:", error)
+                    print("these values were passed:")
+                    for i,a in enumerate(args):
+                        print(f"i:{i}", a)
+                    for key,val in kwargs.items():
+                        print(f"key: {key}, value: {val}")
+                    pan.logger.info(error)
+                    raise BaseException("maximum tries reached with try_until")
+                else:
+                    return default_value
+            return wrapper
+        return decorator
 
     def panic(pan,on_panic,class_method=False):
         def decorator(func):

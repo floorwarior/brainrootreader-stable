@@ -359,8 +359,8 @@ readers = {
     "PiperReader":PiperReader,
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
-    "CoquiReader":CoquiReader
 }
+# TIP: if you are trying to make a custom build or want a faster stand up time, remove the the readers you are not using
 
 if __name__ == "__main__":
 

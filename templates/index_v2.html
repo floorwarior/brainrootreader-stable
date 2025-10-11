@@ -71,7 +71,7 @@
                             <div class="d-flex body-color justify-content-between flex-wrap ">
                                 <p title="{{book_name}}" class="body-color text-wrap">{{book_name[:45]}}</p>
                                 <div class="d-flex body-color text-light justify-content-around gap-5">
-                                    <a class="body-color d-flex align-items-start" title="reads the book" aria-label="takes you to the read page for {{book_name}}" href="/{{safe_bookname}}_readable.json"><i class="bi bi-book h5"></i></a>
+                                    <a class="body-color d-flex align-items-start" title="reads the book" aria-label="takes you to the read page for {{book_name}}" href="/readbook/{{safe_bookname}}_readable.json"><i class="bi bi-book h5"></i></a>
                                     <a class="body-color align-self-start d-flex align-items-start" title="converts the book into a playlist" aria-label="takes you the the book to audio page, this is where a playlist is made that you can take with you later, for book: {{book}}" href="/converttoaudio/{{safe_bookname}}_readable.json">
                                         <i class="bi bi-music-note-list h5"></i>
                                     </a>
@@ -88,6 +88,7 @@
             </div>
         </div>
     </div>
+    <script src="{{url_for('static',filename='js/accessibilityreader.js')}}"> </script> 
     <script>
         var deletedialog = document.getElementById("deletebook")
         var booktodelete = document.getElementById("booktodelete")

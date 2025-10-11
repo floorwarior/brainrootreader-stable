@@ -31,4 +31,7 @@ exporter.py
 exported/*
 !exported/keepme.json
 helpers/__pycache__
-
+build.py
+foolingaroud.py
+.vscode
+.venv-downgrade

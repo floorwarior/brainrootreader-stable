@@ -5,7 +5,7 @@ a = Analysis(
     ['background.py'],
     pathex=[],
     binaries=[],
-    datas=[("templates","templates"),("README.md","."),("LICENSE.txt","."),("static","static"),("pipermodels","pipermodels"),("helpers","helpers"),("uploads","uploads"),("booklist.json","."),("readerconfigs","readerconfigs"),("plusreaders","plusreaders")],
+    datas=[("templates","templates"),("loadingwindow.py","."),("README.md","."),("LICENSE.txt","."),("static","static"),("pipermodels","pipermodels"),("helpers","helpers"),("uploads","uploads"),("booklist.json","."),("readerconfigs","readerconfigs"),("plusreaders","plusreaders")],
     hiddenimports=['pypdf','helpers','readerconfigs','plusreaders','pypdf._reader', 'pypdf._writer', 'pypdf._crypt', 'pypdf._page', 'pypdf.generic', 'pypdf.constants','engineio.async_drivers.threading','engineio.async_drivers.eventlet',],
     hookspath=[],
     hooksconfig={},

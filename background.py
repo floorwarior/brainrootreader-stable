@@ -1,13 +1,44 @@
+import subprocess
+import multiprocessing
+import os
+import threading
+import sys
+
+
+#window_process = multiprocessing.Process(target=window_stuff)
+
+#print(CURRENT_PYTHON)
+
+
+
+
+if getattr(sys, 'frozen', False):
+    # Running as compiled executable
+    BASE_PATH = sys._MEIPASS
+    print(BASE_PATH)
+    DEBUG = False
+    ONANDROID = False
+    CURRENT_PYTHON = "python.exe"
+
+else:
+    # Running as normal Python script
+    BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+    print(BASE_PATH)
+    DEBUG = False
+    ONANDROID = False
+    CURRENT_PYTHON = sys.executable
+
+
+subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py")])
+
+
 from flask import Flask
 from flask import request,redirect,url_for,render_template,jsonify,send_file
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
 
-import os
-import sys
-import threading
 
-# this block is for pyinstaller to pick up the files correctly
+# this block is for pyinstaller to pick up the files correctly, you can comment this out if you are not building only using the app
 import helpers
 import engineio
 import plusreaders 
@@ -27,13 +58,11 @@ from ebooklib import epub
 import zipfile
 import PIL 
 import pytesseract
-# import TTS 
-# install it first, the orginal version have soem bugs this fork is maintained
-# git clone https://github.com/idiap/coqui-ai-TTS
-# cd coqui-ai-TTS
-# pip install -e .
-# from TTS.api import TTS
+import socketio
 import docx
+import flask_socketio
+
+#from TTS.api import TTS
 # -- -- -- -- -- -- -- 
 
 from helpers.book_converter import return_cache,get_booknames,make_permanent_by_page
@@ -44,36 +73,7 @@ from helpers.bookreaders import readers as builtin_readers
 from helpers.store import VoiceStorePiper
 
 
-import flask_socketio
 from flask_socketio import SocketIO
-import socketio
-
-
-
-
-try:
-    from android.storage import app_storage_path
-    BASE_PATH = os.path.join(app_storage_path(),"app")
-    DEBUG = False
-    ONANDROID = True
-except:
-    if getattr(sys, 'frozen', False):
-        # Running as compiled executable
-        BASE_PATH = sys._MEIPASS
-        print(BASE_PATH)
-        DEBUG = False
-        ONANDROID = False
-
-    else:
-        # Running as normal Python script
-        BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-        print(BASE_PATH)
-        DEBUG = True
-        ONANDROID = False
-
-
-    #print(os.listdir(BASE_PATH))
-
 
 SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
 READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
@@ -268,7 +268,7 @@ def open_book_origin(book):
     res = OpenBooksFile(base_path=BASE_PATH,bookname=book,page=page).open_file()
     return jsonify({"success":res})
 
-@app.route("/<book>")
+@app.route("/readbook/<book>")
 def read_book_(book):
     # load the page of the book, return it as list
     page_data,available = return_cache(book,basepath=BASE_PATH)
@@ -285,7 +285,34 @@ def read_book_(book):
 
     return render_template("readpage_v2.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
 
+@app.route("/api/killserver")
+def kill_server():
+    """stops the server from running"""
+    import signal
+    import time
+    pid = os.getpid()
+    def shutdown():
+        print("kill server called shutting down.")
+        time.sleep(2)
+        os.kill(pid,signal.SIGINT)
+    threading.Thread(target=shutdown).start()
+    return jsonify({"request":"shutdown server","status":"scheduled","Brain Root Reader":"bye bye see you next time"})
 
+
+@app.route("/api/alive")
+def server_alive():
+    """used for checking is the server is up"""
+    return jsonify({"alive":True})
+
+@app.route("/api/speak",methods=["POST"])
+def speak():
+    """speaks, used by the accessibility screen reader function
+    can be activated by the r button when any page is in focus
+    """
+    data = request.get_json(force=True)
+    print(data)
+    GLOBALREADER.Speak(text=data.get("text","no text passed"))
+    return jsonify({"spoken":data.get("text")})
 
 @app.route("/api/makepage/<book>/<page>")
 def make_page_of_book(book,page):
@@ -295,14 +322,6 @@ def make_page_of_book(book,page):
     print("-> make page triggered")
     return jsonify({"page":page,"book":book,"converted":success,"sentence_data":rd.save_transscript_for_page(page)})
 
-@app.route("/api/yieldpagetext/<book>/<page>")
-def yieldbooktext(book,page):
-    """returns the nltk converted sentences so we can use the browsers text to speech to listen to the book"""
-    data,success = return_cache(book)
-    if success:
-        return jsonify(nltk.sent_tokenize(data[str(page)]))
-    else:
-        return "some error happened, make sure the books name is typed correctly"
 
 
 @app.route("/api/testimage",methods = ["POST"])
@@ -331,15 +350,15 @@ def return_page_audio(book):
 
 
 def run_server_just_local():
-    app.run(host="localhost",port=5003,debug=DEBUG)
-
-
+    thehost = "localhost" if not DEBUG else "0.0.0.0"
+    app.run(host=thehost,port=5003,debug=DEBUG)
 
 def run_server_with_socketio():
     thehost = "localhost" if not DEBUG else "0.0.0.0"
-    socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG)
+    socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=False)
+
+
+
 
 if __name__ == "__main__":
-    #run_server_just_local()
     run_server_with_socketio()
-   
