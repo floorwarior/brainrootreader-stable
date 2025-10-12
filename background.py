@@ -93,14 +93,10 @@ GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
 def re_initialize_reader():
     """sets a new global reader if there is a settings change"""
-    global GLOBALREADER
-    #SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-    #READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
-    GLOBALREADER = ReaderCoreConnector(
-        core_count = 3,
-        is_frozen = ISFROZEN
-    )
-
+    global GLOBALREADER,SELECTED_READER,READERS_CONFIG
+    SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
+    READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+    GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
 
 
