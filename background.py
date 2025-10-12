@@ -14,6 +14,7 @@ import sys
 
 if getattr(sys, 'frozen', False):
     # Running as compiled executable
+    ISFROZEN = True
     BASE_PATH = sys._MEIPASS
     print(BASE_PATH)
     DEBUG = False
@@ -22,6 +23,7 @@ if getattr(sys, 'frozen', False):
 
 else:
     # Running as normal Python script
+    ISFROZEN = False
     BASE_PATH = os.path.dirname(os.path.abspath(__file__))
     print(BASE_PATH)
     DEBUG = False
@@ -29,7 +31,7 @@ else:
     CURRENT_PYTHON = sys.executable
 
 
-subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py")])
+subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py") ,"--basepath",BASE_PATH])
 
 
 from flask import Flask
@@ -71,22 +73,32 @@ from helpers.loadreader import load_reader, get_readers_config
 from plusreaders import readers as custom_readers
 from helpers.bookreaders import readers as builtin_readers
 from helpers.store import VoiceStorePiper
-
+from helpers.readercore_connector import ReaderCoreConnector
 
 from flask_socketio import SocketIO
 
-SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
-GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
-
+#SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
+#READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+ 
+#GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
+# if you have a better you should use this new method called ReaderCoreConnector
+# it makes it possible to run more then one instances of the reader classes as it wraps them
+# i tested it with i-5 7500 and after a coldstart it can run kokoro, you will need to wait for the first 3 pages to generate however, or if you are jumping around
+GLOBALREADER  = ReaderCoreConnector(
+    core_count = 2,
+    is_frozen = ISFROZEN
+)
 
 
 def re_initialize_reader():
     """sets a new global reader if there is a settings change"""
-    global SELECTED_READER,READERS_CONFIG,GLOBALREADER
-    SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-    READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
-    GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
+    global GLOBALREADER
+    #SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
+    #READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+    GLOBALREADER = ReaderCoreConnector(
+        core_count = 3,
+        is_frozen = ISFROZEN
+    )
 
 
 
@@ -294,6 +306,7 @@ def kill_server():
     def shutdown():
         print("kill server called shutting down.")
         time.sleep(2)
+        GLOBALREADER.clean_up()
         os.kill(pid,signal.SIGINT)
     threading.Thread(target=shutdown).start()
     return jsonify({"request":"shutdown server","status":"scheduled","Brain Root Reader":"bye bye see you next time"})

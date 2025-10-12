@@ -32,6 +32,9 @@
             <a class="p-0 text-center" href="/settings">
                 <i aria-label="opens the settings page" title="opens the settings page" type="button" class="bi bi-gear h5"></i>
             </a>
+            <a class="p-0 text-center" href="/api/killserver">
+                <i aria-label="stops the app and it's processes" title="stops the app" type="button" class="bi bi-power h5"></i>
+            </a>
         </div>
         <div class="d-flex body-color p-3 flex-shrink-1 flex-grow-1 h-100">
             <div class="row w-100">
@@ -41,7 +44,6 @@
                             <!--
                             contains the drop zone and the dropzones image
                             -->
-                            
                             <form id="theform" class="body-color text-light mb-3" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
                                     <label for="book" class="from-label text-light h2" >
                                         <img id="dropzone" src="/static/doctojsonwhite.png" style="width: 50%" alt="">

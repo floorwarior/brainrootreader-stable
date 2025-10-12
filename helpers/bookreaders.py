@@ -54,6 +54,12 @@ class BaseReader(ABC):
 
 
 
+    def clean_up(self):
+        """if you reader requires some kind of clean up this is what the server is calling before shutting down"""
+        print("Reader clean up, not required")
+
+
+
     def on_speak_panic(self,*args,**kwargs):
         self._on_speak_panic(*args,**kwargs)
 
@@ -371,7 +377,7 @@ class KokoroReader(BaseReader):
         added = np.concatenate(parts)
         self.sf.write(audio_out_name,added,24000)
 
-    @pan.panic(on_panic="on_audio_panic",class_method=True)
+    @pan.panic(on_panic="on_speak_panic",class_method=True)
     def Speak(self,*args,**kwargs):
         text = kwargs.get("text")
         generator = self.pipeline(text=text,voice=self.model)
@@ -408,7 +414,8 @@ readers = {
     "PiperReader":PiperReader,
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
-    "KokoroReader":KokoroReader
+    "KokoroReader":KokoroReader,
+    "CoquiReader":CoquiReader
 }
 # TIP: if you are trying to make a custom build or want a faster stand up time, remove the readers you are not using
 

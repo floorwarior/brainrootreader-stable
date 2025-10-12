@@ -1,7 +1,20 @@
 import tkinter
 from tkinter import Tk,Frame,Label
+import os
 from helpers.pingserver import kill_server,is_server
 import webbrowser
+import argparse
+
+parser = argparse.ArgumentParser(
+    prog="ReaderCore",
+    description="Reads a text or creates audio from text, using the readers in the folder",
+    epilog="what is this even"
+)
+
+parser.add_argument("--basepath",required=True)
+
+args = parser.parse_args()
+BASEPATH = args.basepath
 
 def run_splash_screen():
     tkapp = Tk()
@@ -36,7 +49,7 @@ def run_splash_screen():
 
     tkapp.overrideredirect(True)
     tkapp.title("Brain Root Reader")
-    tkapp.iconbitmap("brainrootreadericon.ico")
+    tkapp.iconbitmap(os.path.join(BASEPATH,"brainrootreadericon.ico"))
     screen_width = tkapp.winfo_screenwidth()
     screen_height = tkapp.winfo_screenheight()
     height = 400

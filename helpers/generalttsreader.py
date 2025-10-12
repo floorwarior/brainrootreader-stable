@@ -93,7 +93,7 @@ class ReadBook():
     @staticmethod
     def pull_fallback_reader(base_path=None,*args,**kwargs):
         """if no read was specified it will try to select a reader until one works
-        It uses the GLOBALREADERCONFIG['fallbakorder'] : attribute
+        It uses the GLOBALREADERCONFIG['fallbackorder'] : attribute
         you can modify this in the file@::readerconfigs/globalreader folder
 
 
@@ -399,15 +399,6 @@ class ReadBook():
         return pagename
 
 
-    def zipbookfolder(self):
-        """makes the folder into a zip file that can be downloaded from the server"""
-        import shutil
-        zip_filename = os.path.join(self.books_folder,f"{self.books_folders_name}.zip")
-        if os.path.exists(zip_filename):
-            if not input("you already compiled this book, do you want to coninue? | y | n |").lower() == "y":
-                return False
-        else:
-            shutil.make_archive(zip_filename,'zip',self.books_folder)
 
 
 if __name__ == "__main__":

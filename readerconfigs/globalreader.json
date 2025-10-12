@@ -6,9 +6,7 @@
     "commnet3": "Add the ClassName and its config filename to readerconfigs.json",
     "fallbackorder": [
         "PiperReader",
-        "SherpaReader",
         "WinReader",
-        "AndroidReader",
         "BrowserReader"
     ],
     "comment4": "We set the correct order for the readers"
