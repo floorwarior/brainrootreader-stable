@@ -77,18 +77,19 @@ from helpers.readercore_connector import ReaderCoreConnector
 
 from flask_socketio import SocketIO
 
-#SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-#READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
+READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
  
-#GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
+GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 # if you have a better you should use this new method called ReaderCoreConnector
 # it makes it possible to run more then one instances of the reader classes as it wraps them
 # i tested it with i-5 7500 and after a coldstart it can run kokoro, you will need to wait for the first 3 pages to generate however, or if you are jumping around
-GLOBALREADER  = ReaderCoreConnector(
+# UPDATE: there are some bugs i need to fix
+"""GLOBALREADER  = ReaderCoreConnector(
     core_count = 2,
     is_frozen = ISFROZEN
 )
-
+"""
 
 def re_initialize_reader():
     """sets a new global reader if there is a settings change"""

@@ -129,7 +129,7 @@ class ReaderCoreConnector(BaseReader):
         thecore.sendall(json.dumps(process_this).encode())
         response = thecore.recv(1024)
         data = json.loads(response)
-        print(data["success"])
+        #print(data["success"])
         return kwargs.get("filename")
 
 

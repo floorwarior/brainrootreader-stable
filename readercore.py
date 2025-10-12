@@ -47,6 +47,7 @@ server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 server.bind(("127.0.0.1",int(args.port)))
 server.listen(1)
+server.settimeout(30.0)
 
 while True:
     client,adrr = server.accept()
