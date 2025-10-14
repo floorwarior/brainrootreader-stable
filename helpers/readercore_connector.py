@@ -14,11 +14,14 @@ class ReaderCoreConnector(BaseReader):
     """
 
     def __init__(self, *args,  speaker="ReaderCore", **kwargs):
+        super().__init__(*args,speaker,**kwargs)
         self.starting_port = 4222
         self.core_count = kwargs.get("core_count")
         self.is_frozen = kwargs.get("is_frozen")
-        self.readercore_instance = "python.exe" if not self.is_frozen else "readercore.exe"
+        self.base_path = kwargs.get("base_path")
         self.cores = []
+        
+        self.origin = "readercore"
         self.order_66()
         if self._make_cores():
             self.imported_ok = True
@@ -38,13 +41,16 @@ class ReaderCoreConnector(BaseReader):
                     response = client.recv(1024)
                     data = json.loads(response)
                     if data["shutting_down"] == True:
-                        print(f"shutting down: {i}")
+                        print(f"shutting down reader core on port: {i}")
                         terminated = True
+                        client.close()
                     else:
                         client.close()
-                except:
+                except Exception as e:
                     sleep(.1)
                     pass
+
+
 
     def _make_cores(self):
         """starts up some readercores"""
@@ -52,7 +58,7 @@ class ReaderCoreConnector(BaseReader):
             if not self.is_frozen:
                 subprocess.Popen([sys.executable,"readercore.py","--port",f"{i}"])
             else:
-                subprocess.Popen(["readercore.exe","--port",i])
+                subprocess.Popen(["readercore.exe","--port",f"{i}"])
             self.cores.append(i)
         return True
 
@@ -68,17 +74,21 @@ class ReaderCoreConnector(BaseReader):
                     client.connect(("127.0.0.1",i))
                     connected = True
                     print(f"connected to core: {i}")
-                    return client
-                except  (ConnectionRefusedError, TimeoutError, socket.timeout):
+                    port = i
+                    return client , port
+                except Exception as e:
                     tries += 1
                     sleep(0.1)
+                    print(e)
                     #print(f"{i} is busy trying next core")
 
         raise BaseException("no cores connected or detected")
 
 
     def Speak(self,*args,**kwargs):
-        threading.Thread(target=self._Speak,args=args,kwargs=kwargs).start()
+        speaker_thread = threading.Thread(target=self._Speak,args=args,kwargs=kwargs)
+        speaker_thread.start()
+        speaker_thread.join()
 
 
     def clean_up(self):
@@ -86,7 +96,7 @@ class ReaderCoreConnector(BaseReader):
 
 
     def _Speak(self,*args,**kwargs):
-        thecore = self.connect_one_core()
+        thecore , port = self.connect_one_core()
         process_this = {
             "type":"Speak",
             "text":kwargs.get("text")
@@ -103,23 +113,26 @@ class ReaderCoreConnector(BaseReader):
             result = False
 
         thecore.close()
+        print(f"closend connection to: {port}")
+
 
         return result
 
     def get_reader_attributes(self,keys:list):
         """asks the reader core whatever attruibute"""
-        thecore = self.connect_one_core()
+        thecore,port = self.connect_one_core()
         thecore.send(json.dumps({"type":"request_data","keys":keys}).encode())
         response = thecore.recv(1024)
         data = json.loads(response.decode())
         thecore.close()
+        print(f"closed connection to core with port: {port}")
         return data
 
     def save_audio(self,*args,**kwargs):
         threading.Thread(target=self._save_audio,args=args,kwargs=kwargs).start()
 
     def _save_audio(self,*args,**kwargs):
-        thecore = self.connect_one_core()
+        thecore,port = self.connect_one_core()
         process_this = {
             "type":"save_audio",
             "text":kwargs.get("text"),
@@ -128,8 +141,11 @@ class ReaderCoreConnector(BaseReader):
 
         thecore.sendall(json.dumps(process_this).encode())
         response = thecore.recv(1024)
-        data = json.loads(response)
+        data : dict = json.loads(response)
+        print(f"converted file: {data.get('filename')}")
         #print(data["success"])
+        thecore.close()
+        print(f"closed connection to core with port: {port}")
         return kwargs.get("filename")
 
 

@@ -28,3 +28,11 @@ def save_settings(base_path,data):
         config_reader(reader,subdict)
         
         
+def load_app_config(basepath=None):
+    """gets the current app config file"""
+    if not basepath:
+        raise BaseException("you did not supply a basepath")
+    configfile = os.path.join(basepath,"appconfig.json")
+    with open(configfile,"r") as file:
+        data = json.load(file)
+        return data

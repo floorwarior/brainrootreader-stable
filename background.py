@@ -4,14 +4,6 @@ import os
 import threading
 import sys
 
-
-#window_process = multiprocessing.Process(target=window_stuff)
-
-#print(CURRENT_PYTHON)
-
-
-
-
 if getattr(sys, 'frozen', False):
     # Running as compiled executable
     ISFROZEN = True
@@ -24,14 +16,13 @@ if getattr(sys, 'frozen', False):
 else:
     # Running as normal Python script
     ISFROZEN = False
-    BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+    BASE_PATH = os.path.abspath(os.path.dirname(__file__))
     print(BASE_PATH)
     DEBUG = False
     ONANDROID = False
     CURRENT_PYTHON = sys.executable
-
-
-subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py") ,"--basepath",BASE_PATH])
+    
+subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py") ,"--basepath",str(BASE_PATH)])
 
 
 from flask import Flask
@@ -63,6 +54,10 @@ import pytesseract
 import socketio
 import docx
 import flask_socketio
+import kokoro
+import misaki # kokoros dependecy
+import language_data # misakies dependency
+import language_tags # misakies dependency
 
 #from TTS.api import TTS
 # -- -- -- -- -- -- -- 
@@ -74,30 +69,42 @@ from plusreaders import readers as custom_readers
 from helpers.bookreaders import readers as builtin_readers
 from helpers.store import VoiceStorePiper
 from helpers.readercore_connector import ReaderCoreConnector
+from helpers.settings import load_app_config
 
 from flask_socketio import SocketIO
 
-SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
- 
-GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
-# if you have a better you should use this new method called ReaderCoreConnector
-# it makes it possible to run more then one instances of the reader classes as it wraps them
-# i tested it with i-5 7500 and after a coldstart it can run kokoro, you will need to wait for the first 3 pages to generate however, or if you are jumping around
-# UPDATE: there are some bugs i need to fix
-"""GLOBALREADER  = ReaderCoreConnector(
-    core_count = 2,
-    is_frozen = ISFROZEN
-)
-"""
 
-def re_initialize_reader():
-    """sets a new global reader if there is a settings change"""
-    global GLOBALREADER,SELECTED_READER,READERS_CONFIG
+
+BRRAPPCONFIG = load_app_config(BASE_PATH)
+
+if BRRAPPCONFIG["audio_method"] == "threading":
+
     SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
     READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
     GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
+elif BRRAPPCONFIG["audio_method"] == "subprocess":
+
+    GLOBALREADER  = ReaderCoreConnector(
+        core_count = BRRAPPCONFIG["core_count"],
+        is_frozen = ISFROZEN,
+        base_path = BASE_PATH if not ISFROZEN else os.path.dirname(sys.executable)
+    )
+# TODO: add BRRAPPCONFIG for controlling, core count and such
+
+def re_initialize_reader():
+    """sets a new global reader if there is a settings change"""
+    global GLOBALREADER,BRRAPPCONFIG
+    if BRRAPPCONFIG["audio_method"] == "subprocess":
+        GLOBALREADER  = ReaderCoreConnector(
+            core_count = 2,
+            is_frozen = ISFROZEN,
+            base_path = BASE_PATH
+        )
+    elif BRRAPPCONFIG["audio_method"] == "threading":
+        SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
+        READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+        GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
 
 print("this is basepath:",BASE_PATH)
@@ -248,11 +255,12 @@ def add_video():
 
 @app.route("/converttoaudio/<book>")
 def convert_book_to_audio(book):
-    global ONANDROID
+    from helpers.book_converter import get_booknames
+
     rd = ReadBook(safe_bookname=book,
                   starting_page=0,
                   base_path_=BASE_PATH,
-                  reader_=GLOBALREADER)
+                  reader_=ReadBook.pull_fallback_reader(base_path=BASE_PATH))
     rd._on_sentence_progress = None
     rd._on_page_progress = lambda *args,**kwargs : socketed_app.emit(event="progress",data={"book_id":book,"page_num":kwargs.get("page_num"),"page":kwargs.get("page")})
     def onfinished_callback(*args,**kwargs):
@@ -261,7 +269,7 @@ def convert_book_to_audio(book):
     rd._on_conversion_finished = lambda *args, **kwargs :onfinished_callback(*args,**kwargs)
     th = threading.Thread(target=lambda: rd.read_book(save=True))
     th.start()
-    return render_template("convertingbooktoplaylist.html",book_id=book,page_count = rd.page_count())
+    return render_template("convertingbooktoplaylist.html",books=get_booknames(basepath=BASE_PATH),book_id=book,page_count = rd.page_count())
 
 
 @app.route("/openorigin/<book>")
