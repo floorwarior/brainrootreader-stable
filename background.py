@@ -58,7 +58,9 @@ import kokoro
 import misaki # kokoros dependecy
 import language_data # misakies dependency
 import language_tags # misakies dependency
-
+import spacy
+import spacy_legacy 
+import spacy_curated_transformers
 #from TTS.api import TTS
 # -- -- -- -- -- -- -- 
 
@@ -76,11 +78,11 @@ from flask_socketio import SocketIO
 
 
 BRRAPPCONFIG = load_app_config(BASE_PATH)
+SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
+READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+
 
 if BRRAPPCONFIG["audio_method"] == "threading":
-
-    SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-    READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
     GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
 elif BRRAPPCONFIG["audio_method"] == "subprocess":
@@ -336,7 +338,8 @@ def speak():
 def make_page_of_book(book,page):
     rd = ReadBook(safe_bookname=book,starting_page=page,base_path_=BASE_PATH,reader_=GLOBALREADER)
     rd._on_sentence_progress = None
-    success = rd.save_page_by_sentences(page)
+    blocking = True if request.args.get("blocking",False) == "1" else False
+    success = rd.save_page_by_sentences(page,blocking=blocking)
     print("-> make page triggered")
     return jsonify({"page":page,"book":book,"converted":success,"sentence_data":rd.save_transscript_for_page(page)})
 

@@ -140,7 +140,7 @@ class WinReader(BaseReader):
 
 
     @pan.panic(on_panic="on_audio_panic",class_method=True)
-    def Speak(self,text):
+    def Speak(self,*args,text,**kwargs):
         self._make_thread_safe()
         self.speaker.Speak(text)
 
@@ -223,7 +223,7 @@ class AndroidReader(BaseReader):
 
 class CoquiReader(BaseReader):
 
-    def __init__(self, *args, speaker="there was no speaker specified",model_folder="coquimodels",model="", **kwargs):
+    def __init__(self, *args, speaker=None,model_folder="coquimodels",model="", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
         try:
             import torch
@@ -414,8 +414,6 @@ readers = {
     "PiperReader":PiperReader,
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
-    "KokoroReader":KokoroReader,
-    "CoquiReader":CoquiReader
 }
 # TIP: if you are trying to make a custom build or want a faster stand up time, remove the readers you are not using
 

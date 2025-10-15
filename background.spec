@@ -5,7 +5,17 @@ a = Analysis(
     ['background.py'],
     pathex=[],
     binaries=[],
-    datas=[("templates","templates"),(".venv/Lib/site-packages/language_data","language_data"),(".venv/Lib/site-packages/language_tags","language_tags"),("brainrootreadericon.ico","."),("loadingwindow.py","."),("README.md","."),("LICENSE.txt","."),("static","static"),("pipermodels","pipermodels"),("helpers","helpers"),("uploads","uploads"),("booklist.json","."),("readerconfigs","readerconfigs"),("plusreaders","plusreaders")],
+    datas=[("templates","templates"),(".venv/Lib/site-packages/language_data/data","language_data/data"),
+    (".venv/Lib/site-packages/language_tags/data","language_tags/data"),
+    (".venv/Lib/site-packages/misaki","misaki"),("brainrootreadericon.ico","."),
+    (".venv/Lib/site-packages/kokoro","kokoro")
+    ("loadingwindow.py","."),("README.md","."),("LICENSE.txt","."),
+    ("static","static"),("pipermodels","pipermodels"),
+    ("helpers","helpers"),
+    ("uploads","uploads"),
+    ("booklist.json","."),("readerconfigs","readerconfigs"),
+    ("plusreaders","plusreaders")],
+    ("appconfig.json",".")
     hiddenimports=['pypdf','helpers','readerconfigs','plusreaders','pypdf._reader', 'pypdf._writer', 'pypdf._crypt', 'pypdf._page', 'pypdf.generic', 'pypdf.constants','engineio.async_drivers.threading','engineio.async_drivers.eventlet',],
     hookspath=[],
     hooksconfig={},

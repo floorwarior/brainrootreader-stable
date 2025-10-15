@@ -4,7 +4,7 @@ import nltk
 from nltk import sent_tokenize
 import json
 import pypdf
-from functools import lru_cache
+import time
 
 try:
     from helpers.book_converter import return_cache
@@ -51,7 +51,7 @@ class ReadBook():
         if not safe_bookname:
             if not pdf_path or not self.og_bookname:
                 raise BaseException("no book provided")
-            self.safe_bookname = self.process_pdf(pdf_path) # proccess pdf makes the folder for the book
+            self.safe_bookname = self.process_pdf(pdf_path) # proccess pdf makes the folder for the book, DEPRICATED
         else:
             self.safe_bookname = safe_bookname
         self.book_name = safe_bookname 
@@ -94,8 +94,7 @@ class ReadBook():
     def pull_fallback_reader(base_path=None,*args,**kwargs):
         """if no read was specified it will try to select a reader until one works
         It uses the GLOBALREADERCONFIG['fallbackorder'] : attribute
-        you can modify this in the file@::readerconfigs/globalreader folder
-
+        you can modify this in the file:readerconfigs/globalreader folder
 
         """
         from helpers.bookreaders import readers as builtin_readers
@@ -292,7 +291,7 @@ class ReadBook():
         return os.path.exists(filename)
 
 
-    def save_page_by_sentences(self,page_number):
+    def save_page_by_sentences(self,page_number,blocking=False):
         """
         **SAVES the page in the temporary folder**
         """
@@ -309,11 +308,18 @@ class ReadBook():
             if always_delete_tmp:
                 self.reset_tmp_folder()
 
+
+        filenames = []
         for i,s in enumerate(sentences):
             filename = os.path.join(self.temp_folder,f"page_{page_number}_sentence_{i}.{self.output_ending}")
             if not self.alreadyconverted(filename):
                 self.reader.save_audio(text=s,filename=filename)
             self.on_sentence_progress(sentence=s,sentence_num=i)
+            filenames.append(filename)
+        if blocking:
+            tries = 0
+            while not all(os.path.exists(file ) for file in filenames) and tries < 100:
+                time.sleep(1)
 
         return True
 
@@ -356,9 +362,11 @@ class ReadBook():
         for sentence in sentences:
             self.reader.Speak(text=sentence)
 
-    def read_book(self,save=False):
+    def read_book(self,*args,save=False,**kwargs):
         book_data,success = self.books_data()
         pages = []
+        filenames = []
+
         if not success:
             return "no such book converted before"
         self.remove_last_audio()
@@ -370,14 +378,16 @@ class ReadBook():
             if not save:
                 self.read_page_by_sentence(page)
             else:
-                pagename = self.save_audio(page=page,page_number=page_num)
+                pagename,filename = self.save_audio(page=page,page_number=page_num)
+                print(f"filename in read book function: {filename}")
+                filenames.append(filename)
                 if pagename:
                     pages.append(pagename)
                 else:
                     print(f"[ page: {page_num} already exists ]")
 
             self.on_page_progress(page=page,page_num=page_num)
-            
+
         self.on_conversion_finished(book_folder=self.books_folder)
 
         if os.path.exists(self.playlist_file_name):
@@ -392,11 +402,11 @@ class ReadBook():
         """based on which reader it is using it saves the audio"""
         pagename = f"page_{page_number}.{self.output_ending}"
         if os.path.exists(os.path.join(self.books_folder,pagename)):
-            return False
+            return False, ""
         filename = os.path.join(self.books_folder,pagename)
         self.reader.save_audio(text=page,filename=filename)
 
-        return pagename
+        return pagename, filename
 
 
 

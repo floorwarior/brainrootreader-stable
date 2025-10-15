@@ -16,7 +16,7 @@ class ReaderCoreConnector(BaseReader):
     def __init__(self, *args,  speaker="ReaderCore", **kwargs):
         super().__init__(*args,speaker,**kwargs)
         self.starting_port = 4222
-        self.core_count = kwargs.get("core_count")
+        self.core_count = int(kwargs.get("core_count"))
         self.is_frozen = kwargs.get("is_frozen")
         self.base_path = kwargs.get("base_path")
         self.cores = []
@@ -88,7 +88,8 @@ class ReaderCoreConnector(BaseReader):
     def Speak(self,*args,**kwargs):
         speaker_thread = threading.Thread(target=self._Speak,args=args,kwargs=kwargs)
         speaker_thread.start()
-        speaker_thread.join()
+        if kwargs.get("blocking"):
+            speaker_thread.join()
 
 
     def clean_up(self):
@@ -129,7 +130,10 @@ class ReaderCoreConnector(BaseReader):
         return data
 
     def save_audio(self,*args,**kwargs):
-        threading.Thread(target=self._save_audio,args=args,kwargs=kwargs).start()
+        thethread = threading.Thread(target=self._save_audio,args=args,kwargs=kwargs)
+        thethread.start()
+        if kwargs.get("blocking"):
+            thethread.join()
 
     def _save_audio(self,*args,**kwargs):
         thecore,port = self.connect_one_core()
