@@ -4,6 +4,8 @@ import requests
 import os
 import json
 
+from abc import abstractmethod
+
 
 class VoiceStoreBase():
 
@@ -99,14 +101,39 @@ class VoiceStorePiper(VoiceStoreBase):
 
 
 
-if __name__ == "__main__":
-    print( os.path.dirname(os.path.dirname(__file__)),)
-    piper_voice_store = VoiceStorePiper(
-            name="Piper",
-            base_path=os.path.dirname(os.path.dirname(__file__)),
-            model_folder_foldername="pipermodels",
-            baseendpoint="https://huggingface.co/rhasspy/piper-voices/resolve/main/",
-            voicesendpoint="https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json"
-        )
-    piper_voice_store.download_voice("en_US-amy-medium")
-    #piper_voice_store.download_voice("ed_US-amy-medium")
+class VoiceStoreKokoro():
+    """gets the voice that ends in .pt not the **model**
+    **Params**
+    - name: str used for indentification
+    - models_folder: str example kokoromodels
+    - base_url: url if you are using a different version of kokoro the you will have to gives this in a format where your voice models name will be replacing <placeholder> in the url
+    """
+    def __init__(self,*args,base_path,model_folder,name,**kwargs):
+        self.base_url : str= kwargs.get("base_url","https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/<placeholder>?download=true")
+        self.base_path = base_path
+        self.models_folder = model_folder
+        self.name = name
+        self.models_folder_path = os.path.join(self.base_path,self.models_folder)
+
+    def download_voice(self,voice):
+        """"""
+        filename = f"{voice}.pt"
+        url = self.base_url.replace("<placeholder>",filename)
+        response = requests.get(url)
+        if response.status_code == 200:
+            with open(os.path.join(self.models_folder_path,filename), "wb") as f:
+                f.write(response.content)
+        else:
+            print(f"there is no voice such voice: {voice}, on this endpoint: {self.base_url.replace('<placeholder>','')}")
+
+
+
+
+
+    def get_chached_voices(self):
+        """gets the list of downloaded voices that are inside the apps dedicated kokoro folder"""
+        voices = [voice for voice in os.listdir(self.models_folder_path) if voice.endswith(".pt")]
+        return voices
+
+
+

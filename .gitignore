@@ -11,7 +11,7 @@ tokenforwsl.txt
 !static/videos/spinningfish.mp4
 !static/videos/spinningtoilet.mp4
 !static/videos/video_links.json
-__pycache__
+__pycache__/
 todo.txt
 wslaccestoken.txt
 pipermodels/*
@@ -35,3 +35,7 @@ build.py
 foolingaroud.py
 .vscode
 .venv-downgrade
+run.bat
+kokoromodels/
+!kokoromodels/keepme.json
+

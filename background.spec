@@ -14,8 +14,7 @@ a = Analysis(
     ("helpers","helpers"),
     ("uploads","uploads"),
     ("booklist.json","."),("readerconfigs","readerconfigs"),
-    ("plusreaders","plusreaders")],
-    ("appconfig.json",".")
+    ("plusreaders","plusreaders"),("appconfig.json","."),(".venv/Lib/en_core_web_sm","en_core_web_sm")],
     hiddenimports=['pypdf','helpers','readerconfigs','plusreaders','pypdf._reader', 'pypdf._writer', 'pypdf._crypt', 'pypdf._page', 'pypdf.generic', 'pypdf.constants','engineio.async_drivers.threading','engineio.async_drivers.eventlet',],
     hookspath=[],
     hooksconfig={},

@@ -9,7 +9,7 @@ except:
 
 
 import traceback
-
+IS_BUILD = False
 
 NoVoicesGetterError = "This reader does not support getting voices, make sure this is intended behavior."
 NoSpeakerError = "This reader does not support speaking on this device, make sure this is intended behavior."
@@ -65,47 +65,6 @@ class BaseReader(ABC):
 
 
 
-class GoogleReader(BaseReader):
-
-    def __init__(self,lang="en",speaker=None,*args,**kwargs):
-        super().__init__(speaker=speaker, *args, **kwargs)
-        self.imported_ok = False
-        try:
-            self.lang = lang
-            import playsound
-            from gtts import gTTS
-            self.gTTS = gTTS
-            self.playsound = playsound
-            self.imported_ok = True
-        except BaseException as e:
-            self.error = e
-            self.ready = False
-            print(e)
-            
-        notsupportederror = BaseException(
-            "this reader is currently not supported"
-        )
-        raise notsupportederror
-
-    @pan.panic(on_panic="on_audio_panic")
-    def save_audio(self,*args,**kwargs):
-        """"""
-        text = kwargs.get("text")
-        audio_out_name = kwargs.get("filename")
-        self.gTTS(text).save(audio_out_name)
-
-    @pan.panic(on_panic="on_speak_panic")
-    def Speak(self, *args,**kwargs):
-        text = kwargs.get("text")
-        audio_out_name = kwargs.get("filename")
-        self.gTTS(text).save(audio_out_name)
-
-        
-
-
-    def get_voices(self,*args,**kwargs):
-        """"""
-        return NoVoicesGetterError
 
 
 class WinReader(BaseReader):
@@ -171,56 +130,6 @@ class WinReader(BaseReader):
         self.speaker.Voice = self.speaker.getVoices()[int(index)]
 
 
-class AndroidReader(BaseReader):
-    
-
-    def __init__(self,lang="en",speaker=None,*args,**kwargs):
-        super().__init__(*args, speaker=speaker, **kwargs)
-
-        self.lang = lang
-        try:
-            from kvdroid.tools import TextToSpeech,File
-            from kvdroid.jclass.java import Locale
-            from jnius import autoclass
-            self.PythonService = autoclass('org.kivy.android.PythonService')
-            self.mService = self.PythonService.mService
-            self.TextToSpeech = TextToSpeech
-            self.Locale = Locale
-            self.File = File
-            self.tts_engine = self._get_speaker()
-            self.imported_ok = True
-        except Exception as e:
-            self.ready = False
-            self.error = e
-            print(e)
-
-
-    def on_audio_panic(self, *args, **kwargs):
-        print("[ Panic Ok ]\naudio conversion failed, this is expected behaviour on Android.")
-        return kwargs.get("filename")
-
-    
-    def _get_speaker(self):
-        """gets the system speaker to use"""
-        tts = self.TextToSpeech(self.mService, None)
-        tts.setLanguage(self.Locale(self.lang))
-        return tts
-
-
-    @pan.panic(on_panic="on_audio_panic",class_method=True)
-    def save_audio(self,*args,**kwargs):
-        page = kwargs.get("text")
-        audio_out_name = kwargs.get("filename")
-        params = None
-        outFile = self.File(audio_out_name)
-        self.tts_engine.synthesizeToFile(page, params, outFile, "utteranceId")
-        return audio_out_name
-
-    @pan.panic(on_panic="on_speak_panic",class_method=True)
-    def Speak(self,text):
-        self.tts_engine.speak(text, self.TextToSpeech.QUEUE_FLUSH, None)
-
-
 class CoquiReader(BaseReader):
 
     def __init__(self, *args, speaker=None,model_folder="coquimodels",model="", **kwargs):
@@ -247,17 +156,11 @@ class CoquiReader(BaseReader):
         return super().on_audio_panic(*args, **kwargs)
 
 
-    def _make_placeholder(self,*args,**kwargs):
-        """makes a palceholder file so other threads do not try to make the same file multiple time"""
-        filename = kwargs.get("filename")
-        with open(filename,"w") as f:
-            print(f"made dummy file {filename}")
 
     @pan.panic(on_panic="on_audio_panic",class_method=True)
     def save_audio(self,*args,**kwargs):
         filename = kwargs.get("filename")
         text = kwargs.get("text")
-        self._make_placeholder(filename=filename)
         self.tts.tts_to_file(text=text,file_path = filename)
         return filename
 
@@ -340,56 +243,6 @@ class PiperReader(BaseReader):
         return models
     
 
-
-class KokoroReader(BaseReader):
-    """uses kokoro"""
-
-    def __init__(self, *args, speaker="kokoro", **kwargs):
-        super().__init__(*args, speaker=speaker, **kwargs)
-        try:
-            import soundfile as sf
-            from kokoro import KPipeline
-            import sounddevice as sd
-      
-            self.sf = sf
-            self.sd = sd
-            self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"))
-            self.model = kwargs.get("model")
-            self.imported_ok = True
-            self.ready = True
-        except Exception as e:
-            self.imported_ok = False
-            self.error = e
-
-
-    @pan.panic(on_panic="on_audio_save_panic",class_method=True)
-    def save_audio(self,*args,**kwargs):
-        text = kwargs.get("text")
-        audio_out_name = kwargs.get("filename")
-        generator = self.pipeline(text,voice=self.model)
-        parts = []
-        for i, (gs, ps, audio) in enumerate(generator):
-            #print(i, gs, ps)
-            #display(Audio(data=audio, rate=24000, autoplay=i==0))
-            parts.append(audio)
-            #sf.write(f'{i}.wav', audio, 24000)
-
-        added = np.concatenate(parts)
-        self.sf.write(audio_out_name,added,24000)
-
-    @pan.panic(on_panic="on_speak_panic",class_method=True)
-    def Speak(self,*args,**kwargs):
-        text = kwargs.get("text")
-        generator = self.pipeline(text=text,voice=self.model)
-        parts = []
-        for i, (gs, ps, audio) in enumerate(generator):
-            #print(i, gs, ps)
-            #display(Audio(data=audio, rate=24000, autoplay=i==0))
-            parts.append(audio)
-            self.sd.play(audio, 24000)
-            self.sd.wait()
-
-
 class BrowserReader(BaseReader):
     """since it does not return anything it forces the system to use the browsers reader for audio"""
     def __init__(self, *args, speaker="browser reader", **kwargs):
@@ -407,10 +260,108 @@ class BrowserReader(BaseReader):
 
 
 
+class KokoroReader(BaseReader):
+    """takes the following arguments: 
+    - voice: str or path
+    - lang_code: str
+
+    - model: str or path <- *
+    - config: str or path <- *
+    - models_folder: str or path <-*
+    - base_path: str <-*
+    - g2p_model_folder : str or path  <-*
+    *NOTE: these should be used only if you are trying to build the project, checkout my other repo for more info:
+    https://github.com/floorwarior/pyinstaller_kokoro_build_guide
+    example usege:
+    ```
+        reader = KokoroReader(
+            voice="bm_daniel",
+            lang_code="b"
+    )
+        reader.Speak(text="hello there")
+    ```
+
+    """
+    def __init__(self, *args, speaker="kokoro", **kwargs):
+        super().__init__(*args, speaker=speaker, **kwargs)
+
+        try:
+            import soundfile as sf
+            from kokoro import KPipeline,KModel
+            import sounddevice as sd
+            global IS_BUILD
+            self.sf = sf
+            self.sd = sd
+            self.models_folder = kwargs.get("models_folder")
+            self.base_path = kwargs.get("base_path")
+            self._model = kwargs.get("model")
+            self._voice = kwargs.get("voice") 
+            self._config = kwargs.get("config") 
+            self._model_path = None
+            self._gp2_model_folder = None
+            self.voice = self._voice
+            if IS_BUILD:
+                self._model_path =os.path.join(self.base_path,self.models_folder,self._model)
+                self._gp2_model_folder = kwargs.get("g2p_model_folder")
+                self.voice = os.path.join(self.base_path,self.models_folder,self._voice)
+
+            # if you are building the script you will have to do some modifications to some of the classes see BUILDGUID.md
+            # if you do not want to build the project you can use the precompiled releases
+            #
+            # self.pipeline = KPipeline(gp2_model_path=os.path.join(self.base_path,self._gp2_model_folder),lang_code=kwargs.get("lang_code"),model=KModel(
+            #    model=os.path.join(self.base_path,self.models_folder,self._model),
+            #    config=os.path.join(self.base_path,self.models_folder,self._config)))
+            self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"),model=KModel(
+                model=self._model_path,
+                config=self._config)
+                )
+
+
+            self.imported_ok = True
+            self.ready = True
+        except Exception as e:
+            traceback.print_exc()
+            self.imported_ok = False
+            self.error = e
+
+    def on_audio_save_panic(self,*args,**kwargs):
+        if self._on_audio_save_panic:
+            self._on_audio_save_panic(*args,**kwargs)
+
+
+
+    @pan.panic(on_panic="on_audio_save_panic",class_method=True)
+    def save_audio(self,*args,**kwargs):
+        text = kwargs.get("text")
+        audio_out_name = kwargs.get("filename")
+        generator = self.pipeline(text,voice=self.voice)
+
+        parts = []
+        for i, (gs, ps, audio) in enumerate(generator):
+            #print(i, gs, ps)
+            #display(Audio(data=audio, rate=24000, autoplay=i==0))
+            parts.append(audio)
+            #sf.write(f'{i}.wav', audio, 24000)
+        added = np.concatenate(parts)
+        self.sf.write(audio_out_name,added,24000)
+
+    @pan.panic(on_panic="on_speak_panic",class_method=True)
+    def Speak(self,*args,**kwargs):
+        text = kwargs.get("text")
+        generator = self.pipeline(text,voice=self.voice)
+
+        parts = []
+        for i, (gs, ps, audio) in enumerate(generator):
+            #print(i, gs, ps)
+            #display(Audio(data=audio, rate=24000, autoplay=i==0))
+            parts.append(audio)
+            self.sd.play(audio, 24000)
+            self.sd.wait()
 
 
 
 readers = {
+    "KokoroReader":KokoroReader,
     "PiperReader":PiperReader,
     "WinReader":WinReader,
     "BrowserReader":BrowserReader,
@@ -419,10 +370,15 @@ readers = {
 
 
 if __name__ == "__main__":
-    koro = KokoroReader(
-        lang_code = "a",
-        model="af_bella"
+    reader = KokoroReader(
+        voice="bm_daniel",
+        lang_code="b"
     )
-    #koro.Speak(text="hello there general shinobi")
-    print(koro.get_voices())
-    #koro.save_audio(text="This is some text we are going to save",filename="example.wav")
+    reader.Speak(text="hello there")
+
+    IS_BUILD = True
+
+    reader = KokoroReader(
+        voice="af_heart.pt"
+        
+    )

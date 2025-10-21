@@ -74,9 +74,9 @@ def main():
         server.bind(("127.0.0.1",int(args.port)))
         server.listen(1)
         server.settimeout(None)
-
+        client,adrr = server.accept()
         while True:
-            client,adrr = server.accept()
+           
             msg = (client.recv(2048*10).decode())
             data = json.loads(msg)
 
@@ -87,7 +87,7 @@ def main():
             if data["type"] == "save_audio":
                 GLOBALREADER.save_audio(text=data["text"],filename=data["filename"])
                 client.sendall(json.dumps({"success":True,"filename":data["filename"]}).encode())
-
+ 
             if data["type"] == "terminate":
                 pid = os.getpid()
                 def shutdown():

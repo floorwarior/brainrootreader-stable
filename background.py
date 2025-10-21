@@ -11,7 +11,9 @@ if getattr(sys, 'frozen', False):
     print(BASE_PATH)
     DEBUG = False
     ONANDROID = False
-    CURRENT_PYTHON = "python.exe"
+    subprocess.Popen(["loadingwindow.exe"])
+    
+
 
 else:
     # Running as normal Python script
@@ -21,8 +23,8 @@ else:
     DEBUG = False
     ONANDROID = False
     CURRENT_PYTHON = sys.executable
-    
-subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py") ,"--basepath",str(BASE_PATH)])
+    subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py")])
+
 
 
 from flask import Flask
@@ -61,6 +63,7 @@ import language_tags # misakies dependency
 import spacy
 import spacy_legacy 
 import spacy_curated_transformers
+import en_core_web_sm
 #from TTS.api import TTS
 # -- -- -- -- -- -- -- 
 
@@ -69,8 +72,8 @@ from helpers.generalttsreader import ReadBook
 from helpers.loadreader import load_reader, get_readers_config
 from plusreaders import readers as custom_readers
 from helpers.bookreaders import readers as builtin_readers
-from helpers.store import VoiceStorePiper
-from helpers.readercore_connector import ReaderCoreConnector
+from helpers.store import VoiceStorePiper,VoiceStoreKokoro
+from helpers.readercore_connector_v2 import ReaderCoreConnector
 from helpers.settings import load_app_config
 
 from flask_socketio import SocketIO
@@ -86,13 +89,12 @@ if BRRAPPCONFIG["audio_method"] == "threading":
     GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
 elif BRRAPPCONFIG["audio_method"] == "subprocess":
-
     GLOBALREADER  = ReaderCoreConnector(
         core_count = BRRAPPCONFIG["core_count"],
         is_frozen = ISFROZEN,
         base_path = BASE_PATH if not ISFROZEN else os.path.dirname(sys.executable)
     )
-# TODO: add BRRAPPCONFIG for controlling, core count and such
+
 
 def re_initialize_reader():
     """sets a new global reader if there is a settings change"""
@@ -123,8 +125,7 @@ def home():
 @app.route("/api/downloadvoicemodel/<voice>")
 def download_voice_dirrectly(voice=None):
     if not voice:
-        return "no voice specified"
-    
+        return "no voice specified"    
     piper_voice_store = VoiceStorePiper(
     name="Piper",
     base_path=BASE_PATH,
@@ -132,7 +133,15 @@ def download_voice_dirrectly(voice=None):
     baseendpoint="https://huggingface.co/rhasspy/piper-voices/resolve/main/",
     voicesendpoint="https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json"
     )
-    stores = {piper_voice_store.name:piper_voice_store}
+    kokoro_voice_store = VoiceStoreKokoro(
+        name="Kokoro",
+        base_path=BASE_PATH,
+        model_folder="kokoromodels",
+    )
+
+
+    stores = {piper_voice_store.name:piper_voice_store,
+              kokoro_voice_store.name:kokoro_voice_store}
     # get the correct store to call
     reader = request.args.get("reader")
 
@@ -167,7 +176,7 @@ def voicebag():
 
 @app.route("/settings",methods=["POST","GET"])
 def settings():
-    #return "<h1>This does not work</h1>"
+
     if request.method == "POST":
         from helpers.settings import save_settings
         data = request.form.to_dict()
@@ -178,7 +187,7 @@ def settings():
         from helpers.loadreader import all_readers
         from helpers.videos import get_video_list
         # Gets all the voices from all readers except of the browser one that is handled in the browser
-        return render_template("settings.html",all_readers = all_readers(custom_readers,builtin_readers),get_readers_config=get_readers_config,base_path=BASE_PATH,videos=get_video_list(BASE_PATH),selected_reader=SELECTED_READER)
+        return render_template("settings.html",all_the_readers = all_readers(custom_readers,builtin_readers),get_readers_config=get_readers_config,base_path=BASE_PATH,videos=get_video_list(BASE_PATH),selected_reader=SELECTED_READER)
 
 @app.route("/deletebook/",methods=["POST","GET"])
 @app.route("/deletebook/<book>",methods=["POST","GET"])
@@ -312,11 +321,11 @@ def kill_server():
     pid = os.getpid()
     def shutdown():
         print("kill server called shutting down.")
-        time.sleep(2)
+        time.sleep(10)
         GLOBALREADER.clean_up()
         os.kill(pid,signal.SIGINT)
     threading.Thread(target=shutdown).start()
-    return jsonify({"request":"shutdown server","status":"scheduled","Brain Root Reader":"bye bye see you next time"})
+    return render_template("shutdownscreen.html",books={})
 
 
 @app.route("/api/alive")

@@ -9,13 +9,19 @@ brainrootreader = Analysis(
     (".venv/Lib/site-packages/language_tags/data","language_tags/data"),
     (".venv/Lib/site-packages/misaki","misaki"),("brainrootreadericon.ico","."),
     (".venv/Lib/site-packages/kokoro","kokoro"),
-    (".venv/Lib/site-packages/espeakng_loader","espeakng_loader")
+    (".venv/Lib/site-packages/spacy","spacy"),
+    (".venv/Lib/site-packages/spacy_curated_transformers","spacy_curated_transformers"),
+    (".venv/Lib/site-packages/spacy_legacy","spacy_legacy"),
+    (".venv/Lib/site-packages/spacy_loggers","spacy_loggers"),
+    (".venv/Lib/site-packages/espeakng_loader","espeakng_loader"),
     ("loadingwindow.py","."),("README.md","."),("LICENSE.txt","."),
     ("static","static"),("pipermodels","pipermodels"),
     ("helpers","helpers"),
     ("uploads","uploads"),
     ("booklist.json","."),("readerconfigs","readerconfigs"),
-    ("plusreaders","plusreaders"),("appconfig.json",".")],
+    ("plusreaders","plusreaders"),("appconfig.json","."),
+    (".venv/Lib/site-packages/en_core_web_sm","en_core_web_sm"),
+    ("kokoromodels","kokoromodels")],
     hiddenimports=['pypdf','helpers','readerconfigs','plusreaders','pypdf._reader', 'pypdf._writer', 'pypdf._crypt', 'pypdf._page', 'pypdf.generic', 'pypdf.constants','engineio.async_drivers.threading','engineio.async_drivers.eventlet',],
     hookspath=[],
     hooksconfig={},
@@ -60,6 +66,43 @@ readercore= Analysis(
 )
 readercore_pyz = PYZ(readercore.pure)
 
+
+loadingwindow = Analysis(
+    ['loadingwindow.py'],
+    pathex=[],
+    binaries=[],
+    datas=[],
+    hiddenimports=[],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
+
+loadingwindow_pyz = PYZ(loadingwindow.pure)
+
+loadingwindow_exe = EXE(
+    loadingwindow_pyz,
+    loadingwindow.scripts,
+    [],
+    exclude_binaries=True,
+    name='loadingwindow',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
+
+
+
 readercore_exe = EXE(
     readercore_pyz,
     readercore.scripts,
@@ -79,11 +122,14 @@ readercore_exe = EXE(
 )
 coll = COLLECT(
     readercore_exe,
+    loadingwindow_exe,
     brainrootreader_exe,
+    loadingwindow.binaries,
     readercore.binaries,
     brainrootreader.binaries,
     readercore.datas,
     brainrootreader.datas,
+    loadingwindow.datas,
     strip=False,
     upx=True,
     upx_exclude=[],

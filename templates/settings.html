@@ -15,7 +15,7 @@ Things to have:
 -->
 <h1>Reader Settings</h1>
 <form action="{{url_for('settings')}}" method="post">
-    {% for reader in all_readers.values() %}
+    {% for reader in all_the_readers.values() %}
 
         {% if reader.__name__ != "BrowserReader"  %}
         <div class="card bg-dark text-light border border-light">
@@ -55,7 +55,7 @@ Things to have:
         <div class="card-body">
             <select autocomplete="off" class="form-control text-light bg-dark" name="global_reader" id="globalreadersettings">
                 <option value="empty">--Select-a-Reader--</option>
-                {% for reader, reader_class in all_readers.items() %}
+                {% for reader, reader_class in all_the_readers.items() %}
                     {% if reader==selected_reader.__name__ %}
                         <option selected value="{{reader}}">
                             {{reader}}
@@ -95,8 +95,6 @@ Things to have:
             {% endfor %}
         </select>
     </div>
-
-
 </div>
 <button type="submit" class="btn btn-outline-light">Save</button>
 </form>

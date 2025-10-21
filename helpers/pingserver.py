@@ -3,7 +3,7 @@ from helpers.thepanic import Pan as pan
 from urllib import request
 import json
 
-@pan.try_until(maxtries=60,timeout=1,default_value=False)
+@pan.try_until(maxtries=60,timeout=1,default_value=False,supress=True)
 def is_server():
     """tries until it gets a connection"""
     import urllib.request
@@ -15,7 +15,7 @@ def is_server():
 
 
 
-@pan.try_until(maxtries=10,timeout=1)
+@pan.try_until(maxtries=10,timeout=1,supress=True)
 def kill_server():
     """stops the servers process"""
     r = request.urlopen("http://localhost:5003/api/killserver")

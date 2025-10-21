@@ -42,7 +42,7 @@ class PanTheGuyofPanics():
         """
         pan.attached[name_of_func] = func
 
-    def try_until(pan,timeout,maxtries,default_value=None):
+    def try_until(pan,timeout,maxtries,default_value=None,supress=False):
         """tries to execute a function until it works, or it hits maximum tries, should be used with network bound tasks"""
         def decorator(func):
             def wrapper(*args,**kwargs):
@@ -55,8 +55,9 @@ class PanTheGuyofPanics():
                     except Exception as e:
                         error = e
                         tries += 1
-                        traceback.print_exc()
-                        print(f"{tries} / {maxtries} ")
+                        if not supress:
+                            traceback.print_exc()
+                            print(f"{tries} / {maxtries} ")
 
                         time.sleep(timeout)
                 if not success and not default_value:

@@ -1,3 +1,31 @@
-[WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
-[WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
-[WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+Expecting value: line 1 column 1 (char 0)
+[WinError 10054] An existing connection was forcibly closed by the remote host
+Expecting value: line 1 column 1 (char 0)
+Expecting value: line 1 column 1 (char 0)
+Expecting value: line 1 column 1 (char 0)
+Expecting value: line 1 column 1 (char 0)
+404 Client Error. (Request ID: Root=1-68f6cb97-555b904f7ec46f8b4afb5770;6668e3fc-a006-4c3d-83d0-287438f8ef5e)
+
+Entry Not Found for url: https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/C%3A%5CUsers%5Cishall%5CDesktop%5Cpublic_brainrootreader%5Cbrainrootreader%5Ckokoromodels%5Cbm_daniel.pt.
+404 Client Error. (Request ID: Root=1-68f6cb97-124386ab25f5a97e06b4f729;2e9d4349-35a0-4003-b089-54ff887994f7)
+
+Entry Not Found for url: https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/C%3A%5CUsers%5Cishall%5CDesktop%5Cpublic_brainrootreader%5Cbrainrootreader%5Ckokoromodels%5Cbm_daniel.pt.
+404 Client Error. (Request ID: Root=1-68f6cb97-572199300f0d8a512e66243c;ae5b7fff-6eff-4cc2-ba73-9abfcee6b550)
+
+Entry Not Found for url: https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/C%3A%5CUsers%5Cishall%5CDesktop%5Cpublic_brainrootreader%5Cbrainrootreader%5Ckokoromodels%5Cbm_daniel.pt.
+404 Client Error. (Request ID: Root=1-68f6cb97-02aab3e54233e6726a3c5784;4c60a7f4-0807-4c15-8dc9-9a0bc28259f3)
+
+Entry Not Found for url: https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/C%3A%5CUsers%5Cishall%5CDesktop%5Cpublic_brainrootreader%5Cbrainrootreader%5Ckokoromodels%5Cbm_daniel.pt.
+404 Client Error. (Request ID: Root=1-68f6cb98-34a9693365f61ad76f0cf458;c0a0b206-c1f2-4109-bf91-c879f884cbf1)
+
+Entry Not Found for url: https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/C%3A%5CUsers%5Cishall%5CDesktop%5Cpublic_brainrootreader%5Cbrainrootreader%5Ckokoromodels%5Cbm_daniel.pt.
+404 Client Error. (Request ID: Root=1-68f6cb98-73b4258a2dc531580c709e2c;48b28fe3-266f-435f-93a5-9e4bbf0c9733)
+
+Entry Not Found for url: https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/C%3A%5CUsers%5Cishall%5CDesktop%5Cpublic_brainrootreader%5Cbrainrootreader%5Ckokoromodels%5Cbm_daniel.pt.
+<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+'KokoroReader' object has no attribute 'pipeline'
+expected str, bytes or os.PathLike object, not NoneType
+[Errno 2] No such file or directory: 'bm_daniel.pt'
+'NoneType' object is not iterable
+'NoneType' object is not iterable
+'NoneType' object is not iterable

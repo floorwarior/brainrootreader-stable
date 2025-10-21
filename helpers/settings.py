@@ -13,7 +13,7 @@ def save_settings(base_path,data):
     readers = {}
     for key,val in data.items():
         current_reader,subkey = key.rsplit("_")
-        if val == "empty" or current_reader not in all_readers.keys():
+        if val == "empty" or  not (current_reader in all_readers.keys()):
             if val != "empty":
                 if key == "global_reader":
                     set_global_reader(global_reader=val)

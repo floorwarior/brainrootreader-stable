@@ -1,6 +1,9 @@
 """connects to the readercore, with multiprocess the speed of conversion should be generally a lot faster"""
 import socket
-from helpers.bookreaders import BaseReader
+try:
+    from helpers.bookreaders import BaseReader
+except:
+    from bookreaders import BaseReader
 import subprocess
 import threading
 import os
@@ -9,8 +12,11 @@ import sys
 from time import sleep
 
 class ReaderCoreConnector(BaseReader):
-    """can be used in the place of any Reader class, returns the same stuff, spans core_count number of readercores, can be usefull if you have more then
-    one cores and want to generate data faster
+    """can be used in the place of any Reader class
+    params:
+    - core_count: str <- should be below your systems core count
+    - base_path: path/str root where your project is running from
+    - is_frozen: str if it is set to true we will try to run the readercore.exe file rather then subprocess
     """
 
     def __init__(self, *args,  speaker="ReaderCore", **kwargs):
@@ -44,8 +50,7 @@ class ReaderCoreConnector(BaseReader):
                         print(f"shutting down reader core on port: {i}")
                         terminated = True
                         client.close()
-                    else:
-                        client.close()
+
                 except Exception as e:
                     sleep(.1)
                     pass
@@ -61,6 +66,8 @@ class ReaderCoreConnector(BaseReader):
                 subprocess.Popen(["readercore.exe","--port",f"{i}"])
             self.cores.append(i)
         return True
+
+
 
 
     def connect_one_core(self):
@@ -79,7 +86,7 @@ class ReaderCoreConnector(BaseReader):
                 except Exception as e:
                     tries += 1
                     sleep(0.1)
-                    print(e)
+                    #print(e)
                     #print(f"{i} is busy trying next core")
 
         raise BaseException("no cores connected or detected")
@@ -153,3 +160,10 @@ class ReaderCoreConnector(BaseReader):
         return kwargs.get("filename")
 
 
+
+if __name__ == "__main__":
+    reader = ReaderCoreConnector(
+        core_count = "2",
+        is_frozen = False,
+        base_path = os.getcwd()
+    )

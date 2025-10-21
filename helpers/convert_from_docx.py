@@ -16,7 +16,7 @@ class ConvertFromDocx():
         from nltk import sent_tokenize
         self.sent_tokenize = sent_tokenize
         self.chunksize = chunksize
-        self._convert_error_handler = lambda *args, **kwargs: print("the conversion of the file faild with error,",kwargs.get("error"), "look at the above traceback to see where it went wrong")
+        self._convert_error_handler = lambda *args, **kwargs: print("the conversion of the file failed with error,",kwargs.get("error"), "look at the above traceback to see where it went wrong")
 
     def _chunkit(self,text):
         """breaks the submitted text into 15 sentence pages"""
@@ -35,7 +35,7 @@ class ConvertFromDocx():
         fullText = []
         for para in doc.paragraphs:
             fullText.append(para.text)
-        return '\n'.join(fullText)
+        return ' '.join(fullText)
 
 
     def convert_error_handler(self,*args,**kwargs):
