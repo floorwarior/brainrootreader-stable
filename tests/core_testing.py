@@ -10,7 +10,6 @@ ReaderCoreConnector = import_from_path(file_path=os.path.join(project_folder,mod
 if __name__ == "__main__":
     reader = ReaderCoreConnector(
         core_count="1",
-        base_path = project_folder
     )
     reader.Speak(text="this is a really important text here")
     reader.save_audio(filename=os.path.join(test_folder,"test.wav"),text="Hello there general kenobi")

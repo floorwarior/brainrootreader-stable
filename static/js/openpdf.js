@@ -4,7 +4,7 @@
 
 
 function openpdf(bookname,page){
-    window.open(`http://localhost:5003/uploads/${bookname}#page=${page}`,"pdfviewer")
-
-
+    if ("pdf" in bookname){
+        window.open(`http://localhost:5003/uploads/${bookname}#page=${page}`,"pdfviewer")
+    }
 }

@@ -38,7 +38,6 @@ class ReaderCoreConnector(BaseReader):
 
 
     **Params:**
-    - base_path: str or path
     - is_frozen: defaults to False, pass True if your app is compiled
     - core_count: str it should not exceed your physical core counts, recommended is 2
     - starting_port: defaults to 4222"""
@@ -47,9 +46,6 @@ class ReaderCoreConnector(BaseReader):
     def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
         try:
-            self.base_path = kwargs.get("base_path")
-            if not self.base_path:
-                raise Exception("base path should be explicitly stated ")
             self.is_frozen = kwargs.get("is_frozen",False)
             self.core_count = int(kwargs.get("core_count",1))
             self.starting_port = kwargs.get("starting_port",4222)
@@ -82,12 +78,13 @@ class ReaderCoreConnector(BaseReader):
         self._force_kill(port)
         pid = self._make_one_core(port)
         self.cores[port]["pid"] = pid
-        if self.cores[port]["lock"].locked():
-            self.cores[port]["lock"].release()
-        #should i try release the lock here?
+
         client = socket.socket()
         client.connect(("127.0.0.1",int(port)))
         self.cores[port]["client"] = client
+        if self.cores[port]["lock"].locked():
+            self.cores[port]["lock"].release()
+        #should i try release the lock here?
 
     def kill_cores(self):
         """stops the cores from running"""
@@ -248,7 +245,6 @@ if __name__ == "__main__":
     reader = ReaderCoreConnector(
         core_count="3",
         is_frozen = False,
-        base_path = os.getcwd()
 
     )
     reader.Speak(text="Hello there")

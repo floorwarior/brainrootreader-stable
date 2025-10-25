@@ -2,7 +2,12 @@ import subprocess
 import multiprocessing
 import os
 import threading
+import signal
 import sys
+from helpers.settings import load_app_config
+
+
+
 
 if getattr(sys, 'frozen', False):
     # Running as compiled executable
@@ -11,8 +16,9 @@ if getattr(sys, 'frozen', False):
     print(BASE_PATH)
     DEBUG = False
     ONANDROID = False
-    subprocess.Popen(["loadingwindow.exe"])
-    
+    BRRAPPCONFIG = load_app_config(BASE_PATH)
+    if BRRAPPCONFIG["loading_window"]:
+        subprocess.Popen(["loadingwindow.exe"]) 
 
 
 else:
@@ -22,8 +28,10 @@ else:
     print(BASE_PATH)
     DEBUG = False
     ONANDROID = False
+    BRRAPPCONFIG = load_app_config(BASE_PATH)
     CURRENT_PYTHON = sys.executable
-    subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py")])
+    if BRRAPPCONFIG["loading_window"]:
+        subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py")])
 
 
 
@@ -64,6 +72,7 @@ import spacy
 import spacy_legacy 
 import spacy_curated_transformers
 import en_core_web_sm
+import loguru
 #from TTS.api import TTS
 # -- -- -- -- -- -- -- 
 
@@ -74,16 +83,17 @@ from plusreaders import readers as custom_readers
 from helpers.bookreaders import readers as builtin_readers
 from helpers.store import VoiceStorePiper,VoiceStoreKokoro
 from helpers.readercore_connector_v2 import ReaderCoreConnector
-from helpers.settings import load_app_config
+from helpers.autoshutdown import INACTIVITY_MANAGER
 
 from flask_socketio import SocketIO
 
 
 
-BRRAPPCONFIG = load_app_config(BASE_PATH)
 SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
 READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
 
+INACTIVITY_MANAGER.max_timeout = 60*20
+INACTIVITY_MANAGER.interval = 20
 
 if BRRAPPCONFIG["audio_method"] == "threading":
     GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
@@ -92,23 +102,31 @@ elif BRRAPPCONFIG["audio_method"] == "subprocess":
     GLOBALREADER  = ReaderCoreConnector(
         core_count = BRRAPPCONFIG["core_count"],
         is_frozen = ISFROZEN,
-        base_path = BASE_PATH if not ISFROZEN else os.path.dirname(sys.executable)
     )
 
 
 def re_initialize_reader():
     """sets a new global reader if there is a settings change"""
-    global GLOBALREADER,BRRAPPCONFIG
+    global GLOBALREADER,BRRAPPCONFIG,ISFROZEN,BASE_PATH,READERS_CONFIG,SELECTED_READER
     if BRRAPPCONFIG["audio_method"] == "subprocess":
+        GLOBALREADER.clean_up()
         GLOBALREADER  = ReaderCoreConnector(
-            core_count = 2,
+            core_count = BRRAPPCONFIG["core_count"],
             is_frozen = ISFROZEN,
-            base_path = BASE_PATH
         )
     elif BRRAPPCONFIG["audio_method"] == "threading":
         SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
         READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
         GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
+
+
+def shutdown():
+    """stops the server from running"""
+    GLOBALREADER.clean_up()
+    pid = os.getpid()
+    os.kill(pid,signal.SIGINT)
+
+INACTIVITY_MANAGER._shutdown = shutdown
 
 
 print("this is basepath:",BASE_PATH)
@@ -120,6 +138,8 @@ socketed_app = SocketIO(app=app,async_mode="threading")
 def home():
     books = get_booknames(basepath=BASE_PATH)
     return render_template("index_v2.html",books=books)
+
+
 
 
 @app.route("/api/downloadvoicemodel/<voice>")
@@ -313,7 +333,7 @@ def read_book_(book):
 
     return render_template("readpage_v2.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
 
-@app.route("/api/killserver")
+@app.route("/api/killserver",methods=["POST","GET"])
 def kill_server():
     """stops the server from running"""
     import signal
@@ -325,8 +345,10 @@ def kill_server():
         GLOBALREADER.clean_up()
         os.kill(pid,signal.SIGINT)
     threading.Thread(target=shutdown).start()
-    return render_template("shutdownscreen.html",books={})
-
+    if request.method == "GET":
+        return render_template("shutdownscreen.html",books={})
+    else:
+        return "kill server called shutting down."
 
 @app.route("/api/alive")
 def server_alive():
@@ -383,10 +405,20 @@ def run_server_just_local():
     thehost = "localhost" if not DEBUG else "0.0.0.0"
     app.run(host=thehost,port=5003,debug=DEBUG)
 
-def run_server_with_socketio():
-    thehost = "localhost" if not DEBUG else "0.0.0.0"
-    socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=False)
 
+
+@app.before_request
+def monitor_inactivity():
+    global INACTIVITY_MANAGER
+    INACTIVITY_MANAGER.trigger()
+
+def run_server_with_socketio():
+    if BRRAPPCONFIG.get("auto_shutdown",True):
+        INACTIVITY_MANAGER.max_timeout = BRRAPPCONFIG.get("shutdown_after",1200)
+        INACTIVITY_MANAGER.auto_shutdown()
+
+    thehost = "localhost" if not DEBUG else "0.0.0.0"
+    socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=False,allow_unsafe_werkzeug=True)
 
 
 

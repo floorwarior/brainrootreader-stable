@@ -127,9 +127,6 @@ class VoiceStoreKokoro():
             print(f"there is no voice such voice: {voice}, on this endpoint: {self.base_url.replace('<placeholder>','')}")
 
 
-
-
-
     def get_chached_voices(self):
         """gets the list of downloaded voices that are inside the apps dedicated kokoro folder"""
         voices = [voice for voice in os.listdir(self.models_folder_path) if voice.endswith(".pt")]

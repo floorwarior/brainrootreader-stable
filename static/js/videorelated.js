@@ -10,7 +10,7 @@ function set_video_source(elem_id){
         video_link = "./static/videos/spinningfish.mp4"
     }
 
-    if (video_link[0] === "."){
+    if (video_link[0] === "/"){
         elem.id = ""
         var new_elem = document.createElement("video")
         new_elem.classList.add("cover-page-video")

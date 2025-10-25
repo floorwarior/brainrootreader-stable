@@ -6,18 +6,18 @@ from urllib.parse import urljoin
 class OpenBooksFile():
 
     def __init__(self,base_path,bookname,page):
-        self.bookname = bookname
+        self.bookname : str= bookname
         self.page = page
         self.basepath = base_path
         self.uploads_folder = os.path.join(self.basepath,"uploads")
         "PATH"
     def check_type(self):
         """ we only ever want to open pdf files nothing else"""
-        ending = self.bookname.rsplit(".")[-1]
+        ending = self.bookname.endswith(".pdf")
         print("ending:",ending)
         match ending:
             case "pdf":
-                return True            
+                return True
             case _:
                 return False
                 #raise BaseException("other endings are not supported currently")
@@ -37,3 +37,9 @@ if __name__ == "__main__":
         page=2
     )
     openpdf.open_file()
+
+
+
+
+if __name__ == "__main__":
+    

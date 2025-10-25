@@ -93,6 +93,7 @@ python3 background.py
 
 # How to add new voice models?
 ## There are a few different ways to do it:
+### Piper
 - to sample the voices you can checkout this [link](https://rhasspy.github.io/piper-samples/) you can either download one from there and place the files inside the readers models folder in this case: [pipermodels](./pipermodels/)
 
 - alternativly you can try the built in downloader [VoiceBag](http://localhost:5003/voicebag) if you combine these 2, you can sample the voice and then look for its name on the right:
@@ -108,19 +109,30 @@ python3 background.py
 - if you are more confident in your skills you can look directly [here](https://huggingface.co/rhasspy/piper-voices/tree/main)
 
 after you got your model you need to select it in the [settings](http://localhost:5003/settings), for your reader
+### Kokoro
+you can sample kokoros voices [here] (https://huggingface.co/spaces/hexgrad/Kokoro-TTS)
+how to get the voice model depend on if you are using a built BRR (.exe) or the github repo directly
+
+**for compiled version users:**
+- you will need to download the voice model from here: (in the next update it will be added to the voicebag for dirrect download)
+https://huggingface.co/hexgrad/Kokoro-82M/tree/main/voices
+- then place it inside the kokoromodels folder
+- set the name of the model in [kokoros readerconfig](readerconfigs/kokororeader.json) note: this is a filename, example af_heart.pt
+**for developers:**
+- set the name of the voice in the [config](readerconfigs/kokororeader.json) note this is the name of the model: af_heart
+
 
 # How to change fallback order of readers ?
 in the [globalvoicemodelsettings](./readerconfigs/globalreader.json)
 ```
 {
-    "name": "PiperReader",
+    "name": "KokoroReader",
     "type": "builtin",
     "comment": "To use this you can pick either *builtin* or if you want to use a selfmade reader you need to use *custom*",
     "comment2": "The name also have to match the name of the class you want to import",
     "comment3": "Add the ClassName and its config filename to readerconfigs.json",
     "fallbackorder": [
         "PiperReader",
-        "SherpaReader",
         "WinReader",
         "AndroidReader",
         "BrowserReader"
@@ -130,6 +142,12 @@ in the [globalvoicemodelsettings](./readerconfigs/globalreader.json)
 ```
 
 
+# How to make generation faster?
+to improve audio generation time for stronger models ( kokoro ), you can try to use subprocess:
+for this open the [appconfig file](appconfig.json)
+and change threading to subprocess
+set the core count to: 2 =< x <= your system's core count 
+**Note: depending on your system this will take horsepower, if you want to multitask keep it as low as 2**
 
 
 # How to add my own reader?
@@ -141,6 +159,7 @@ Base Reader:
 
 class BaseReader(ABC):
 
+
     def __init__(self,*args,speaker="there was no speaker specified",**kwargs):
         self.speaker = speaker
         self.imported_ok = False
@@ -148,7 +167,7 @@ class BaseReader(ABC):
         self.base_path = kwargs.get("base_path")
         self.origin = "builtin"
         self._on_speak_panic = lambda *args,**kwargs: print("speak has failed, default panic triggered because of:",kwargs.get("error"))
-        self._on_audio_save_panic = lambda *args,**kwargs: print("audio save failed, default panic triggered because of error:",kwargs.get("error"))
+        self._on_audio_save_panic = lambda *args,**kwargs: print("audio save failed, defalt panic triggered because of error:",kwargs.get("error"))
         self.output_ending = "wav"
        
     
@@ -156,16 +175,14 @@ class BaseReader(ABC):
         return self.imported_ok and self.ready
 
     @abstractmethod
-    def save_audio(self,*args,**kwargs):
+    def save_audio(self):
         """overwrite this to save the audio based on how the reader works"""
-        text = kwargs.get("text")
-        audio_out_name = kwargs.get("filename")
+        pass
 
     @abstractmethod
-    def Speak(self,*args,**kwargs):
-        """
-        """
-        text = kwargs.get("text")
+    def Speak(self):
+        """"""
+        pass
 
 
     def get_voices(self,*args,**kwargs):
@@ -178,11 +195,21 @@ class BaseReader(ABC):
 
 
 
+    def clean_up(self):
+        """if you reader requires some kind of clean up this is what the server is calling before shutting down"""
+        print("Reader clean up, not required")
+
+
+
     def on_speak_panic(self,*args,**kwargs):
         self._on_speak_panic(*args,**kwargs)
+
+
 ```
 check out [piper_reader](./helpers/bookreaders.py) to get a better idea
-to add your own reader you need to first put its implementation in [plusreaders_folder](./plusreaders)
+
+
+to add your own reader you need to put its implementation in [plusreaders_folder](./plusreaders)
 then you also have to add it by name to [the_plusreaders_by_name_config](./plusreaders/plusreadersbyname.json):
 ```
 {

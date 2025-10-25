@@ -9,7 +9,9 @@ except:
 
 
 import traceback
+
 IS_BUILD = False
+
 
 NoVoicesGetterError = "This reader does not support getting voices, make sure this is intended behavior."
 NoSpeakerError = "This reader does not support speaking on this device, make sure this is intended behavior."
@@ -288,6 +290,7 @@ class KokoroReader(BaseReader):
         try:
             import soundfile as sf
             from kokoro import KPipeline,KModel
+            self.KPipeline = KPipeline
             import sounddevice as sd
             global IS_BUILD
             self.sf = sf
@@ -297,26 +300,23 @@ class KokoroReader(BaseReader):
             self._model = kwargs.get("model")
             self._voice = kwargs.get("voice") 
             self._config = kwargs.get("config") 
-            self._model_path = None
-            self._gp2_model_folder = None
+
+            self.config = None
+            self.model_path = None
+            self.g2p_model_folder = None
             self.voice = self._voice
             if IS_BUILD:
-                self._model_path =os.path.join(self.base_path,self.models_folder,self._model)
-                self._gp2_model_folder = kwargs.get("g2p_model_folder")
+                self.model_path =os.path.join(self.base_path,self.models_folder,self._model)
+                self._g2p_model_folder = kwargs.get("g2p_model_folder")
+                self.g2p_model_folder =  os.path.join(self.base_path,self._g2p_model_folder)
                 self.voice = os.path.join(self.base_path,self.models_folder,self._voice)
-
-            # if you are building the script you will have to do some modifications to some of the classes see BUILDGUID.md
-            # if you do not want to build the project you can use the precompiled releases
-            #
-            # self.pipeline = KPipeline(gp2_model_path=os.path.join(self.base_path,self._gp2_model_folder),lang_code=kwargs.get("lang_code"),model=KModel(
-            #    model=os.path.join(self.base_path,self.models_folder,self._model),
-            #    config=os.path.join(self.base_path,self.models_folder,self._config)))
+                self.config = os.path.join(self.base_path,self.models_folder,self._config)
+                # if you are building a custom exe, read this guide first: https://github.com/floorwarior/pyinstaller_kokoro_build_guide
             self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"),model=KModel(
-                model=self._model_path,
-                config=self._config)
+                model=self.model_path,
+                config=self.config,
+                ),g2p_model_path =self.g2p_model_folder
                 )
-
-
             self.imported_ok = True
             self.ready = True
         except Exception as e:
@@ -360,6 +360,18 @@ class KokoroReader(BaseReader):
 
 
 
+    def get_voices(self):
+        """gets the currently downloaded voices"""
+        if IS_BUILD:
+            voices = [file for file in self.models_folder if file.endswith(".pt")]
+            items = {
+            }
+            for voice in voices:
+                items[voice.removesuffix(".pt")] = voice
+            return items
+        else:
+            return {}
+
 readers = {
     "KokoroReader":KokoroReader,
     "PiperReader":PiperReader,
@@ -375,10 +387,3 @@ if __name__ == "__main__":
         lang_code="b"
     )
     reader.Speak(text="hello there")
-
-    IS_BUILD = True
-
-    reader = KokoroReader(
-        voice="af_heart.pt"
-        
-    )

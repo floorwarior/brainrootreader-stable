@@ -38,4 +38,5 @@ foolingaroud.py
 run.bat
 kokoromodels/
 !kokoromodels/keepme.json
-
+.locks
+en_core_web_sm

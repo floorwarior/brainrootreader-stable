@@ -28,7 +28,7 @@ def get_video_list(base_path) -> list:
         if ".json" in file:
             continue
         else:
-            all_videos.append("./" + ("/".join(["static","videos",file])))
+            all_videos.append("/" + ("/".join(["static","videos",file])))
 
 
     return all_videos + get_link_list(base_path)
