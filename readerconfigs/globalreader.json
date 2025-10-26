@@ -5,6 +5,7 @@
     "comment2": "The name also have to match the name of the class you want to import",
     "commnet3": "Add the ClassName and its config filename to readerconfigs.json",
     "fallbackorder": [
+        "PiperReader",
         "WinReader",
         "BrowserReader"
     ],

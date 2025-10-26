@@ -312,11 +312,13 @@ class KokoroReader(BaseReader):
                 self.voice = os.path.join(self.base_path,self.models_folder,self._voice)
                 self.config = os.path.join(self.base_path,self.models_folder,self._config)
                 # if you are building a custom exe, read this guide first: https://github.com/floorwarior/pyinstaller_kokoro_build_guide
-            self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"),model=KModel(
-                model=self.model_path,
-                config=self.config,
-                ),g2p_model_path =self.g2p_model_folder
-                )
+                self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"),model=KModel(
+                    model=self.model_path,
+                    config=self.config,
+                    ),g2p_model_path =self.g2p_model_folder
+                    )
+            else:
+                self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"))
             self.imported_ok = True
             self.ready = True
         except Exception as e:
@@ -334,7 +336,7 @@ class KokoroReader(BaseReader):
     def save_audio(self,*args,**kwargs):
         text = kwargs.get("text")
         audio_out_name = kwargs.get("filename")
-        generator = self.pipeline(text,voice=self.voice)
+        generator = self.pipeline(text,voice=self.voice, speed=1, split_pattern=r'\n+')
 
         parts = []
         for i, (gs, ps, audio) in enumerate(generator):
@@ -348,8 +350,7 @@ class KokoroReader(BaseReader):
     @pan.panic(on_panic="on_speak_panic",class_method=True)
     def Speak(self,*args,**kwargs):
         text = kwargs.get("text")
-        generator = self.pipeline(text,voice=self.voice)
-
+        generator = self.pipeline(text,voice=self.voice, speed=1, split_pattern=r'\n+')
         parts = []
         for i, (gs, ps, audio) in enumerate(generator):
             #print(i, gs, ps)
@@ -383,7 +384,10 @@ readers = {
 
 if __name__ == "__main__":
     reader = KokoroReader(
-        voice="bm_daniel",
-        lang_code="b"
+        voice="af_heart",
+        lang_code="a"
     )
-    reader.Speak(text="hello there")
+    reader.Speak(filename="0.wav",text="""
+About Doyle: Sir Arthur Ignatius Conan Doyle, DL (22 May 1859 – 7 July 1930) was a Scottish author most noted for his stories about the detective Sherlock Holmes, which are generally considered a major innovation in the field of crime fiction, and the adventures of Professor Challenger.
+"""
+    )

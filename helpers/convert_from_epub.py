@@ -34,7 +34,9 @@ class ConvertFromEbook():
         for i in range(0,len(sentences),self.chunksize):
             chunk = sentences[i:i+self.chunksize]
             if chunk:
-                data[current_page] = " ".join(chunk)
+                not_clear = " ".join(chunk).strip()
+                cleared = not_clear.replace("\xa0"," ").replace("\r"," ").replace("\t", " ").replace("\n"," ")
+                data[current_page] = cleared.strip()
                 current_page += 1
 
 
@@ -64,7 +66,7 @@ class ConvertFromEbook():
         for item in chapters.get_items_of_type(ITEM_DOCUMENT):
             soup = BeautifulSoup(item.get_content(), "html.parser")
             #print("this is page:", soup.get_text().strip())
-            page, data = self._chunker(page,soup.get_text().strip())
+            page, data = self._chunker(page,soup.get_text())
             print("this is page data: ",data)
             book_data.update(data)
 
