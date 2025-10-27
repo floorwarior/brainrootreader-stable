@@ -50,6 +50,13 @@ import pypdf
 import piper
 import pythoncom
 import nltk
+
+nltk_folder_path = os.path.join(BASE_PATH,"nltk_data")
+
+nltk.download("punkt",download_dir=nltk_folder_path)
+nltk.download("punkt_tab",download_dir=nltk_folder_path)
+nltk.data.path.append(nltk_folder_path)
+
 import numpy
 import sounddevice
 import win32com
@@ -298,7 +305,7 @@ def convert_book_to_audio(book):
         socketed_app.emit(event="finished",data={"book_id":book,"book_folder":kwargs.get("book_folder")})
         os.startfile(kwargs.get("book_folder"))
     rd._on_conversion_finished = lambda *args, **kwargs :onfinished_callback(*args,**kwargs)
-    th = threading.Thread(target=lambda: rd.read_book(save=True))
+    th = threading.Thread(target=lambda: rd.read_book(save=True),daemon=True)
     th.start()
     return render_template("convertingbooktoplaylist.html",books=get_booknames(basepath=BASE_PATH),book_id=book,page_count = rd.page_count())
 

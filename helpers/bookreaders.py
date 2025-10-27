@@ -12,7 +12,6 @@ import traceback
 
 IS_BUILD = False
 
-
 NoVoicesGetterError = "This reader does not support getting voices, make sure this is intended behavior."
 NoSpeakerError = "This reader does not support speaking on this device, make sure this is intended behavior."
 NoAudioSaveError = "This reader can not save audio, make sure this is intended behavior."

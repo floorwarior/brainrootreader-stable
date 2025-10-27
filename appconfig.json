@@ -1,5 +1,5 @@
 {
-    "audio_method":"subprocess",
+    "audio_method":"threading",
     "comment":"audio_method takes: **threading** or **subprocess** as its argument",
     "core_count":"2",
     "comment2":"how many cores you want to use to generate audio, recommended is 2, should not be more then the core count of your pc",
