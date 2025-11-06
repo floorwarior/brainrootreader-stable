@@ -15,14 +15,15 @@ async function read_with_backend(text){
 
 
 window.addEventListener("keypress",(event)=>{
-// 
+    // 
 
 
-var the_key = event.key
-var key_code = event.keyCode    
+    var the_key = event.key
 
-if (the_key == "r"){
-    var current_text = document.activeElement.getAttribute("aria-label")
-    read_with_backend(current_text)
-}
+    if (the_key == "r"){
+        var current_text = document.activeElement.getAttribute("aria-label")
+        if (current_text){
+            read_with_backend(current_text)
+        }
+    }
 })

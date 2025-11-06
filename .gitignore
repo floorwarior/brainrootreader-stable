@@ -42,6 +42,3 @@ kokoromodels/
 en_core_web_sm
 nltk_data
 !nltk_data/keepme.json
-
-
-

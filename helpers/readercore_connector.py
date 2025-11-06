@@ -1,4 +1,6 @@
-"""connects to the readercore, with multiprocess the speed of conversion should be generally a lot faster"""
+"""connects to the readercore, with multiprocess the speed of conversion should be generally a lot faster
+DEPRICATED
+"""
 import socket
 try:
     from helpers.bookreaders import BaseReader

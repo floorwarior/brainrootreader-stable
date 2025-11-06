@@ -4,8 +4,8 @@
     "core_count":"2",
     "comment2":"how many cores you want to use to generate audio, recommended is 2, should not be more then the core count of your pc",
     "loading_window":true,
-    "auto_shutdown":true,
+    "auto_shutdown":false,
     "shutdown_after":1200,
-    "comment3":"you can enable of disable auto shutdown, this will stop the server if there is no interaction , shutdown_after uses secods",
+    "comment3":"you can enable or disable auto shutdown, this will stop the server if there is no interaction , shutdown_after uses secods",
     "comment4":"**DO NOT SET** loading_window=false with auto_shutdown=false this will make the app run indefinetly, the only way to stop the app then is by stopping it from the Task Manager"
 }

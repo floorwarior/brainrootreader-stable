@@ -386,7 +386,7 @@ if __name__ == "__main__":
         voice="af_heart",
         lang_code="a"
     )
-    reader.Speak(filename="0.wav",text="""
+    reader.save_audio(filename="0.wav",text="""
 About Doyle: Sir Arthur Ignatius Conan Doyle, DL (22 May 1859 – 7 July 1930) was a Scottish author most noted for his stories about the detective Sherlock Holmes, which are generally considered a major innovation in the field of crime fiction, and the adventures of Professor Challenger.
 """
     )

@@ -7,6 +7,7 @@ import sys
 import signal
 import threading
 
+
 # ---------------------------
 from __version__ import __version__ , __released__
 from helpers.pingserver import kill_server,is_server,health_check
@@ -91,6 +92,7 @@ def run_splash_screen():
         th.start()
 
     loadingbar = SimpleStringLoader(label=loading_label)
+    loadingbar.interval = .05
     loadingbar.start()
 
     def open_browser():
@@ -108,7 +110,7 @@ def run_splash_screen():
                 tkapp.destroy()
 
             loadingbar.stop()
-            tkapp.after(4000,lambda : loading_label.config(text=" "))
+            tkapp.after(4000,lambda : loading_label.config(text="[ CLOSE THIS WINDOW TO STOP BRR ]"))
 
 
         th = threading.Thread(target=helper,daemon=True)

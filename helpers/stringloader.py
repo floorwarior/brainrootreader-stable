@@ -3,7 +3,7 @@ import time
 
 class SimpleStringLoader():
     def __init__(self,label):
-        self.loader = ["=","=","="," "," "," "," "," "," "," "," "," "," "," "," ", " ", " ", " ", " ", " ", " ", " ", " ", " "," " ," ", " ", " ", " ", " ", " "," " ," "]
+        self.loader = ["■","■","■","■"," "," "," "," "," "," "," "," "," "," "," ", " ", " ", " ", " ", " ", " ", " ", " ", " "," " ," ", " ", " ", " ", " ", " "," " ," "]
         self.label = label
         self.running = False
         self.interval = 0.1
@@ -11,9 +11,9 @@ class SimpleStringLoader():
         self.direction = 1
 
     def play(self):
-        if self.loader[-1] == "=":
+        if self.loader[-1] == "■":
             self.direction = "left"
-        elif self.loader[0] == "=":
+        elif self.loader[0] == "■":
             self.direction = "right"
 
         if self.direction == "right":

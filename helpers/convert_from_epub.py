@@ -6,7 +6,7 @@ from nltk import sent_tokenize
 from secrets import token_urlsafe
 import json
 from helpers.book_converter import update_booknames
-
+from helpers.makebrr import PageImageHandler,PageTextHandler,NotesHandler,CardHandler
 
 
 class ConvertFromEbook():
@@ -63,6 +63,31 @@ class ConvertFromEbook():
         chapters = epub.read_epub(os.path.join(self.upload_folder,self.ebookname))
         page = 1
         book_data = {}
+        safe_name = token_urlsafe(32)
+
+        # brr section
+        notes_handler = NotesHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        card_handler = CardHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        imgs_handler = PageImageHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        page_text_handler = PageTextHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+
+
         for item in chapters.get_items_of_type(ITEM_DOCUMENT):
             soup = BeautifulSoup(item.get_content(), "html.parser")
             #print("this is page:", soup.get_text().strip())
@@ -70,7 +95,9 @@ class ConvertFromEbook():
             print("this is page data: ",data)
             book_data.update(data)
 
-        safe_name = token_urlsafe(32)
+        
+        page_text_handler.insert_all(datadict=book_data)
+
         books_json_path =os.path.join(self.base_path,"static","books",f"{safe_name}_readable.json") 
         print(books_json_path)
 

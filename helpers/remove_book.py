@@ -1,7 +1,7 @@
 import json
 import os
 from helpers.book_converter import get_booknames
-
+from helpers.makebrr import RemoveBrrFile
 
 
 def remove_bookname(base_path,safe_bookname):
@@ -19,7 +19,10 @@ def remove_bookname(base_path,safe_bookname):
 
 
 def remove_pdf(base_path,safe_bookname:str):
-    """gets the real name of the book by looking it up first"""
+    """gets the real name of the book by looking it up first
+    DEPRICATED
+    
+    """
     booknames = get_booknames(basepath=base_path)
     pdf_name = booknames.get(safe_bookname.removesuffix("_readable.json"),None)
     pdf_file_name = os.path.join(base_path,"uploads",f"{pdf_name}.pdf")
@@ -44,3 +47,9 @@ def remove_doc(base_path,safe_bookname:str):
     if not doc_name:
         raise BaseException(f"your book with safe name: {safe_bookname}, doc name: {doc_name} was not found it the records: {booknames}")
     os.remove(doc_file_name)
+    
+    RemoveBrrFile(
+        base_path=base_path,
+        safe_bookname=safe_bookname.removesuffix("_readable.json")
+    ).remove_brr()
+

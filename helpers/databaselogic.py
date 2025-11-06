@@ -62,10 +62,9 @@ class dbModel():
         - if there is no condition it simply returns all, that is the matching by first selector
         - getall will return all matching items
         - strict checks you conditions in a chain rather then with an or if or is used we get everything
-        - if getall is false you get one row
-        - if one col is true you will only get the one col without a tuple
+        - if getall is True you will get back a list of dicts
         - prefered key: if you get more that one items and not all cols are uniqe it might come handy, if left as none it will pick the first col that you look for
-        - otherwise it will use the specified col as the key
+        otherwise it will use the specified col as the key
 
     
         `SELECT <col_name goes here> FROM users WHERE <conditions go here: status = 'active'> ;`
@@ -91,13 +90,13 @@ class dbModel():
         
         if getall:
             values = cursor.fetchall()
+            res = []
             for row in values:
-                oneuser = {key:val for key,val in zip(col_name,row)}
-                if prefered_key:
-                    pref_key = oneuser.get(prefered_key)
-                else:
-                    pref_key = row[0]
-                temp_dict[pref_key] = {key:val for key,val in zip(col_name,row)}
+                onehit = {key:val for key,val in zip(col_name,row)}
+                res.append(onehit)
+
+            return res
+
 
         if not getall:
             values = cursor.fetchone()
@@ -112,7 +111,7 @@ class dbModel():
 
 
     def exec_any(self,command,values,confirm=False):
-        """executes any and command supplied with any and all values"""
+        """executes any, and all command supplied with any, and all values"""
 
         if confirm:
             if not input("are you sure you want to execute: (y/any):").lower() == "y":
@@ -145,26 +144,32 @@ class dbModel():
             return True
         return False
 
+
+
+
+
     def update(self,col_name,col_val,what,to):
         """
         example:
         UPDATE users SET age = 31 WHERE name = 'Alice';
-        col_name -> name 
-        col_val -> Alice
-        what -> age
-        to -> 31
+        col_name -> [name, . . . ] 
+        col_val -> [Alice
+        what -> [age, . . . ]
+        to -> [31, . . . ]
         this should only be used with the primary key which is the username right now
         the col name and col value are indentifying the thing to update
-        if the col and its value are not uniqe it will update that as well        
+        
 
+        NOTE: fix to and its useage
 
         """
         cursor,connector = self.get_connection()
-        lineweexecute = f"""UPDATE {self.table_name} SET {what} = ? WHERE {col_name} = ?;"""
+        placeholder = " ,".join([f"{w} = ?" for w in what])
+        lineweexecute = f"""UPDATE {self.table_name} SET {placeholder} WHERE {col_name} = ?;"""
         print("updating with:",lineweexecute)
         success = False
         try:
-            cursor.execute(lineweexecute,[to,col_val])
+            cursor.execute(lineweexecute,[*to,col_val])
             connector.commit()
             success = True
         except Exception as e:
@@ -270,7 +275,7 @@ class dbModel():
 
 
     def delete(self,conditions=["username = '?'"],values =["jeff"]):
-        """based on the conditions it removes the a certain item"""
+        """based on the conditions it removes a certain item/items"""
         cursor,connector = self.get_connection()
         condition_string = " AND ".join(conditions)
         thisiswhatweexecute = f"""DELETE FROM {self.table_name} WHERE {condition_string};"""
@@ -344,8 +349,6 @@ if __name__ == "__main__":
             col_names=["username","salary"],
             col_type = ["TEXT","REAL"]
         )
-    new_db_table.create_new_entry({
-        "username":"steve",
-        "salary":"940 Euros"
-    })
+    #new_db_table.get_db_state()
+    new_db_table.update(col_name="username",col_val="steve",what=["salary"],to=[1200])
     new_db_table.get_db_state()

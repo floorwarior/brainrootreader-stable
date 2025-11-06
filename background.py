@@ -5,7 +5,7 @@ import threading
 import signal
 import sys
 from helpers.settings import load_app_config
-
+from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
 
 
 
@@ -18,7 +18,7 @@ if getattr(sys, 'frozen', False):
     ONANDROID = False
     BRRAPPCONFIG = load_app_config(BASE_PATH)
     if BRRAPPCONFIG["loading_window"]:
-        subprocess.Popen(["loadingwindow.exe"]) 
+       subprocess.Popen(["loadingwindow.exe"]) 
 
 
 else:
@@ -39,7 +39,13 @@ from flask import Flask
 from flask import request,redirect,url_for,render_template,jsonify,send_file
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
+import nltk
 
+nltk_folder_path = os.path.join(BASE_PATH,"nltk_data")
+
+nltk.download("punkt",download_dir=nltk_folder_path)
+nltk.download("punkt_tab",download_dir=nltk_folder_path)
+nltk.data.path.append(nltk_folder_path)
 
 # this block is for pyinstaller to pick up the files correctly, you can comment this out if you are not building only using the app
 import helpers
@@ -49,14 +55,6 @@ import readerconfigs
 import pypdf
 import piper
 import pythoncom
-import nltk
-
-nltk_folder_path = os.path.join(BASE_PATH,"nltk_data")
-
-nltk.download("punkt",download_dir=nltk_folder_path)
-nltk.download("punkt_tab",download_dir=nltk_folder_path)
-nltk.data.path.append(nltk_folder_path)
-
 import numpy
 import sounddevice
 import win32com
@@ -338,7 +336,7 @@ def read_book_(book):
         current_page +=1
         current_page = str(current_page)
 
-    return render_template("readpage_v2.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
+    return render_template("readpage_v3.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
 
 @app.route("/api/killserver",methods=["POST","GET"])
 def kill_server():
@@ -381,6 +379,163 @@ def make_page_of_book(book,page):
     print("-> make page triggered")
     return jsonify({"page":page,"book":book,"converted":success,"sentence_data":rd.save_transscript_for_page(page)})
 
+
+
+@app.route("/api/show_image/<book>/<page>")
+def show_img_from_book(book,page):
+    """returns the images from the database if they exists"""
+    from helpers.makebrr import PageImageHandler
+    img_handler = PageImageHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book.removesuffix("_readable.json")
+    )
+
+    data = img_handler.get_images_of_page(page_number=page)
+    return jsonify({
+        "success":data
+    })
+
+
+@app.route("/api/pull_notes/<book>/<page>")
+def pull_page_notes(book,page):
+    notes_handler = NotesHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book.removesuffix("_readable.json")
+    )
+
+    res = notes_handler.get_notes_of_page(page_number=int(page))
+
+    return jsonify({
+        "success":res
+    })
+
+
+@app.route("/api/make_note/<book>/<page>",methods=["POST"])
+def make_note(book,page):
+    notes_handler = NotesHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book.removesuffix("_readable.json")
+    )
+
+    data = request.get_json(force=True)
+    note = data["note"]
+    sentence_number= data["sentence_number"]
+
+    res = notes_handler.add_note(
+        note=note,
+        sentence_number=sentence_number,
+        page_number=int(page)
+    )
+    
+    return jsonify({
+        "success":res
+    })
+
+
+@app.route("/api/del_note/<book>/<note_id>")
+def del_note(book,note_id):
+    """removes the note from the .brr file"""
+    notes_handler = NotesHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book.removesuffix("_readable.json")
+    )
+
+    res = notes_handler.remove_note(note_id=note_id)
+    return jsonify({"success":res})
+
+@app.route("/api/update_note/<book>/<note_id>",methods = ["POST"])
+def update_note(book,note_id):
+    """updated the note to a new value"""
+    notes_handler = NotesHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book.removesuffix("_readable.json")
+    )
+
+    data = request.get_json(force=True)
+
+
+    res = notes_handler.change_note(
+        note_id=int(note_id),
+        new_note=data.get("note")
+    )
+
+    return jsonify({"success":res})
+
+
+
+
+
+@app.route("/api/pull_cards/<book>/<page_number>")
+def pull_cards(book,page_number):
+    notes_handler = NotesHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book
+    )
+
+    res = notes_handler.get_notes_of_page(page_number=int(page_number))
+    return jsonify({
+        "success":res
+    })
+
+@app.route("/api/update_card/<book>/card_id")
+def update_card(book,card_id):
+    card_handler = CardHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book
+    )
+    data = request.get_json(force=True)
+
+    front_side_text = data["front_side_text"]
+    back_side_text = data["back_side_text"]
+
+    res = card_handler.update_card(
+        card_id=int(card_id),
+        front_side_text=front_side_text,
+        back_side_text=back_side_text
+    )
+
+    return jsonify({
+        "success":res
+    })
+
+@app.route("/api/make_new_card/<book>/<page_number>")
+def make_card(book,page_number):
+
+    card_handler = CardHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book.removesuffix("_readable.json")
+    )
+
+    data = request.get_json(force=True)
+
+    front_side_text = data["front_side_text"]
+    back_side_text = data["back_side_text"]
+
+    res = card_handler.add_card(
+        page_number=page_number,
+        front_side_text=front_side_text,
+        back_side_text=back_side_text
+    )
+
+    return jsonify({
+        "success":res
+    })
+
+
+@app.route("/api/delete_card/<book>/<card_id>")
+def del_card(book,card_id):
+    card_handler = CardHandler(
+        base_path=BASE_PATH,
+        safe_bookname=book.removesuffix("_readable.json")
+    )
+
+    res = card_handler.remove_card(
+        card_id=int(card_id)
+    )
+
+    return jsonify({
+        "success":res
+    })
 
 
 @app.route("/api/testimage",methods = ["POST"])
@@ -426,6 +581,16 @@ def run_server_with_socketio():
 
     thehost = "localhost" if not DEBUG else "0.0.0.0"
     socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=False,allow_unsafe_werkzeug=True)
+
+def run_server_with_reload_trouble_shoot():
+    if BRRAPPCONFIG.get("auto_shutdown",True):
+        INACTIVITY_MANAGER.max_timeout = BRRAPPCONFIG.get("shutdown_after",1200)
+        INACTIVITY_MANAGER.auto_shutdown()
+
+    thehost = "localhost" if not DEBUG else "0.0.0.0"
+    socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=True,allow_unsafe_werkzeug=False)
+
+
 
 
 

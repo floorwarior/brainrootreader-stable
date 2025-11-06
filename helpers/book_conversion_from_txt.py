@@ -31,7 +31,7 @@ class ConvertFromTxt():
         """chunks up the text file into into 15 sentence a page chuks"""
         with open(os.path.join(self.upload_folder,self.txtfilename),"r") as txt_file:
             data =  txt_file.readlines()
-            cleaned_data = [i.removesuffix("\n") for i in data]
+            cleaned_data = [i.replace("\xa0"," ").replace("\r"," ").replace("\t", " ").replace("\n"," ") for i in data]
 
         full_file = " ".join(cleaned_data)
         sentences = self.sent_tokenize(full_file)

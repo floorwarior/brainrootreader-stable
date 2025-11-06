@@ -15,7 +15,7 @@
 
 
 </head>
-<body class="px-2">
+<body class="px-2 mx-2 overflow-hidden">
     <!--modal goes here-->
     <dialog id="gotopagedialog" class="bg-dark text-light">
         <div class="container">
@@ -27,6 +27,28 @@
             </div>
         </div>
     </dialog>
+
+
+    <!--
+    note's dialog 
+    -->
+    <dialog id="notes_modal_dialog" close class="bg-dark text-light">
+        <!--
+        save button id: make_or_edit_note_btn 
+        note_modal_text_area: note_modal_text_area        
+        -->
+        <div class="container">
+            <button type="button" class="btn-close float-end bg-dark text-light" onclick="close_make_edit_note_dialog();" aria-label="Close"></button>
+            <h2>Make/Edit Note </h2>
+            <div class="d-flex">
+                <textarea placeholder="put your note here" name="note_text" id="note_modal_text_area">
+                </textarea>
+                <button class="btn btn-outline-light" id="make_or_edit_note_btn" >Save</button>      
+            </div>
+        </div>
+
+    </dialog>
+    <!--note's dialog end-->
     <div class="row">
         <!--
         contains the side panel that can be toggled off or on
@@ -187,11 +209,37 @@
                 <h5 id="pageindicator">current page: {{current_page}}</h5>
                 <hr>
             </div>
-            <div class="flex-grow-1 overflow-auto">
-                <div id="sentence_scroll_container" class="list-flush px-2 double-height">
-                <!-- side indicator that shows the current pages sentences -->
+            <nav>
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <button class="nav-link p-2 active" id="nav-page-tab" data-bs-toggle="tab" data-bs-target="#nav-page" type="button" role="tab" aria-controls="nav-page" aria-selected="true">Page</button>
+                    <button class="nav-link p-2 " id="nav-notes-tab" data-bs-toggle="tab" data-bs-target="#nav-notes" type="button" role="tab" aria-controls="nav-notes" aria-selected="false">Notes</button>
+                    <button class="nav-link p-2 d-none" id="nav-cards-tab" data-bs-toggle="tab" data-bs-target="#nav-cards" type="button" role="tab" aria-controls="nav-cards" aria-selected="false">Cards</button>
                 </div>
+            </nav>
+            <div class="tab-content flex-grow-1 overflow-auto" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="nav-page" role="tabpanel" aria-labelledby="nav-page-tab" tabindex="0">
+                    <div id="sentence_scroll_container" class="list-flush px-1 py-1 double-height">
+                        <!-- side indicator that shows the current pages sentences -->
+                    </div>
+                </div>
+                <div class="tab-pane fade vh-75" id="nav-notes" role="tabpanel" aria-labelledby="nav-notes-tab" tabindex="0">
+                    <div id="notes_container" class="list-flush px-1 px-1">
+                        <!--
+                        we are going to dinamicly load the notes here
+                        -->
+
+                    </div>
+                    <div class="d-flex px-1 py-1 mt-auto">
+                        <button class="btn btn-outline-light" onclick="open_make_note_dialog()">
+                            Add note
+                                <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="nav-cards" role="tabpanel" aria-labelledby="nav-cards-tab" tabindex="0">...</div>
             </div>
+
+
 
         </div>
 
@@ -205,6 +253,7 @@
     <script src="{{url_for('static',filename='js/openpdf.js')}}"></script>
     <script src="{{url_for('static',filename='js/accessibilityreader.js')}}"> </script>
     <script src="{{url_for('static',filename='js/brrrelated.js')}}"></script>
+    <script src="{{url_for('static',filename='js/notes_tab.js')}}"></script>
     <script>
     var volume = document.getElementById('volume')
     var bookmarkpageindicatortitle = document.getElementById("lastpageindicatortitle")
@@ -212,7 +261,8 @@
 
 
     var player;
-    var pageData = {{page|tojson}}
+    var keyboard_in_use = false;
+    var pageData = {{page|tojson}} 
     const speak_synthesys = window.speechSynthesis
     const sentence_text = document.getElementById("pagedata")
     var current_page = {{current_page|tojson}}
@@ -231,6 +281,9 @@
     var sentence_data;
     var page_data = null
     var current_sentence = 0
+
+
+        
     var pageaudio =document.getElementById("pageaudio")
     var gotopagedialog = document.getElementById("gotopagedialog")
     var pageindicator = document.getElementById("pageindicator")
@@ -240,6 +293,12 @@
     var user_is_scrolling
     var setstatedisplay_timeout
     var readable_name = {{readable_name|tojson}}
+    var make_or_edit_notes_dialog = document.getElementById("notes_modal_dialog")
+    make_or_edit_notes_dialog.addEventListener("close",()=>{
+        keyboard_in_use = false
+    })
+
+    reload_notes()
 
     function setvolumeofspeaker(that){
         if (volume.value != 0){
@@ -391,7 +450,7 @@
     function getPreviousPage(){
         pauseaudio = true
         pageaudio.pause()
-        current_page --;
+        current_page--;
         jumpto.value = current_page
         jumptopage()
     }
@@ -557,7 +616,8 @@
         if (player && player.getPlayerState() === YT.PlayerState.PAUSED) {
             playVideo();
         }
-
+        
+        reload_notes()
         //playVideo()
         setstatedisplay("[ generating audio ]",true)
         var inpendent_loader_timeout = setInterval(()=>{
@@ -581,6 +641,7 @@
         
         var keys = Object.keys(sentence_data)
         var i = starting_idx
+        current_sentence = starting_idx
         for (i; i < keys.length; i++ ){
             let key = keys[i.toString()] 
             console.log("reading sentence:", sentence_data[key])
@@ -588,6 +649,7 @@
             if (!pauseaudio){
                 // perfect place to a call sentence indicator here
                 await load_page_data(sentence_data[key])
+                current_sentence++;
             }
             else{
                 return
@@ -608,8 +670,6 @@
     getlastvisited()
     hidebookmarkindicator()
     set_video_source("thevideo")
-
-
     function increase_vol(){
         console.log("increase vol called")
         volume.value = parseInt(volume.value) + 5
@@ -642,8 +702,10 @@
 
 
     window.addEventListener("keypress",(event)=>{
-        // 
-
+        //
+        if (keyboard_in_use){
+            return
+        }
 
         var the_key = event.key
         var key_code = event.keyCode
@@ -651,7 +713,7 @@
         console.log(key_code)
 
 
-        if (the_key == " " && key_code == 32)
+        if (the_key == " " && key_code == 32 && document.activeElement != pause_reading_btn)
         {
             pause_reading()
         }

@@ -4,6 +4,7 @@ from secrets import token_urlsafe
 import json
 from helpers.book_converter import update_booknames
 from helpers.thepanic import Pan as pan
+from helpers.makebrr import PageTextHandler,NotesHandler,CardHandler,PageImageHandler
 
 class ConvertFromDocx():
 
@@ -32,6 +33,7 @@ class ConvertFromDocx():
 
     def _gettext(self):
         doc = docx.Document(os.path.join(self.upload_folder,self.docx_name))
+    
         fullText = []
         for para in doc.paragraphs:
             fullText.append(para.text)
@@ -49,11 +51,36 @@ class ConvertFromDocx():
         print("convert docx is running")
        
         text = self._gettext()
-        pages = self._chunkit(text)
+        pages = self._chunkit(text.replace("\xa0"," ").replace("\r"," ").replace("\t", " ").replace("\n"," "))
 
 
 
         safe_name = token_urlsafe(32)
+
+        # brr section
+        notes_handler = NotesHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        card_handler = CardHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        imgs_handler = PageImageHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+
+        page_text_handler = PageTextHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        page_text_handler.insert_all(datadict=pages)
+
         books_json_path =os.path.join(self.base_path,"static","books",f"{safe_name}_readable.json") 
         print(books_json_path)
 

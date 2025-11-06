@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinkering</title>
+    <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
+    <!--bootstrap style sheet-->
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/bootstrap/icons/bootstrap-icons.css">
+    <script src="/static/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+</head>
+<body>
+    <div id="notes_container" class="container-fluid gy-5">
+        <div id="note_id" class="card body-color align-items-center border border-light border-1 rounded-1 border-opacity-25">
+            <div class="card-body text-light mx-1">
+                <div class="d-flex">
+                    <p id="note_note_number" class="mx-1">Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit non ipsum ab impedit, quam, rerum vero blanditiis voluptate maiores a ad nostrum quia. Vitae quaerat animi obcaecati odio eum. Sapiente.
+                    </p>
+                    <button class="btn icon-btn text-light mx-1">
+                        
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function add_notes(area_id,book,page_number){
+
+            var the_area = document.getElementById(area_id)
+            var data = await pull_notes(book,page_number)
+
+            var sentence_keys = Object.keys(data)
+
+            for (key in sentence_keys){
+                var notes = sentence_keys[key]
+                for (let note in notes){
+                    var note_card = document.createElement("div")
+                    var note_id = note["note_id"]
+                    note_card.id = `notes_id_${note_id}`
+                    note_card.classList.add("card", "body-color", "align-items-center", "border", "border-light", "border-1", "rounded-1", "border-opacity-25")
+                    console.log(note["note"])
+
+                    var note_card_body = document.createElement("div")
+                    note_card_body = note_card_body.classList.add("card-body", "text-light", "mx-1")
+
+                    var note_card_body_flex_container = document.createElement("div")
+                    note_card_body_flex_container.classList.add("d-flex", "justify-content-around", "align-items-center")
+
+                    var note_card_text_container = document.createElement("p")
+                    note_card_text_container.classList.add("mx-1")
+                    note_card_text_container.id = `note_card_text_container_${note_id}`
+
+                    var note_card_edit_button = document.createElement("button")
+                    note_card_edit_button.addEventListener("click",()=>{
+                        // we want to load the data, open the dialog
+                        open_note_edit_dialog(note) // TODO: define this function 
+                    })
+                    note_card_edit_button.innerHTML = `<i class="bi bi-pen h5"></i>`
+                    // adding it all together
+                    note_card.append(note_card_body)
+                    note_card_body.append(note_card_body_flex_container)
+                    note_card_body_flex_container.append(note_card_text_container)
+                    note_card_body_flex_container.append(note_card_edit_button)
+
+                    the_area.append(note_card)
+
+                }
+            }
+        }
+
+    add_notes("notes_container","thisistestdb","7")
+    </script>
+</body>
+</html>

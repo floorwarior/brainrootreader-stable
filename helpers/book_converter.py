@@ -2,7 +2,7 @@ import os
 from pypdf import PdfReader
 import json
 from secrets import token_urlsafe
-
+from helpers.makebrr import PageImageHandler,PageTextHandler,NotesHandler,CardHandler
 
 def update_booknames(url_safe_name,bookname,basepath=None):
     """adds the new book to the list"""
@@ -48,6 +48,29 @@ class ConvertFromPdf():
 
         pdf_path = os.path.join(self.upload_folder,self.pdf_name)
         book_data = PdfReader(pdf_path)
+
+        # brr section
+        notes_handler = NotesHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        card_handler = CardHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        imgs_handler = PageImageHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+        page_text_handler = PageTextHandler(
+            base_path=self.base_path,
+            safe_bookname=safe_name
+        )
+
+
         temp = {}
         static_folder = "static"
         books_folder = "books"
@@ -57,11 +80,16 @@ class ConvertFromPdf():
         for i,page in enumerate(book_data.pages,start=1):
             text = page.extract_text()
             # probably gonna add image extraction here
+            imgs_handler.insert_imgs_by_page(page_number=i,imgs = page.images)
+
             if text != "":
-                temp[i] = text
+                temp[i] = text.replace("\xa0"," ").replace("\r"," ").replace("\t", " ").replace("\n"," ")
         books_json_path =os.path.join(self.base_path,static_folder,books_folder,f"{safe_name}_readable.json") 
         print(books_json_path)
 
+
+        page_text_handler.insert_all(datadict=temp) #putting it into the .brr filetype
+        
         with open(books_json_path,"w") as converted:
             json.dump(temp,converted,indent=4)
 

@@ -10,6 +10,7 @@ try:
     from helpers.book_converter import return_cache
     from helpers.remove_book import remove_bookname,remove_doc
     from helpers.book_converter import update_booknames
+    from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
 except:
     from book_converter import return_cache
     from book_converter import update_booknames
@@ -86,6 +87,9 @@ class ReadBook():
         """gets passed the error argument that you can use to see what went wrong"""
         # output ending
         self.output_ending = self.reader.output_ending
+
+
+
         self.first_page_last_page()
 
 
