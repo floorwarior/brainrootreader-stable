@@ -53,6 +53,7 @@ class ReaderCoreConnector(BaseReader):
             self._make_and_connect_cores()
             self.ready = True
             self.imported_ok = True
+            self.do_terminate = False
         except Exception as e:
             self.error = e
 
@@ -60,6 +61,7 @@ class ReaderCoreConnector(BaseReader):
 
     def clean_up(self,*args,**kwargs):
         # kills the cores as soon as they free up
+        self.do_terminate = True
         self.kill_cores()
 
 
@@ -159,13 +161,13 @@ class ReaderCoreConnector(BaseReader):
                     free_core = self.cores[port]["client"]
                     if self.cores[port]["state"] == "free":
                         print(f"using core: {port}")
+                        self.cores[port]["state"] = "busy"
                         return free_core, port 
                     else:
                         self.cores[port]["lock"].release()
             time.sleep(1)
 
         raise Exception("tried to get the core in get_core, 100 times, could not, exiting")
-
 
     def _Speak(self,*args,**kwargs):
         text = kwargs.get("text")
@@ -206,7 +208,12 @@ class ReaderCoreConnector(BaseReader):
         text = kwargs.get("text")
         filename = kwargs.get("filename")
 
-        free_core, port = self.get_core()
+        if not kwargs.get("free_core") and not kwargs.get("port"):
+            free_core, port = self.get_core()
+        else:
+            free_core = kwargs.get("free_core")
+            port = kwargs.get("port")
+
         free_core.sendall(json.dumps({
             "text":text,
             "filename":filename,
@@ -228,16 +235,20 @@ class ReaderCoreConnector(BaseReader):
 
 
     def save_audio(self,*args,**kwargs):
+        #print(self.cores)
+        if self.do_terminate:
+            return
+        free_core,port = self.get_core()
+        kwargs.update({
+            "free_core":free_core,
+            "port":port
+        })
         th = Thread(
             target=self._save_audio,
             args=args,
             kwargs=kwargs
         )
         th.start()
-        if kwargs.get("blocking"):
-            th.join()
-
-
 
 
 if __name__ == "__main__":

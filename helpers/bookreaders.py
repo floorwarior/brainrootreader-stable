@@ -371,6 +371,81 @@ class KokoroReader(BaseReader):
             return items
         else:
             return {}
+        
+
+
+class QwenTTSReader(BaseReader):
+
+    def __init__(self, *args,  **kwargs):
+        self.error = "no error"
+        try:
+            import torch
+            import soundfile as sf
+            from qwen_tts import Qwen3TTSModel
+            import soundfile as sd
+            self.sd = sd
+            self.imported_ok = True
+            self.speaker = kwargs.get("speaker","Ryan")
+            self.model =  Qwen3TTSModel.from_pretrained(
+                "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+                device_map="cuda:0",
+                dtype=torch.bfloat16,
+            )
+            self.ready = True
+        except Exception as e:
+            self.error = e
+        #print(self.error)
+
+    def Speak(self,*args,**kwargs):
+        text = kwargs.get("text")
+        wav,sr = self.model.generate_custom_voice(
+            text=text,
+            speaker="Ryan",
+        )
+        self.sd.play(wav, samplerate=sr)  # samplerate depends on the model
+        
+
+    def save_audio(self,*args,**kwargs):
+        text = kwargs.get("text")
+        audio_out_name = kwargs.get("filename")
+        # single inference
+        wavs, sr = self.model.generate_custom_voice(
+            text=text,
+            speaker=self.speaker,
+        )
+        self.sd.write(audio_out_name, wavs[0], sr)
+
+
+class PocketTTSReader(BaseReader):
+
+    def __init__(self, *args, **kwargs):
+        try:
+            from pocket_tts import TTSModel
+            import scipy.io.wavfile as wavefile
+            self._tts_model = TTSModel
+            self.wavefile = wavefile
+            self.imported_ok = True
+            self.tts_model = self._tts_model.load_model()
+            self.voice_state = self.tts_model.get_state_for_audio_prompt(
+    "alba"  # One of the pre-made voices, see above
+    # You can also use any voice file you have locally or from Hugging Face:
+    # "./some_audio.wav"
+    # or "hf://kyutai/tts-voices/expresso/ex01-ex02_default_001_channel2_198s.wav"
+)
+        except Exception as e:
+            print(f"[FAILED WITH {e}]")
+            self.error = e
+            self.imported_ok = False
+
+    
+    def Speak(self):
+        pass
+
+    def save_audio(self,*args,**kwargs):
+        text = kwargs.get("text")
+        audio_out_name = kwargs.get("filename")
+        audio = self.tts_model.generate_audio(model_state=self.voice_state,text_to_generate=text)
+        self.wavefile.write(audio_out_name,self.tts_model.sample_rate,audio.numpy())
 
 readers = {
     "KokoroReader":KokoroReader,
@@ -382,11 +457,6 @@ readers = {
 
 
 if __name__ == "__main__":
-    reader = KokoroReader(
-        voice="af_heart",
-        lang_code="a"
+    reader = QwenTTSReader(
     )
-    reader.save_audio(filename="0.wav",text="""
-About Doyle: Sir Arthur Ignatius Conan Doyle, DL (22 May 1859 – 7 July 1930) was a Scottish author most noted for his stories about the detective Sherlock Holmes, which are generally considered a major innovation in the field of crime fiction, and the adventures of Professor Challenger.
-"""
-    )
+    reader.save_audio(text="What's up suckers?",filename="suckers.wav")

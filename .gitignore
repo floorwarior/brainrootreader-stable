@@ -42,3 +42,10 @@ kokoromodels/
 en_core_web_sm
 nltk_data
 !nltk_data/keepme.json
+foolingaround.py
+*.wav
+
+node_modules
+package.json
+package-lock.json
+usefullcommands.txt

@@ -10,6 +10,7 @@ try:
     from helpers.book_converter import return_cache
     from helpers.remove_book import remove_bookname,remove_doc
     from helpers.book_converter import update_booknames
+    from helpers.stich_it import stich_playlist_to_file
     from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
 except:
     from book_converter import return_cache
@@ -397,6 +398,7 @@ class ReadBook():
         if os.path.exists(self.playlist_file_name):
             self.update_playlist(pages)
         else:self.make_playlist(pages)
+        stich_playlist_to_file(self.books_folder,self.book_name,self.reader.output_ending)
 
 
 

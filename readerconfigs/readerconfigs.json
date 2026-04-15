@@ -8,5 +8,7 @@
     "BrowserReader":"browserreader.json",
     "SherpaReader":"sherpareader.json",
     "CoquiReader":"coquireader.json",
-    "KokoroReader":"kokororeader.json"
+    "KokoroReader":"kokororeader.json",
+    "PocketTTSReader":"pocketttsreader.json",
+    "QwenTTSReader":"qwenttsreader.json"
 }

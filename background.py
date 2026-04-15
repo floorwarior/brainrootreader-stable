@@ -296,7 +296,7 @@ def convert_book_to_audio(book):
     rd = ReadBook(safe_bookname=book,
                   starting_page=0,
                   base_path_=BASE_PATH,
-                  reader_=ReadBook.pull_fallback_reader(base_path=BASE_PATH))
+                  reader_=GLOBALREADER)
     rd._on_sentence_progress = None
     rd._on_page_progress = lambda *args,**kwargs : socketed_app.emit(event="progress",data={"book_id":book,"page_num":kwargs.get("page_num"),"page":kwargs.get("page")})
     def onfinished_callback(*args,**kwargs):
@@ -579,7 +579,7 @@ def run_server_with_socketio():
         INACTIVITY_MANAGER.max_timeout = BRRAPPCONFIG.get("shutdown_after",1200)
         INACTIVITY_MANAGER.auto_shutdown()
 
-    thehost = "localhost" if not DEBUG else "0.0.0.0"
+    thehost = "0.0.0.0" if BRRAPPCONFIG.get("debug",True) else "localhost"
     socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=False,allow_unsafe_werkzeug=True)
 
 def run_server_with_reload_trouble_shoot():
