@@ -4,20 +4,13 @@ It can also convert to a one file audiofile that you can take with you.
 
 # Getting started:
 ## For tech-savy users:
-- 1. Go to the [releases](https://github.com/floorwarior/brainrootreader-stable/releases) page.
-- 2. Open Assets.
-- 3. Download brainrootreadersetup<version>.exe
-- 4. Install to your **Desktop**
-- 5. Go to the [dependencies](#dependencies) section and check what else you might need to download
-
-### there is also an install tutorial:
-
-<video width="100%" controls>
-  <source src="static/videos/dancingskeletons.mp4" type="video/mp4">
-</video>
+1. Go to the [releases](https://github.com/floorwarior/brainrootreader-stable/releases) page.
+2. Open Assets.
+3. Download brainrootreadersetup-latestversion.exe
+4. Install to your **Desktop**
+5. Go to the [dependencies](#dependencies) section and check what else you might need to download
 
 ## For developers:
-
 # Install without the cli
 ```
 
@@ -36,11 +29,15 @@ python.exe -m venv .venv
 # install base requirements:
 pip install -r requirements-[base].txt
 
-# pick a reader you want to use
+# pick a backend you want to use
 pip install -r requirements-[piper-tts].txt
 
+# run the app
 python.exe background.py
 
+
+# open localhost:5003/settings select your reader example: PiperReader save
+# start listening to books/docs
 ```
 ## istalling multiple tts backends at the same time can be done with the cli:
 
@@ -62,15 +59,12 @@ pip install -r requirements-[base].txt -r requirements-[cli].txt
 
 
 # run the cli:
-python.exe -m tools.cli
+python.exe -m tools.cli --ignore_venv
  
-
-# pick and install a tts:
-
-
-
-python.exe background.py
-
+# select the root of the project . is usually fine
+# select the reader you want to install
+# use install-in-current-venv if you use *threading* in the appconfig.json
+# use install-in-dedicated-venv if you are using subprocess
 ```
 
 
@@ -85,7 +79,6 @@ python.exe background.py
 - install it and make sure it's also added to your path
 - f5-tts will not run without this
 
-## zip conversion depends on [pytesseract](https://pypi.org/project/pytesseract/) which requires [tesseract](https://github.com/UB-Mannheim/tesseract/wiki) to be installed.
 
 # Once BRR is running:
 - visit http://localhost:5003
@@ -129,15 +122,8 @@ python.exe background.py
 | Epub ( should pretty much always work )        |   Yes [X]   | No image/diagram/table conversion |
 | Pdf ( true pdf not image )        |   Yes [X]   | same as epub |
 | Pdf ( made from images )           |   Yes [X]   | you first have to convert the pages into images then convert this to a zip file |
-| Zip ( from images of old books )    |  Yes [X], but not reliable   | Bad Image quality, Bad lighting, Shadows, Wrinkles |
 | Txt (simple .txt files ) | Yes [X] | Should be okay to use for videos as long as you check if the voice can be used in such fashion |
 | Docx | Yes [X] | same as epub | 
-
-## Tips for zip:
-    - you want to first take a picture of every page of a book.
-    - test the images on http://localhost:5003/testimage to make sure they are good quality
-    - take the pictures in good lighting
-    - after this you will have to zip this whole folder, NOTE that your zip's name is going to be used as the name of the book after conversion.
 
 # How to add different videos?
 - you can add either use local videos ( mp4, webm ), or video links from youtube, you can add them [here](http://localhost/addvideo)
