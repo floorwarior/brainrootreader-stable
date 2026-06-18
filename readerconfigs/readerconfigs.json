@@ -10,5 +10,8 @@
     "CoquiReader":"coquireader.json",
     "KokoroReader":"kokororeader.json",
     "PocketTTSReader":"pocketttsreader.json",
-    "QwenTTSReader":"qwenttsreader.json"
+    "QwenTTSReader":"qwenttsreader.json",
+    "F5TTSReader":"f5ttsreader.json",
+    "ChatterBoxTTSReader":"chatterboxreader.json",
+    "SupertonicReader":"supertonicreader.json"
 }

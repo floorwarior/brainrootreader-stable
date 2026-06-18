@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Root Reader</title>
+    <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
+    <!--tailwind css-->
+    <link rel="stylesheet" href="{{url_for('static', filename='static/css/output.css')}}">
+</head>
+<body>
+    <main>
+
+        <div class="flex w-dvw h-dvh">
+            <!--sidebar-->
+            <div class="h-full w-64 flex flex-col">
+                    <a title="home button" aria-label="home button" class="mx-auto" href="/">
+                        <img src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="app icon, its a brain with roots at the bottom," width="30" height="30" class="d-inline-block align-text-top">
+                    </a>
+            </div>
+            {% block content %}
+            {% endblock %}
+
+
+        </div>
+
+
+    </main>
+    
+</body>
+
+</html>

@@ -5,6 +5,7 @@ from nltk import sent_tokenize
 import json
 import pypdf
 import time
+import datetime
 
 try:
     from helpers.book_converter import return_cache
@@ -12,6 +13,7 @@ try:
     from helpers.book_converter import update_booknames
     from helpers.stich_it import stich_playlist_to_file
     from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
+
 except:
     from book_converter import return_cache
     from book_converter import update_booknames
@@ -99,7 +101,7 @@ class ReadBook():
     def pull_fallback_reader(base_path=None,*args,**kwargs):
         """if no read was specified it will try to select a reader until one works
         It uses the GLOBALREADERCONFIG['fallbackorder'] : attribute
-        you can modify this in the file:readerconfigs/globalreader folder
+        you can modify this in the file:readerconfigs/globalreader 
 
         """
         from helpers.bookreaders import readers as builtin_readers
@@ -318,7 +320,7 @@ class ReadBook():
         for i,s in enumerate(sentences):
             filename = os.path.join(self.temp_folder,f"page_{page_number}_sentence_{i}.{self.output_ending}")
             if not self.alreadyconverted(filename):
-                self.reader.save_audio(text=s,filename=filename)
+                self.reader.save_audio(text=s,filename=filename,priority=int(page_number))
             self.on_sentence_progress(sentence=s,sentence_num=i)
             filenames.append(filename)
         if blocking:
@@ -369,13 +371,16 @@ class ReadBook():
 
     def read_book(self,*args,save=False,**kwargs):
         book_data,success = self.books_data()
+        socketed_app = kwargs.get("socketed_app")
         pages = []
         filenames = []
 
         if not success:
             return "no such book converted before"
         self.remove_last_audio()
-        
+
+        self.reader.on_save_audio = self._on_page_progress
+
         for page_num,page in list(book_data.items())[self.starting_page:]:
             if page == "":
                 continue
@@ -384,6 +389,7 @@ class ReadBook():
                 self.read_page_by_sentence(page)
             else:
                 pagename,filename = self.save_audio(page=page,page_number=page_num)
+                socketed_app.emit(event="progress",data={"page_num":page_num,"total_pages":int(len(list(book_data.keys()))),"page":page,"book_id":self.safe_bookname})
                 print(f"filename in read book function: {filename}")
                 filenames.append(filename)
                 if pagename:
@@ -391,17 +397,58 @@ class ReadBook():
                 else:
                     print(f"[ page: {page_num} already exists ]")
 
-            self.on_page_progress(page=page,page_num=page_num)
+
+    
+        self.on_conversion_finished(book_folder=self.books_folder)
+
+        if os.path.exists(self.playlist_file_name):
+            self.update_playlist(pages)
+        else:self.make_playlist(pages)
+        stich_playlist_to_file(self.books_folder,self.og_bookname,self.reader.output_ending)
+
+
+    def async_read_book(self,socketed_app):
+        """gets called if the reader class ReaderCoreConnector"""
+        book_data,success = self.books_data()
+        pages = []
+        filenames = []
+
+        if not success:
+            return "no such book converted before"
+        self.remove_last_audio()
+        total_items = len(list(book_data.keys()))
+        start_t = time.time()
+
+        def progress(current_item,queue_size):
+            nonlocal total_items, start_t
+            print(f"this is queue size: {queue_size}")
+            time_since_start = time.time() - start_t
+            print(time_since_start)
+            convert_speed = (time_since_start/(total_items-queue_size)) # per page
+            print(f"convert speed per page: {convert_speed}s")
+            estimated = convert_speed * queue_size
+            socketed_app.emit(event="async_progress",data={"total_items":total_items,"estimated":estimated,"current_items":total_items - queue_size,"book_id":self.safe_bookname})
+        self.reader.on_queue_change(callback=progress)
+        for page_num,page in list(book_data.items())[self.starting_page:]:
+            if page == "":
+                continue
+            print(f"[ ADDING PAGE TO QUEUE: {page_num} ]")
+            pagename,filename = self.save_audio(page=page,page_number=page_num)
+            filenames.append(filename)
+            if pagename:
+                pages.append(pagename)
+            else:
+                print(f"[ page: {page_num} already exists ]")
+
+        while not all([os.path.exists(f) for f in filenames]):
+            time.sleep(10)
 
         self.on_conversion_finished(book_folder=self.books_folder)
 
         if os.path.exists(self.playlist_file_name):
             self.update_playlist(pages)
         else:self.make_playlist(pages)
-        stich_playlist_to_file(self.books_folder,self.book_name,self.reader.output_ending)
-
-
-
+        stich_playlist_to_file(self.books_folder,self.og_bookname,self.reader.output_ending)
 
 
     def save_audio(self,page,page_number):
@@ -410,7 +457,7 @@ class ReadBook():
         if os.path.exists(os.path.join(self.books_folder,pagename)):
             return False, ""
         filename = os.path.join(self.books_folder,pagename)
-        self.reader.save_audio(text=page,filename=filename)
+        self.reader.save_audio(text=page,filename=filename,priority=int(page_number))
 
         return pagename, filename
 
@@ -420,3 +467,4 @@ class ReadBook():
 if __name__ == "__main__":
     rd = ReadBook(og_bookname="This is marketing",pdf_path=r"c:/Users/ishall/Downloads/this is marketing.pdf",starting_page=168,base_path_=os.getcwd())
     rd.read_book(save=False)
+

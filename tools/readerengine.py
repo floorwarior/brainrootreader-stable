@@ -1,46 +1,31 @@
-"""to make this more optimal for weaker pcs we are going to handle all the heavy stuff in this subprocess"""
+"""template for generating a readerengine"""
 
-from helpers.loadreader import load_reader,get_readers_config
-from plusreaders import readers as custom_readers
 from helpers.bookreaders import readers as builtin_readers
+
 from helpers.thepanic import Pan as pan
 import sys
-
 import os
 import signal
 import argparse
 import json
 import socket
 from threading import *
-import datetime
-# block for pyinstaller to pick up needed packages
-'''import helpers
-import plusreaders
-import readerconfigs
-import pythoncom
-import nltk
-import numpy
-import sounddevice
-import win32com
-import wave
-import kokoro
-import piper
-import misaki
-import language_data
-import language_tags'''
-# ---------------
+
+{#
+- _reader: str
+- _config : str should look like a dict: {"voice":"af_heart","lang_code":"a"}
+- requirements: a list of dependencies of the
+#}
 
 
 def main():
     try:
         parser = argparse.ArgumentParser(
-            prog="ReaderCore",
-            description="Reads a text or creates audio from text, using the readers in the folder",
-            epilog="what is this even"
+            prog="ReaderEngine",
+            description="Reader with a pinned reader holds its own",
         )
 
         parser.add_argument("--port",required=True)
-        parser.add_argument("--reader",required=False)
         #parser.add_argument("--basepath",required=True)
 
         args = parser.parse_args()
@@ -63,12 +48,9 @@ def main():
 
         print("readercore running from directory: ", BASE_PATH)
 
-        if not args.reader:
-            SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-        else:
-            SELECTED_READER = {**custom_readers,**builtin_readers}[args.reader]
 
-        READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+        SELECTED_READER = builtin_readers["{{_reader}}"]
+        READERS_CONFIG = {{_config}}
         GLOBALREADER  = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
         
@@ -81,6 +63,7 @@ def main():
         server.settimeout(None)
         client,adrr = server.accept()
         while True:
+           
             msg = (client.recv(2048*10).decode())
             data = json.loads(msg)
 

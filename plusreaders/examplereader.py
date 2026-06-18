@@ -7,17 +7,15 @@ class MyReader(BaseReader):
         super().__init__(*args, speaker=speaker, **kwargs)
         self.origin = "custom"
 
-    def Speak(self,segment):
-        print(segment)
+    def Speak(self,text):
+        print(text)
 
 
     def save_audio(self,*args,**kwargs):
-        page = kwargs.get("page")
+        text = kwargs.get("text")
         out_file_name = kwargs.get("filename")
 
-        print(f"saving page: {page} at: {out_file_name}")
-
-
+        print(f"saving page with text: {text} at: {out_file_name}")
 
 if __name__ == "__main__":
     reader = MyReader()

@@ -6,7 +6,7 @@ import signal
 import sys
 from helpers.settings import load_app_config
 from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
-
+from helpers.themeing import THEMES,Theme
 
 
 if getattr(sys, 'frozen', False):
@@ -48,7 +48,7 @@ nltk.download("punkt_tab",download_dir=nltk_folder_path)
 nltk.data.path.append(nltk_folder_path)
 
 # this block is for pyinstaller to pick up the files correctly, you can comment this out if you are not building only using the app
-import helpers
+'''import helpers
 import engineio
 import plusreaders 
 import readerconfigs
@@ -70,14 +70,14 @@ import socketio
 import docx
 import flask_socketio
 import kokoro
-import misaki # kokoros dependecy
+import misaki # kokoros dependency
 import language_data # misakies dependency
 import language_tags # misakies dependency
 import spacy
 import spacy_legacy 
 import spacy_curated_transformers
 import en_core_web_sm
-import loguru
+import loguru'''
 #from TTS.api import TTS
 # -- -- -- -- -- -- -- 
 
@@ -89,15 +89,16 @@ from helpers.bookreaders import readers as builtin_readers
 from helpers.store import VoiceStorePiper,VoiceStoreKokoro
 from helpers.readercore_connector_v2 import ReaderCoreConnector
 from helpers.autoshutdown import INACTIVITY_MANAGER
+from helpers.increment_port import get_next_port
+
 
 from flask_socketio import SocketIO
 
 
-
+APPTHEME : Theme =  THEMES[BRRAPPCONFIG["theme"]]
 SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
 READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
-
-INACTIVITY_MANAGER.max_timeout = 60*20
+INACTIVITY_MANAGER.max_timeout = BRRAPPCONFIG["shutdown_after"]
 INACTIVITY_MANAGER.interval = 20
 
 if BRRAPPCONFIG["audio_method"] == "threading":
@@ -107,18 +108,26 @@ elif BRRAPPCONFIG["audio_method"] == "subprocess":
     GLOBALREADER  = ReaderCoreConnector(
         core_count = BRRAPPCONFIG["core_count"],
         is_frozen = ISFROZEN,
+        base_path = BASE_PATH
     )
 
+start_port = get_next_port(4222,int(BRRAPPCONFIG["core_count"]))
+_ = next(start_port)
 
 def re_initialize_reader():
     """sets a new global reader if there is a settings change"""
-    global GLOBALREADER,BRRAPPCONFIG,ISFROZEN,BASE_PATH,READERS_CONFIG,SELECTED_READER
+    global GLOBALREADER,BRRAPPCONFIG,ISFROZEN,BASE_PATH,READERS_CONFIG,SELECTED_READER,start_port
+    starting_port = next(start_port)
     if BRRAPPCONFIG["audio_method"] == "subprocess":
         GLOBALREADER.clean_up()
         GLOBALREADER  = ReaderCoreConnector(
             core_count = BRRAPPCONFIG["core_count"],
             is_frozen = ISFROZEN,
+            base_path = BASE_PATH,
+            starting_port = starting_port
         )
+
+
     elif BRRAPPCONFIG["audio_method"] == "threading":
         SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
         READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
@@ -142,7 +151,7 @@ socketed_app = SocketIO(app=app,async_mode="threading")
 @app.route("/")
 def home():
     books = get_booknames(basepath=BASE_PATH)
-    return render_template("index_v2.html",books=books)
+    return render_template(APPTHEME.home,books=books)
 
 
 
@@ -197,7 +206,7 @@ def voicebag():
         baseendpoint="https://huggingface.co/rhasspy/piper-voices/resolve/main/",
         voicesendpoint="https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json"
     )
-    return render_template("voicebag.html",voicestores=[piper_voice_store])
+    return render_template(APPTHEME.voicebag,voicestores=[piper_voice_store])
 
 @app.route("/settings",methods=["POST","GET"])
 def settings():
@@ -212,7 +221,7 @@ def settings():
         from helpers.loadreader import all_readers
         from helpers.videos import get_video_list
         # Gets all the voices from all readers except of the browser one that is handled in the browser
-        return render_template("settings.html",all_the_readers = all_readers(custom_readers,builtin_readers),get_readers_config=get_readers_config,base_path=BASE_PATH,videos=get_video_list(BASE_PATH),selected_reader=SELECTED_READER)
+        return render_template(APPTHEME.settings,all_the_readers = all_readers(custom_readers,builtin_readers),get_readers_config=get_readers_config,base_path=BASE_PATH,videos=get_video_list(BASE_PATH),selected_reader=SELECTED_READER)
 
 @app.route("/deletebook/",methods=["POST","GET"])
 @app.route("/deletebook/<book>",methods=["POST","GET"])
@@ -237,15 +246,15 @@ def test_image_quality():
     - opens camera stream on the image and tests it
     """
     from helpers.book_converter import get_booknames        
-    return render_template("testimage_v2.html",books=get_booknames(basepath=BASE_PATH))
+    return render_template(APPTHEME.test_image_quality,books=get_booknames(basepath=BASE_PATH))
 
 
 @app.route("/testnewroutes")
 def check_new_routes():
     """testing the new route layouts here"""
-    from helpers.book_converter import get_booknames
-    books = get_booknames(basepath=BASE_PATH)
-    return render_template("testimage_v2.html",books=books)
+    #from helpers.book_converter import get_booknames
+    #books = get_booknames(basepath=BASE_PATH)
+    return render_template("templates_2/base.html")
 
 
 @app.route("/convert",methods=["POST"])
@@ -285,7 +294,8 @@ def add_video():
             add_video_link(base_path=BASE_PATH,new_link=videolink)
         return redirect(url_for("home"))
     
-    return render_template("uploadvideo.html")
+    return render_template(APPTHEME.addvideo)
+
 
 
 
@@ -297,15 +307,13 @@ def convert_book_to_audio(book):
                   starting_page=0,
                   base_path_=BASE_PATH,
                   reader_=GLOBALREADER)
-    rd._on_sentence_progress = None
-    rd._on_page_progress = lambda *args,**kwargs : socketed_app.emit(event="progress",data={"book_id":book,"page_num":kwargs.get("page_num"),"page":kwargs.get("page")})
-    def onfinished_callback(*args,**kwargs):
-        socketed_app.emit(event="finished",data={"book_id":book,"book_folder":kwargs.get("book_folder")})
-        os.startfile(kwargs.get("book_folder"))
-    rd._on_conversion_finished = lambda *args, **kwargs :onfinished_callback(*args,**kwargs)
-    th = threading.Thread(target=lambda: rd.read_book(save=True),daemon=True)
-    th.start()
-    return render_template("convertingbooktoplaylist.html",books=get_booknames(basepath=BASE_PATH),book_id=book,page_count = rd.page_count())
+
+    if isinstance(rd.reader,ReaderCoreConnector):
+        threading.Thread(target=lambda: rd.async_read_book(socketed_app=socketed_app)).start()
+    else:
+        threading.Thread(target=lambda: rd.read_book(save=True,socketed_app=socketed_app)).start()
+
+    return render_template(APPTHEME.convert_book_to_audio,books=get_booknames(basepath=BASE_PATH),book_id=book,page_count = rd.page_count())
 
 
 @app.route("/openorigin/<book>")
@@ -336,7 +344,7 @@ def read_book_(book):
         current_page +=1
         current_page = str(current_page)
 
-    return render_template("readpage_v3.html",page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
+    return render_template(APPTHEME.read_book,page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
 
 @app.route("/api/killserver",methods=["POST","GET"])
 def kill_server():
@@ -351,7 +359,7 @@ def kill_server():
         os.kill(pid,signal.SIGINT)
     threading.Thread(target=shutdown).start()
     if request.method == "GET":
-        return render_template("shutdownscreen.html",books={})
+        return render_template(APPTHEME.shutdownscreen,books={})
     else:
         return "kill server called shutting down."
 
@@ -589,8 +597,6 @@ def run_server_with_reload_trouble_shoot():
 
     thehost = "localhost" if not DEBUG else "0.0.0.0"
     socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=True,allow_unsafe_werkzeug=False)
-
-
 
 
 

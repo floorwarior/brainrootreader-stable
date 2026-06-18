@@ -44,8 +44,12 @@ nltk_data
 !nltk_data/keepme.json
 foolingaround.py
 *.wav
+.*venv
+*.m4a
 
+.testingsomething
 node_modules
 package.json
 package-lock.json
 usefullcommands.txt
+chatterbox

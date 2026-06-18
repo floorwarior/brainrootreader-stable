@@ -1,0 +1,4 @@
+{
+    "device":"cuda",
+    "ref_audio":"output.wav"
+}

@@ -18,9 +18,10 @@ NoAudioSaveError = "This reader can not save audio, make sure this is intended b
 
 
 class BaseReader(ABC):
-
+    requirements = "requirements-[base].txt"
 
     def __init__(self,*args,speaker="there was no speaker specified",**kwargs):
+        self.error = None
         self.speaker = speaker
         self.imported_ok = False
         self.ready = True
@@ -69,9 +70,8 @@ class BaseReader(ABC):
 
 
 class WinReader(BaseReader):
-    """ :param voice_index: int
-        this is what you use to select a voice
-    """
+    requirements = "requirements-[win-tts].txt"
+    recommended_python = "any;>="
 
     def __init__(self, *args,speaker=None,voice_index=1,**kwargs):
         super().__init__( speaker=speaker,*args, **kwargs)
@@ -132,6 +132,9 @@ class WinReader(BaseReader):
 
 
 class CoquiReader(BaseReader):
+    #requirements = "requirements-[coqui-tts].txt" TODO
+    # recommended_python = "3.10;>="
+
 
     def __init__(self, *args, speaker=None,model_folder="coquimodels",model="", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
@@ -174,8 +177,8 @@ class CoquiReader(BaseReader):
 
 
 class PiperReader(BaseReader):
-
-
+    requirements = "requirements-[piper-tts].txt"
+    recommended_python = "3.10;>="
 
     def __init__(self, speaker=None,model="en_US-amy-medium.onnx",model_folder="pipermodels",*args,**kwargs):
         super().__init__(speaker=speaker,*args,**kwargs)
@@ -246,8 +249,10 @@ class PiperReader(BaseReader):
 
 class BrowserReader(BaseReader):
     """since it does not return anything it forces the system to use the browsers reader for audio"""
+
     def __init__(self, *args, speaker="browser reader", **kwargs):
         super().__init__(speaker=speaker, *args, **kwargs)
+        raise Exception("BrowserReader has been depricated, it does not work with the current logic")
         self.imported_ok = True
 
     def Speak(self,*args,text="some text",**kwargs):
@@ -283,6 +288,10 @@ class KokoroReader(BaseReader):
     ```
 
     """
+    requirements = "requirements-[kokoro-tts].txt"
+    recommended_python = "3.10;>="
+
+
     def __init__(self, *args, speaker="kokoro", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
 
@@ -345,6 +354,7 @@ class KokoroReader(BaseReader):
             #sf.write(f'{i}.wav', audio, 24000)
         added = np.concatenate(parts)
         self.sf.write(audio_out_name,added,24000)
+        return audio_out_name
 
     @pan.panic(on_panic="on_speak_panic",class_method=True)
     def Speak(self,*args,**kwargs):
@@ -375,14 +385,19 @@ class KokoroReader(BaseReader):
 
 
 class QwenTTSReader(BaseReader):
+    requirements = "requirements-[qwen-tts].txt"
+    recommended_python = "3.11;=="
+
 
     def __init__(self, *args,  **kwargs):
+        super().__init__(self,*args,**kwargs)
         self.error = "no error"
         try:
             import torch
-            import soundfile as sf
             from qwen_tts import Qwen3TTSModel
-            import soundfile as sd
+            import soundfile as sf
+            import sounddevice as sd
+            self.sf = sf
             self.sd = sd
             self.imported_ok = True
             self.speaker = kwargs.get("speaker","Ryan")
@@ -394,16 +409,18 @@ class QwenTTSReader(BaseReader):
             self.ready = True
         except Exception as e:
             self.error = e
-        #print(self.error)
+            print(self.error)
 
     def Speak(self,*args,**kwargs):
         text = kwargs.get("text")
-        wav,sr = self.model.generate_custom_voice(
+        wavs,sr = self.model.generate_custom_voice(
             text=text,
             speaker="Ryan",
         )
-        self.sd.play(wav, samplerate=sr)  # samplerate depends on the model
-        
+
+        for wv in wavs:
+            self.sd.play(wv, samplerate=sr)  # samplerate depends on the model
+            self.sd.wait()
 
     def save_audio(self,*args,**kwargs):
         text = kwargs.get("text")
@@ -413,21 +430,26 @@ class QwenTTSReader(BaseReader):
             text=text,
             speaker=self.speaker,
         )
-        self.sd.write(audio_out_name, wavs[0], sr)
+        self.sf.write(audio_out_name, wavs[0], sr)
 
 
 class PocketTTSReader(BaseReader):
-
+    requirements = "requirements-[pocket-tts].txt"
+    # recommended_python = "?"
     def __init__(self, *args, **kwargs):
+        super().__init__(self,*args,**kwargs)
         try:
             from pocket_tts import TTSModel
             import scipy.io.wavfile as wavefile
+            import sounddevice as sd
             self._tts_model = TTSModel
             self.wavefile = wavefile
             self.imported_ok = True
             self.tts_model = self._tts_model.load_model()
+            self.sd = sd
             self.voice_state = self.tts_model.get_state_for_audio_prompt(
-    "alba"  # One of the pre-made voices, see above
+
+    kwargs.get("voice")  # One of the pre-made voices, see above
     # You can also use any voice file you have locally or from Hugging Face:
     # "./some_audio.wav"
     # or "hf://kyutai/tts-voices/expresso/ex01-ex02_default_001_channel2_198s.wav"
@@ -438,25 +460,225 @@ class PocketTTSReader(BaseReader):
             self.imported_ok = False
 
     
-    def Speak(self):
-        pass
+    def Speak(self,*args,**kwargs):
+        text = kwargs.get("text")
+        audio = self.tts_model.generate_audio(model_state=self.voice_state,text_to_generate=text,max_tokens=100)
+        wav = audio.numpy()      # tensor -> numpy
+        self.sd.play(wav,self.tts_model.sample_rate)
+        self.sd.wait()
 
     def save_audio(self,*args,**kwargs):
         text = kwargs.get("text")
         audio_out_name = kwargs.get("filename")
-        audio = self.tts_model.generate_audio(model_state=self.voice_state,text_to_generate=text)
+        audio = self.tts_model.generate_audio(model_state=self.voice_state,text_to_generate=text,max_tokens=100)
         self.wavefile.write(audio_out_name,self.tts_model.sample_rate,audio.numpy())
+
+
+class F5TTSReader(BaseReader):
+    requirements = "requirements-[f5-tts].txt"
+
+    def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
+        super().__init__(*args, speaker=speaker, **kwargs)
+        try:    
+            from f5_tts.api import F5TTS
+            import sounddevice as sd
+            import soundfile as sf
+
+            self.ref_text = kwargs.get("ref_text")
+            self.ref_file = kwargs.get("ref_file")
+            self.seed = None
+            self.sd = sd
+            self.sf = sf
+            self.tts = F5TTS()
+            self.ready = True
+            self.imported_ok = True
+
+        except Exception as e:
+            print(e)
+            self.error = e
+
+
+
+    def Speak(self,*args,**kwargs):
+        text = kwargs.get("text")
+
+        seed = None
+        if self.seed:
+            seed = self.seed
+
+
+        wav, sr, spec = self.tts.infer(
+            ref_text=self.ref_text,
+            ref_file=self.ref_file,
+            gen_text=text,
+            seed=seed,
+        )
+
+        self.seed = self.tts.seed
+        self.sd.play(wav, samplerate=sr)
+        self.sd.wait()
+
+        
+
+    def save_audio(self,*args,**kwargs):
+        text = kwargs.get("text")
+        audio_out_name = kwargs.get("filename")
+
+        seed = None
+        if self.seed:
+            seed = self.seed
+
+        wav, sr, spec = self.tts.infer(
+            ref_text=self.ref_text,
+            ref_file=self.ref_file,
+            gen_text=text,
+            file_wave="f5_test.wav",
+            seed=seed,
+        )
+
+        self.seed = self.tts.seed
+
+        self.sf.write(audio_out_name, wav,sr)
+        return audio_out_name
+    
+
+class ChatterBoxTTSReader(BaseReader):
+    """
+    ref_audio: path    
+    device: str ["cuda","cpu"]
+    """
+    requirements = "requirements-[chatterbox-tts].txt"
+
+
+    def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
+        super().__init__(*args, speaker=speaker, **kwargs)
+        try:   
+            import torchaudio as ta
+            import torch
+            from chatterbox.tts_turbo import ChatterboxTurboTTS
+            import sounddevice as sd
+
+
+            self.ta = ta
+            self.sd = sd
+            self.ref_audio_path = kwargs.get("ref_audio")
+            # Load the Turbo model
+            self.tts = ChatterboxTurboTTS.from_pretrained(device=kwargs.get("device","cpu")) # should return cuda or cpu
+            self.ready = True
+            self.imported_ok = True
+
+        except Exception as e:
+
+            self.ready = False
+            self.imported_ok = False
+            self.error = e
+
+
+    def save_audio(self,*arg,**kwargs):
+        text = kwargs.get("text")
+        audio_out_name = kwargs.get("filename")
+
+        wav = self.tts.generate(
+            text=text,
+            audio_prompt_path=self.ref_audio_path
+        )
+
+        self.ta.save(audio_out_name, wav, self.tts.sr)
+        return audio_out_name
+
+    def Speak(self,*args,**kwargs):
+        text = kwargs.get("text")
+
+
+
+
+        wav = self.tts.generate(
+            text=text,
+            audio_prompt_path=self.ref_audio_path
+        )
+
+        wav = wav.squeeze(0)          # [1,43200] -> [43200]
+        wav = wav.cpu().numpy()      # tensor -> numpy
+
+
+
+        #wav = wav.cpu().numpy()
+
+        self.sd.play(wav,self.tts.sr)
+        self.sd.wait()
+
+class SupertonicReader(BaseReader):
+    requirements = "requirements-[supertonic].txt"
+
+    def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
+        super().__init__(*args, speaker=speaker, **kwargs)
+        # TODO make the config load stuff
+        try:
+            from supertonic import TTS
+            import sounddevice as sd
+
+            # First run downloads the model from Hugging Face automatically.
+            self.steps = int(kwargs.get("steps"))
+            self.speed = float(kwargs.get("speed"))
+            self.lang = kwargs.get("lang")
+            self.style_ = kwargs.get("style")
+
+            self.sd = sd
+            self.tts = TTS(auto_download=True)
+            self.style = self.tts.get_voice_style(voice_name=self.style_)
+
+        except Exception as e:
+            print(f"[ FAILED WITH: {e}]")
+            self.ready = False
+            self.imported_ok = False
+            self.error = e
+
+    def Speak(self,*args,**kwargs):
+        text = kwargs.get("text")
+
+        wav, duration = self.tts.synthesize(
+            text=text,
+            lang=self.lang,                      # Language code (e.g., "en", "ko", "na" for language-agnostic)
+            voice_style=self.style,              # Voice style object
+            total_steps=self.steps,                  # Quality: 5 (low) to 12 (high), default 8 (medium)
+            speed=self.speed         # Speed: 0.7 (slow) to 2.0 (fast)
+        )
+        
+        wav = wav.squeeze()
+
+        self.sd.play(wav,self.tts.sample_rate)
+        self.sd.wait()
+
+
+    def save_audio(self,*args,**kwargs):
+        text = kwargs.get("text")
+        filename = kwargs.get("filename")
+        wav, duration = self.tts.synthesize(
+            text=text,
+            lang=self.lang,                      # Language code (e.g., "en", "ko", "na" for language-agnostic)
+            voice_style=self.style,              # Voice style object
+            total_steps=self.steps,                  # Quality: 5 (low) to 12 (high), default 8 (medium)
+            speed=self.speed         # Speed: 0.7 (slow) to 2.0 (fast)
+        )
+        self.tts.save_audio(output_path=filename,wav=wav)
 
 readers = {
     "KokoroReader":KokoroReader,
     "PiperReader":PiperReader,
     "WinReader":WinReader,
-    "BrowserReader":BrowserReader,
+    "CoquiReader":CoquiReader,
+    "QwenTTSReader":QwenTTSReader,
+    "F5TTSReader":F5TTSReader,
+    "ChatterBoxTTSReader":ChatterBoxTTSReader,
+    "PocketTTSReader":PocketTTSReader,
+    "SupertonicReader":SupertonicReader
 }
+
 # TIP: if you are trying to make a custom build or want a faster stand up time, remove the readers you are not using
 
 
 if __name__ == "__main__":
+
     reader = QwenTTSReader(
     )
     reader.save_audio(text="What's up suckers?",filename="suckers.wav")
