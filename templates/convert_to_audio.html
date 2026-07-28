@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div x-data="convert" class="flex flex-col text-center h-full w-full">
+    <div class="flex flex-col my-auto mx-auto">
+        <h2 class="text-gray-12 text-2xl">{{books_name[:25]}}. . . <br>is converting</h2>
+        <h3 class="text-gray-11">
+            This will take some time
+        </h3>
+        <div class="flex flex-col text-gray-11">
+        <h4 class="text-green-11" x-text="`[${current_items} / ${total_items}]`"></h4>
+        </div>
+    </div>
+</div>
+<script src="/static/js/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
+<script>
+    const  book_id = "{{book_id}}"
+    document.addEventListener("alpine:init", () => {
+        Alpine.data("convert",()=>({
+            book_name:"",
+            total_items:0,
+            estimated:0,
+            current_items:0,
+            async init(){
+                //
+                var socket = io();
+                var component = this
+                socket.on('async_progress', function(data) {
+                    if (data.book_id == book_id){
+                        component.total_items = data.total_items,
+                        component.current_items = data.current_items
+                    }
+
+                });
+
+                socket.on("progress",function(data) {
+                    if (data.book_id){
+                        component.total_items = data.total_pages,
+                        component.current_items = data.page_num
+                    }
+                })
+            }
+        }))
+    })
+
+
+
+
+
+</script>
+
+{% endblock %}

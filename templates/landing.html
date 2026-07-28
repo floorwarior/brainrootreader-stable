@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <dialog class="backdrop-blur-3xl mx-auto my-auto h-fit min-w-84 w-3/9 bg-gray-2 p-6 relative text-gray-11" id="add_readable_dial">
+        <div class="flex flex-col w-full h-fit gap-3">
+            <button onclick="reset_form()" class="absolute right-2 top-2 md:size-8 size-6 flex flex-col rounded-4xl hover:bg-gray-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="md:size-6 size-4 my-auto mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="flex flex-col gap-4">
+                <h1 class="text-xl font-semibold text-gray-12">
+                    Add new Readable
+                </h1>
+
+                <h2 class="text-md font-light text-gray-11 text-wrap">
+                    You can select it by clicking on the dotted area or dropping your file there<br>supported: [docx, pdf, epub, txt]
+                </h2>
+                <div class="max-h-64 max-w-64 min-h-0 w-46 h-46 min-w-0 flex flex-col hover:bg-green-a4 bg-green-a3 text-center mx-auto border-dotted border-2 rounded-xl">
+                    <form autocomplete="off" id="theform" method="post" action="{{url_for('convert_book')}}" enctype="multipart/form-data">
+                            <label for="book" >
+                                <img id="dropzone" src="/static/doctojsonwhite.png" class="w-full" alt="">
+                            </label>
+                            <input class="hidden" name="book" id="book" title="this is the input field for uploading files to BRR, you can use o to open this in the future" required  type="file">
+                    </form>
+                </div>
+                <h2 class="text-green-11" id="selected_file">
+                    
+                </h2>
+            </div>
+
+            <div class="flex ml-auto gap-2">
+                <button onclick="reset_form()" class="ml-auto cancel-btn">
+                    Cancel
+                </button>
+                <button onclick="submit_form()" class="ml-auto btn">
+                    <!--
+                    Todo block empty uploads
+                    -->
+                    Add
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog class="backdrop-blur-3xl mx-auto my-auto h-fit min-w-md w-3/9 bg-gray-5 p-6 relative text-gray-11" id="delete_book">
+        <div class="flex flex-col w-full gap-3">
+            <button onclick="delete_dialog.close()" class="absolute right-2 top-2 md:size-8 size-6 hover:bg-gray-3 rounded-4xl">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="md:size-6 size-4 my-auto mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="flex flex-col gap-4">
+                <h1 class="text-xl font-semibold text-gray-12 mr-auto">
+                    Are you sure you want to delete:
+                </h1>
+                <h2 class="text-gray-10 text-wrap" data-id="book-to-delete">
+                </h2> 
+                <div class="flex justify-between">
+                    <a data-id="del-book" href="about:blank" class="py-1 px-2 text-red-400 border-red-600 rounded-md hover:bg-gray-3">
+                        delete
+                    </a>
+                    <button onclick="delete_dialog.close()" class="cancel-btn">
+                        cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+
+
+    <div class="page">
+        <div class="flex justify-between">
+            <h2 class="text-gray-11 text-2xl my-auto">Your Readables</h2>    
+            <button onclick="document.getElementById('add_readable_dial').showModal()" class="btn" >
+                new
+            </button>
+        </div>
+        <hr class="w-full my-1 mx-auto bg-gray-10 h-[2px]">
+        <div class="flex flex-col md:rounded-xl rounded-md bg-gray-2 p-4 mt-2">
+            {% if not books.items()%}
+                <h2 class="text-center text-gray-11 font-light">No Readables</h2>
+            {% endif %}
+            <ul class="flex flex-col gap-2 list-inside divide-y"> 
+                {% for safe_bookname,book_name in books.items() %}
+                    <li class="text-gray-11 border-none">
+                        <div x-data="{book_name:'{{book_name}}',full_name_visible:false}" class="flex justify-between p-1 [&_svg]:rounded-4xl [&_svg]:size-8 [&_svg]:p-1 [&_svg]:hover:bg-gray-4">
+                            <div class="flex flex-col">
+                                <h2  x-on:click="full_name_visible = true" x-on:mouseout="full_name_visible = false" data-full-name="{{book_name}}" data-tmp=""  title="{{book_name}}">
+                                    {{book_name[:40]}}. . .
+                                </h2>
+                                <h2 x-cloak x-show="full_name_visible" x-transition>
+                                    {{book_name[40:]}}
+                                </h2>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <a href="/readbook/{{safe_bookname}}_readable.json" id="{{safe_bookname}}" data-book-name="{{book_name}}" data-book="{{safe_bookname}}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                    </svg>
+                                </a>
+                                <a href="/converttoaudio/{{safe_bookname}}_readable.json">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z" />
+                                    </svg>
+                                </a>
+                                <a href="javascript:confirm_delete('{{safe_bookname}}','{{book_name}}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <script>
+        var dropzone = document.getElementById("dropzone")
+        dropzone.addEventListener("dragover",(e)=>{
+            e.preventDefault()
+        })
+
+        // globals
+        var file 
+        const file_input = document.getElementById('theform')
+        const selected_display = document.getElementById("selected_file")
+        const delete_dialog = document.getElementById("delete_book")
+        const add_readable_dial = document.getElementById("add_readable_dial")
+
+        file_input.addEventListener("change",(e)=>{
+            //console.log( e.target.files[0].name)
+            file = selected_display.textContent = `[selected file: ${e.target.files[0].name}]`
+        })
+
+        dropzone.addEventListener("drop",(e)=>{
+            e.preventDefault()
+            var thefile = e.dataTransfer.files[0]
+            console.log(thefile.path)
+            var datatransfer_ = new DataTransfer()
+            datatransfer_.items.add(thefile)
+            file = thefile
+            book.files = datatransfer_.files
+            selected_display.textContent = `[selected file: ${thefile.name}]`
+            //document.getElementById("items_selected").innerHTML = `[ selected file ${thefile.name}]`
+        })
+
+        
+
+
+        function confirm_delete(safe_bookname,bookname){
+            var name_display = delete_dialog.querySelector("[data-id=book-to-delete]")
+            var delete_link = delete_dialog.querySelector("[data-id=del-book]")
+            name_display.textContent = bookname
+            console.log(safe_bookname,bookname)
+            
+            delete_link.setAttribute("href",`./deletebook/${safe_bookname}_readable.json`)
+            delete_dialog.showModal()
+        }
+
+
+        function submit_form(){
+            if (file){
+                file_input.submit()
+            }
+            else{
+                console.log("input empty")
+            }
+        }
+
+        function reset_form(){
+            add_readable_dial.close()
+            file_input.reset()
+            selected_display.textContent = ""
+        }
+    </script>
+
+
+{% endblock %}

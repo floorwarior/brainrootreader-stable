@@ -35,5 +35,6 @@ def stich_playlist_to_file(folder_name,book_name,ext):
 
     playlist.export(os.path.join(folder_name,f"{book_name}.{ext}"),format=ext)
     print(f"[ SAVED AUDIO TO: {new_file_path}]")
+    return new_file_path
 
 

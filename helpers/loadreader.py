@@ -1,11 +1,9 @@
 import json
 import os
+from helpers.settings import BRRAPPCONFIG
 
-def load_reader(base_path,custom_readers={},builtin_readers={}):
-    with open(os.path.join(base_path,"readerconfigs","globalreader.json"),"r") as reader_data:
-        config_data = json.load(reader_data)
-    reader_class_name = config_data["name"]
-    #type_ = config_data["type"] the system should not care if its built in or not
+def load_reader(base_path,custom_readers={},builtin_readers={},appconfig=BRRAPPCONFIG):
+    reader_class_name = appconfig["reader"]["selected_reader"]
     _all_readers = {**builtin_readers,**custom_readers}
     return _all_readers.get(reader_class_name)
 
@@ -36,6 +34,5 @@ def get_readers_config(base_path=None,readername="PiperReader",supress_error=Fal
 
 def all_readers(custom_readers,builtin_readers):
     return {**custom_readers,**builtin_readers}
-
 
 

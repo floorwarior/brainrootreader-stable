@@ -38,9 +38,12 @@ def remove_pdf(base_path,safe_bookname:str):
 
 def remove_doc(base_path,safe_bookname:str):
     """gets the real name of the book by looking it up first, then it removes its folders and the file associated with it"""
+    print("remove doc called")
     booknames = get_booknames(basepath=base_path)
     doc_name = booknames.get(safe_bookname.removesuffix("_readable.json"),None)
+    print(doc_name)
     doc_file_name = os.path.join(base_path,"uploads",doc_name)
+    print(doc_file_name)
     if not os.path.exists(doc_file_name):
         print("this doc has been already removed from the system")
         return

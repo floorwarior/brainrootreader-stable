@@ -1,5 +1,5 @@
 import os
-import numpy as np
+#import numpy as np
 from secrets import token_urlsafe
 from abc import ABC, abstractmethod
 try:
@@ -19,6 +19,7 @@ NoAudioSaveError = "This reader can not save audio, make sure this is intended b
 
 class BaseReader(ABC):
     requirements = "requirements-[base].txt"
+    recommended_python = "any"
 
     def __init__(self,*args,speaker="there was no speaker specified",**kwargs):
         self.error = None
@@ -71,7 +72,7 @@ class BaseReader(ABC):
 
 class WinReader(BaseReader):
     requirements = "requirements-[win-tts].txt"
-    recommended_python = "any;>="
+    recommended_python = "any"
 
     def __init__(self, *args,speaker=None,voice_index=1,**kwargs):
         super().__init__( speaker=speaker,*args, **kwargs)
@@ -133,7 +134,7 @@ class WinReader(BaseReader):
 
 class CoquiReader(BaseReader):
     #requirements = "requirements-[coqui-tts].txt" TODO
-    # recommended_python = "3.10;>="
+    # recommended_python = "3.10"
 
 
     def __init__(self, *args, speaker=None,model_folder="coquimodels",model="", **kwargs):
@@ -178,7 +179,7 @@ class CoquiReader(BaseReader):
 
 class PiperReader(BaseReader):
     requirements = "requirements-[piper-tts].txt"
-    recommended_python = "3.10;>="
+    recommended_python = "any"
 
     def __init__(self, speaker=None,model="en_US-amy-medium.onnx",model_folder="pipermodels",*args,**kwargs):
         super().__init__(speaker=speaker,*args,**kwargs)
@@ -189,6 +190,8 @@ class PiperReader(BaseReader):
             from piper import PiperVoice
             import wave
             import sounddevice as sd
+            import numpy as np
+            self.np = np
             self.sd = sd
             self.PiperVoice = PiperVoice
             self.voice = self.PiperVoice.load(os.path.join(self.model_folder,self.model),use_cuda=False)
@@ -213,7 +216,7 @@ class PiperReader(BaseReader):
                 stream.start()
             
             # Convert bytes to numpy array and play
-            audio_array = np.frombuffer(chunk.audio_int16_bytes, dtype=np.int16)
+            audio_array = self.np.frombuffer(chunk.audio_int16_bytes, dtype=self.np.int16)
             stream.write(audio_array)
 
         if stream:
@@ -289,7 +292,7 @@ class KokoroReader(BaseReader):
 
     """
     requirements = "requirements-[kokoro-tts].txt"
-    recommended_python = "3.10;>="
+    recommended_python = "any"
 
 
     def __init__(self, *args, speaker="kokoro", **kwargs):
@@ -297,12 +300,14 @@ class KokoroReader(BaseReader):
 
         try:
             import soundfile as sf
+            import numpy as np
             from kokoro import KPipeline,KModel
             self.KPipeline = KPipeline
             import sounddevice as sd
             global IS_BUILD
             self.sf = sf
             self.sd = sd
+            self.np = np
             self.models_folder = kwargs.get("models_folder")
             self.base_path = kwargs.get("base_path")
             self._model = kwargs.get("model")
@@ -352,7 +357,7 @@ class KokoroReader(BaseReader):
             #display(Audio(data=audio, rate=24000, autoplay=i==0))
             parts.append(audio)
             #sf.write(f'{i}.wav', audio, 24000)
-        added = np.concatenate(parts)
+        added = self.np.concatenate(parts)
         self.sf.write(audio_out_name,added,24000)
         return audio_out_name
 
@@ -386,7 +391,7 @@ class KokoroReader(BaseReader):
 
 class QwenTTSReader(BaseReader):
     requirements = "requirements-[qwen-tts].txt"
-    recommended_python = "3.11;=="
+    recommended_python = "3.11"
 
 
     def __init__(self, *args,  **kwargs):
@@ -435,7 +440,7 @@ class QwenTTSReader(BaseReader):
 
 class PocketTTSReader(BaseReader):
     requirements = "requirements-[pocket-tts].txt"
-    # recommended_python = "?"
+    recommended_python = "any"
     def __init__(self, *args, **kwargs):
         super().__init__(self,*args,**kwargs)
         try:
@@ -476,6 +481,7 @@ class PocketTTSReader(BaseReader):
 
 class F5TTSReader(BaseReader):
     requirements = "requirements-[f5-tts].txt"
+    recommended_python = "3.11"
 
     def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
@@ -548,6 +554,7 @@ class ChatterBoxTTSReader(BaseReader):
     device: str ["cuda","cpu"]
     """
     requirements = "requirements-[chatterbox-tts].txt"
+    recommended_python = "3.12"
 
 
     def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
@@ -609,6 +616,7 @@ class ChatterBoxTTSReader(BaseReader):
 
 class SupertonicReader(BaseReader):
     requirements = "requirements-[supertonic].txt"
+    recommended_python = "any"
 
     def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
@@ -626,6 +634,10 @@ class SupertonicReader(BaseReader):
             self.sd = sd
             self.tts = TTS(auto_download=True)
             self.style = self.tts.get_voice_style(voice_name=self.style_)
+
+            self.imported_ok = True
+            self.ready = True
+
 
         except Exception as e:
             print(f"[ FAILED WITH: {e}]")

@@ -46,6 +46,7 @@ foolingaround.py
 *.wav
 .*venv
 *.m4a
+*.db
 
 .testingsomething
 node_modules

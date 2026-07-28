@@ -3,15 +3,14 @@ from dataclasses import dataclass
 
 @dataclass
 class Theme():
-    home : str
-    settings: str
-    voicebag: str
-    test_image_quality: str
-    add_video : str
-    read_book: str
-    convert_book_to_audio :str
-    shutdownscreen: str
-
+    home : str = None
+    settings: str = None
+    voicebag: str = None
+    test_image_quality: str = None
+    add_video : str = None
+    read_book: str = None
+    convert_book_to_audio :str = None
+    shutdownscreen: str = None
 
 
 THEMES = {
@@ -24,8 +23,17 @@ THEMES = {
         convert_book_to_audio = "convertingbooktoplaylist.html",
         read_book="readpage_v3.html",
         shutdownscreen="shutdownscreen.html"
+    ),"NEW_THEME":Theme(
+        home="landing.html",
+        read_book="reading.html",
+        settings="settings.html" ,
+        shutdownscreen="shutdownscreen.html",
+        convert_book_to_audio="convert_to_audio.html" 
     )
 }
+
+
+
 
 def register_custom_theme(name,data):
     THEMES[name] = Theme(**data)

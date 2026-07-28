@@ -1,121 +1,302 @@
 {% extends "base.html" %}
 
 
+{% block content%}
+<div class="h-dvh w-full flex flex-col gap-4 p-4">
 
-{% block body %}
-<script src="{{url_for('static',filename='js/videorelated.js')}}" ></script>
-<script src="{{url_for('static',filename='js/getbrowservoices.js')}}"></script>
-<script src="{{url_for('static',filename='js/read_in_browser.js')}}"></script>
 
-<!--
-Things to have:
-> select reading method
-> select reading model for piper only!
-> select reader model for the browser version
--->
-<h1>Reader Settings</h1>
-<form action="{{url_for('settings')}}" method="post">
-    {% for reader in all_the_readers.values() %}
 
-        {% if reader.__name__ != "BrowserReader"  %}
-        <div class="card bg-dark text-light border border-light">
-            <div class="card-header">
-                <h2>{{reader.__name__}}</h2>
-            </div>
-            <div class="card-body">
-                <h3>{{reader.__name__}} voices</h3>
-                {% set og_data= get_readers_config(base_path,reader.__name__)  %}
-                {% set config = dict(og_data, base_path=base_path) %}
-                {% set thereader =reader(**config) %}
-                
-                {% if thereader.imported_ok %}
-                    <select autocomplete="off" class="form-control text-light bg-dark" name="{{reader.__name__}}_model" id="{{reader.__name__}}_model">
-                        <option value="empty">--Select-a-Voice--</option>
-                        {% for descriptor , value in thereader.get_voices().items() %}
-                            {% if value==config.get('model') %}
-                                <option selected  value="{{value}}">{{descriptor}}</option>
-                            {% else %}
-                                <option  value="{{value}}">{{descriptor}}</option>
-                            {% endif %} 
-                        {% endfor %}
-                    </select>
-                {% else  %}
-                    <h4>Your system does not support or have missing dependecies for this reader:</h4>
-                    <p>{{thereader.error}}</p>
-                {% endif %}
-            </div>
+    
+    <div id="installed_readers" class="overflow-y-scroll flex flex-col pr-2">
+        <h1 class="text-3xl text-gray-11">Settings</h1>
 
-        </div>
-        {% endif %}
-    {% endfor %}
-    <div class="card bg-dark text-light border border-light">
-        <div class="card-header">
-            <h2 class="text-center">Global Reader</h2>
-        </div>
-        <div class="card-body">
-            <select autocomplete="off" class="form-control text-light bg-dark" name="global_reader" id="globalreadersettings">
-                <option value="empty">--Select-a-Reader--</option>
-                {% for reader, reader_class in all_the_readers.items() %}
-                    {% if reader==selected_reader.__name__ %}
-                        <option selected value="{{reader}}">
-                            {{reader}}
-                        </option>
-                    {% else %}
-                        <option value="{{reader}}">
-                            {{reader}}
-                        </option>
-                    {% endif %}
+
+        <h2 class="text-2xl text-gray-11 my-4">Reader</h2>
+        <div x-data="global_reader" class="rounded-md p-2 text-gray-11 surface">
+            
+            <h3 x-text="()=>{return `Selected Reader: ${selected}`}"></h3>
+            <h4 class="text-green-11" x-cloak x-show="is_reloading">
+                [reloading backend] <br>
+                <span class="text-gray-10">this might take some time</span>
+            </h4>
+            <h4 class="text-green-12" x-show="changed" x-text="()=>{return `[changed to ${selected}]`}">
+            </h4>
+            <select x-on:change="changed = false" x-model="selected" name="globalreader" id="globalreader">
+                {% for reader in installed_readers %}
+                <option value="{{reader.__name__}}">{{reader.__name__}}</option>
                 {% endfor %}
             </select>
+            
+            <button @click="select_reader" class="btn">
+                reload reader
+            </button>
+        </div>
+
+
+        <div class="flex justify-between my-4">
+            <h2 class="text-xl text-gray-11">Installed readers:</h2>
+            <button id="recheck_all_readers" class="btn mr-2">
+                recheck
+            </button>
+        </div>
+
+        <div class="flex flex-col gap-2 text-gray-11">
+            {% for reader in installed_readers %}
+                <div x-data="{{reader.__name__}}" x-cloack x-show="installed" data-id="reader_card" id="{{reader.__name__}}" class="p-2 rounded-md bg-gray-2 flex flex-col">
+                    <div class="flex justify-between">
+                        <h2>
+                            {{reader.__name__}}
+                        </h2>
+                        <button x-on:click="check_is_installed" class="icon-btn" data-id="recheck_install">
+                            <svg :class="checking ? 'animate-spin' : '' " xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <h3 x-text="()=>{return 'Install type: ' + install_type }"></h3>
+                    <h3 x-text="()=>{return 'Installed in: ' + installed_where}" data-id="installed_in"></h3>
+                    <h3 class="text-yellow-800" x-show="uninstalling">[uninstalling]</h3>
+                    <div class="flex gap-1 justify-end align-items-end">
+                        {% if installed_there[reader.__name__]["type_of_install"] in [INSTALLED_IN.GLOBAL,INSTALLED_IN.CURRENT_VENV] %}
+                        {#
+                            INSTALLED_IN.VENV, INSTALLED_IN.GLOBAL, INSTALLED_IN.DEDICATED_VENV
+                            
+                        #}
+                            <button @click="remove" class="btn">
+                                remove
+                            </button>
+                        {% endif %}
+                        {% if installed_there[reader.__name__]["type_of_install"] == "dedicated_venv" %}
+                            <button @click="remove" class="btn" data-id="delete_dedicated_venv">
+                                delete venv
+                            </button>
+                        {% endif %}
+                    </div>
+ 
+                </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-between  text-gray-11 my-4">
+            <h1 class="text-xl text-gray-11">Not Installed:</h1>
+
+        </div>
+        
+        <div class="flex flex-col text-gray-11 gap-2">
+
+            {% for reader in not_installed%}
+
+                <div x-data="{{reader.__name__}}" class="p-2 rounded-md bg-gray-2 flex flex-col">
+                    <h2 class="text-gray-11">
+                        {{reader.__name__}}
+
+                    </h2>
+                    <div class="flex flex-col gap-1">
+                        <div  class="flex gap-1">
+                            <h3>Install into</h3>
+                            <select x-model="selected" name="install_type">
+                                <option value="dedicated_venv">dedicated venv  [RECOMMENDED]</option>
+                                <option value="current_venv">current venv</option>
+                            </select>
+                        </div>
+                        <h3 class="text-green-11" x-show="installing">
+                            [installing]
+                        </h3>
+                        <h3 class="text-green-12" x-show="installed">[installed]</h3>
+
+                        <button @click="install" class="btn ml-auto">Install</button>
+                    </div>
+                </div>
+
+            {% endfor %}
+        </div>
+        
+        
+        <h2 class="text-2xl text-gray-11 my-4">Config</h2>
+        <div x-data="other" class="text-gray-11 surface rounded-md p-2 gap-2 flex flex-col divide-y">
+            <div class="flex p-1 gap-2">
+                <label for="port">port</label>
+                <input x-on:change="reset" name="port" id="port" x-model="port" type="number">
+            </div>
+            <div class="flex p-1 gap-2">
+                <label for="host">host:</label>
+                <input x-on:change="reset" x-model="host" type="text">
+            </div>
+            <div class="flex flex-col gap-2 ">
+                <h4>Audio Method of generation:</h4>
+                <div class="flex gap-2">
+                    <button x-on:click="reset" @click="audio_method = 'subprocess'" x-bind:class="audio_method == 'subprocess' ? 'bg-green-5' : ''" class="btn">
+                        subprocess
+                    </button>
+                    <button x-on:click="reset" @click="audio_method = 'threading'" x-bind:class="audio_method == 'threading' ? 'bg-green-5' : ''" class="btn">
+                        threading
+                    </button>
+  
+                </div>
+                <div class="flex gap-2" >
+                    <label x-bind:class="audio_method == 'subprocess' ? '': 'text-gray-8'" for="core_count">Core count:</label>
+                    <input x-on:change="reset" title="Select a core count that is less or equals to your systems cpu's core count" x-bind:disabled="audio_method != 'subprocess'" class="disabled:text-gray-8" x-model="core_count" name="core_count" type="number">
+                </div>
+
+            </div>
+
+            <div>
+                <label for="loading_window">Use loading_window</label>
+                <input x-on:change="reset" x-model="loading_window" name="loading_window" type="checkbox"> 
+            </div>
+            <div class="flex flex-col">
+                <div class="flex gap-2">
+                    <label for="auto_shutdown">
+                        Auto Shutdown:
+                    </label>
+                    <input x-model="auto_shutdown" x-on:change="reset" name="auto_shutdown" type="checkbox">
+                </div>
+                <div class="flex gap-2">
+                    <label for="shutdown_after">Shutdown After</label>
+                    <input x-on:change="reset" x-model="shutdown_after" name="shutdown_after" type="number">
+                </div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <h4>Video Settings</h4>
+                <div class="flex gap-2">
+                    <button class="btn" x-bind:class="video_type == 'iframe' ? 'bg-green-6' : '' " @click="video_type = 'iframe' ">
+                        iframe
+                    </button>
+                    <button class="btn" x-bind:class="video_type == 'video' ? 'bg-green-6' : '' " @click="video_type = 'video' ">
+                        video
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <label for="video">video</label>
+                    <input class="w-86" x-model="video" type="text">
+                </div>
+            </div>
+
+            <button class="btn ml-auto" @click="update_cnfg">
+                save config <span x-cloak x-show="updated" class="text-green-11">
+                    [saved]
+                </span>
+            </button>
         </div>
 
     </div>
-
-<div class="card bg-dark text-light border border-light">
-    <div class="card-header">
-        <h2>Browser ( fallback )</h2>
-    </div>
-    <div class="card-body">
-        <label class="form-label" for="browser-voices">Browser Vocies</label>
-        <select onchange="onbrowservoice(this);" class="form-control bg-dark text-light"  id="browser-voices">
-            <option value="empty">--Select-a-Voice--</option>
-        </select>      
-    </div>
-
 </div>
-<div class="card bg-dark text-light border border-light">
-    <div class="card-header">
-        <h2>Video Settings</h2>
-    </div>
-    <div class="card-body">
-        <label for="videooptions"></label>
-        <select class="form-control bg-dark text-light" onchange="change_default_video(this);" id="videooptions">
-            {% for vid in videos %}
-                <option value="{{vid}}">{{vid}}</option>
-            {% endfor %}
-        </select>
-    </div>
-</div>
-<button type="submit" class="btn btn-outline-light">Save</button>
-</form>
+
 <script>
-    var browservoiceselect = document.getElementById("browser-voices")
-    function select_current(){
-        var voc = localStorage.getItem("brainrootreader-browser-voice")
-        console.log("previously selected value was",voc)
-        browservoiceselect.value = voc
-        console.log(browservoiceselect.value)
-    }
+    const cfg = new Configure()
+    const install_tools = new InstallTools()
+    const kyz = new Keys()
 
-    function onbrowservoice(that){
-        var voice = that.value
-        console.log("selecting voice",voice)
-        localStorage.setItem("brainrootreader-browser-voice",voice)
-    }
-    document.addEventListener("DOMContentLoaded",()=>{getbrowservoices("browser-voices");select_current()})
 
+    document.addEventListener('alpine:init', () => {
+        {% for reader in installed_readers %}
+            Alpine.data("{{reader.__name__}}",()=>({
+                init(){
+                    document.getElementById("recheck_all_readers").addEventListener("click",()=>{
+                        this.check_is_installed()
+                    })
+                },
+                reader:"{{reader.__name__}}",
+                checking:false,
+                installed:true,
+                uninstalling :false,
+                install_type:'{{installed_there[reader.__name__]["type_of_install"]}}',
+                installed_where:'{{installed_there[reader.__name__]["where"]|tojson}}',
+                async check_is_installed(){
+                    // checks to see if the reader is still installed
+                    this.checking = true
+                    var reader = this
+                    setTimeout(async ()=>{
+                        var res = await install_tools.check_reader(reader.reader)
+                        reader.checking = false
+                        reader.installed = res
+                    },0)
+                },
+                async remove(){
+                    this.uninstalling = true
+                    var component = this
+                    setTimeout(async ()=>{
+                        await install_tools.remove_reader(this.reader,this.install_type)
+                        component.installed = false
+                        component.uninstalling = false
+                    },0)
+                }
+            }))
+        {% endfor %}
+
+        {% for reader in not_installed %}
+            Alpine.data("{{reader.__name__}}",()=>({
+                reader:'{{reader.__name__}}',
+                selected:"dedicated_venv",
+                installing:false,
+                installed:false,
+                install(){
+                    this.installing = true
+                    var component = this
+                    setTimeout(async ()=>{
+                        var is_installed = await install_tools.install_reader(this.reader,this.selected)
+                        component.installing = false
+                        component.installed = is_installed
+                    },0)
+                }
+            }))
+
+
+        {% endfor %}
+        Alpine.data("global_reader",()=>({
+            selected:"{{config.reader.selected_reader}}",
+            is_reloading:false,
+            changed:false,
+            async select_reader(){
+                //console.log(this.selected)
+                var component = this
+                this.is_reloading = true
+                setTimeout(async ()=>{
+                    var res = await cfg.setconfigfield("reader.selected_reader",this.selected)
+                    await reload_backend()
+                    component.is_reloading = false
+                    component.changed = true
+                })
+
+            }
+        }))
+
+
+        Alpine.data("other",()=>({
+            async update_cnfg(){
+                data = {
+                    "app.port":this.port,
+                    "app.host":this.host,
+                    "app.audio_method":this.audio_method,
+                    "subprocess.core_count":this.core_count,
+                    "startup.loading_window":this.loading_window,
+                    "shutdown.shutdown_after":this.shutdown_after,
+                    "shutdown.auto_shutdown":this.auto_shutdown
+                } 
+                await cfg.setconfigfields(data)
+                await kyz.setkey("video",this.video)
+                await kyz.setkey("video_type",this.video_type)
+                this.updated = true
+            },
+            reset(){
+                //changes the updated back to not updated
+                this.updated = false
+            },
+            port:{{config.app.port|tojson}},
+            host:{{config.app.host|tojson}},
+            audio_method:{{config.app.audio_method|tojson}},
+            core_count:{{config.subprocess.core_count|tojson}},
+            loading_window:{{config.startup.loading_window|tojson}},
+            shutdown_after:{{config.shutdown.shutdown_after|tojson}},
+            auto_shutdown:{{config.shutdown.auto_shutdown|tojson}},
+            video: {{KEYS['video'].value|tojson}},
+            video_type: {{KEYS['video_type'].value|tojson}},
+            updated:false
+        }))
+    })
 
 </script>
+
 
 
 {% endblock %}

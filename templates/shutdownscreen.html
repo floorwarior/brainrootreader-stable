@@ -1,7 +1,35 @@
-{% extends "base_v2.html"%}
+{% extends "base.html" %}
 
-{% block body %}
-<div class="d-flex justify-content-center align-items-center">
-    <h2 class="text-center">Brain Root Reader stopped see you next time</h2>
+{% block content%}
+<div x-data="{statustext:' is stopping.',status:'stopping'}" x-init="document.addEventListener('disconnected',()=>{statustext='has stopped';status = 'stopped'})" class="flex flex-col h-full w-full text-gray-11">
+    <h1 class="text-center md:text-3xl text-2xl text-gray-11 my-auto mx-auto">BRR <span x-bind:class="status == 'stopping' ? 'text-yellow-500' : 'text-red-500' " x-text="statustext"></span> <br>See you next time.</h1>
+    <div class="flex mx-auto mb-auto gap-4 text-green-11">
+        <a href="https://github.com/floorwarior/brainrootreader-stable">[github repo]</a>
+        <a href="https://github.com/floorwarior">[floorwarior]</a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSehdLGWVLW-RzxYXoDCfoF_vfaVx7K0p8SV1sbj91xbXsfuoA/viewform?usp=publish-editor">[give feedback]</a>
+    </div>
 </div>
+<script src="/static/js/socket.io.js"></script>
+
+<script>
+
+
+    document.addEventListener("DOMContentLoaded",()=>{
+        var ev = new Event("brr-stopping")
+        document.dispatchEvent(ev)
+    })
+    var socket = io()
+
+    socket.on("connect",()=>{
+        console.log("connected")
+    })
+
+
+    socket.on("disconnect",()=>{
+        var ev = new Event("disconnected")
+        document.dispatchEvent(ev)
+        //console.log("lost server")
+    })
+
+</script>
 {% endblock %}

@@ -21,7 +21,7 @@
 import socket
 from secrets import token_urlsafe
 
-from queue import PriorityQueue
+from queue import PriorityQueue,Empty
 import json
 try:
     from helpers.bookreaders import BaseReader
@@ -42,6 +42,9 @@ from time import sleep,time
 from helpers.loadreader import load_reader
 from helpers.bookreaders import readers as builtin_readers
 from plusreaders import readers as custom_readers
+from helpers.dedicated_venv import is_venv,venv_name
+from helpers.enums import ReaderCoreEnums
+from helpers.taskqueue import TaskQueue
 
 
 
@@ -92,6 +95,9 @@ class KillCores(LazyCompareable):
     prio : int = 0
 
 
+class KillCore(LazyCompareable):
+    type : str = "kill_core"
+
 
 class ReaderCoreConnector(BaseReader):
     """make the readercore: which is a socket server you can use this to generate faster if you are using a weaker device,
@@ -118,7 +124,7 @@ class ReaderCoreConnector(BaseReader):
             self.imported_ok = True
 
             self.priority_lookup = []
-            self.priority_queue = PriorityQueue()
+            self.priority_queue = TaskQueue()
             
             self.threads = {}
             self.exit_event = Event()
@@ -130,14 +136,35 @@ class ReaderCoreConnector(BaseReader):
 
     def clean_up(self,*args,**kwargs):
         self.kill_cores()
+        while self.cores:
+            sleep(1)
+        self.exit_event.set()
+        return
+
    
     def _force_kill(self,port):
         """forcefully terminates a core if it becomes unresponsive"""
         pid = self.cores[port]["pid"]
-        self.priority_queue.empty()
         os.kill(pid,signal.SIGINT)
 
 
+    def clear_queue(self):
+        """empties the queue"""
+        self.priority_queue.clear()
+
+    def is_ready(self):
+        free_core,port = self.get_core()
+        free_core.sendall(json.dumps({
+            "type":ReaderCoreEnums.CLASS_METHOD,
+            "method":"is_ready",
+            "args":[],"kwargs":{}
+            # can also take args or kwargs you can only pass simple values
+        }).encode())
+        response = free_core.recv(1024)
+        #print(response)
+        data = json.loads(response)
+        self.release_core(port)
+        return data
 
     def on_queue_change(self,callback):
         self._on_queue_change = callback
@@ -160,17 +187,24 @@ class ReaderCoreConnector(BaseReader):
         
     def kill_cores(self):
         """stops the cores from running"""
+
+        for i in self.cores:
+            kc = KillCore(prio=0)
+            self.priority_queue.put(item=(0,kc))
+            self.priority_lookup.append(kc.__dict__)
+        return True
         for _ in range(0,self.core_count):
             free_core, port = self.get_core()
 
             free_core.sendall(json.dumps(
                 {
-                    "type":"terminate"
+                    "type":ReaderCoreEnums.TERMINATE
                 }
             ).encode())
             response = free_core.recv(1024)
             data = json.loads(response)
             if not data.get("shutting_down"):
+                print("port refused to terminate")
                 self._force_kill(port)
         
         return True
@@ -184,9 +218,8 @@ class ReaderCoreConnector(BaseReader):
             else:
                 SELECTED_READER = {**custom_readers,**builtin_readers}[self.forced_reader]
 
-            dedicated_venv = os.path.join(self.base_path,f".{SELECTED_READER.__name__.lower()}-venv")
-
-            if os.path.exists(dedicated_venv):
+            dedicated_venv = os.path.join(self.base_path,f".{SELECTED_READER.__name__.lower()}-venv") #
+            if is_venv(self.base_path,SELECTED_READER):
                 command = [os.path.join(dedicated_venv,"Scripts","python.exe"),"readercore.py","--port",f"{port}"]
                 if self.forced_reader:
                     command += ["--reader",self.forced_reader]
@@ -239,6 +272,9 @@ class ReaderCoreConnector(BaseReader):
         return True
 
 
+
+
+
     def release_core(self,port):
         """sets the state of the core as free and releases the lock"""
         self.cores[port]["state"] = "free"
@@ -279,7 +315,7 @@ class ReaderCoreConnector(BaseReader):
         free_core.sendall(json.dumps(
             {
                 "text":text,
-                "type":"Speak"
+                "type":ReaderCoreEnums.SPEAK
             }
         ).encode())
         response = free_core.recv(1024)
@@ -305,12 +341,15 @@ class ReaderCoreConnector(BaseReader):
     def _main_loop(self):
         def helper():
             while True:
-                if self.priority_queue.not_empty:
+                try:
+                    # get one item
+                    _,current_task = self.priority_queue.get(timeout=2,block=True)
                     #print(self.priority_queue)
-                    _,current_task = self.priority_queue.get()
+                    print("prio:",_)
+
                     self._on_queue_change(
                         current_item=current_task,
-                        queue_size = self.priority_queue.qsize()
+                        queue_size = self.priority_queue.get_size()
                     )
                     match current_task.type:
                         case "Speak":
@@ -319,17 +358,37 @@ class ReaderCoreConnector(BaseReader):
                         case "save_audio":
                             self._save_audio(text=current_task.text,filename=current_task.filename)
 
-                        case "kill_cores":
-                            self.kill_cores()
-                    
-                elif self.exit_event.is_set():
-                    break
+                        case "kill_core":
+                            self.kill_one()
+                            if self.exit_event.is_set():
+                                print("exit event set readercore spinning down")
+                                break
+                except Empty:
+                    pass
+                sleep(.1)
 
-                else:
-                    sleep(.1)
         th_id = token_urlsafe(12)
         self.threads[th_id] = Thread(target=helper)
         self.threads[th_id].start()
+
+
+    def kill_one(self):
+        """removes one core"""
+        free_core, port = self.get_core()
+        free_core.sendall(json.dumps(
+            {
+                "type":ReaderCoreEnums.TERMINATE
+            }
+        ).encode())
+        response = free_core.recv(1024)
+        
+        data = json.loads(response)
+        if not data.get("shutting_down"):
+            print("port refused to terminate")
+            self._force_kill(port)
+            
+        self.cores.pop(port)
+        self.ports.remove(port)
 
     def Speak(self,*args,**kwargs):
         text=kwargs.get("text")
@@ -373,7 +432,7 @@ class ReaderCoreConnector(BaseReader):
         free_core.sendall(json.dumps({
             "text":text,
             "filename":filename,
-            "type":"save_audio"
+            "type":ReaderCoreEnums.SAVE_AUDIO
         }).encode())
         response  = free_core.recv(1024)
         print(response)
@@ -419,7 +478,6 @@ if __name__ == "__main__":
     reader = ReaderCoreConnector(
         core_count="3",
         is_frozen = False,
-
     )
 
     

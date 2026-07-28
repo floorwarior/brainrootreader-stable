@@ -3,6 +3,12 @@
 from helpers.loadreader import load_reader,get_readers_config
 from plusreaders import readers as custom_readers
 from helpers.bookreaders import readers as builtin_readers
+from helpers.enums import ReaderCoreEnums
+from helpers.throttle import KeepCool
+from helpers.settings import load_app_config_v2
+from helpers.get_root import getroot
+
+
 from helpers.thepanic import Pan as pan
 import sys
 
@@ -31,7 +37,9 @@ import language_tags'''
 # ---------------
 
 
+
 def main():
+
     try:
         parser = argparse.ArgumentParser(
             prog="ReaderCore",
@@ -46,19 +54,9 @@ def main():
         args = parser.parse_args()
 
 
-        
-
-        if getattr(sys, 'frozen', False):
-            # Running as compiled executable
-            BASE_PATH = sys._MEIPASS
-            print(BASE_PATH)
-
-
-        else:
-            # Running as normal Python script
-            BASE_PATH = os.path.abspath(os.path.dirname(__file__))
-            print(BASE_PATH)
-
+                
+        BASE_PATH = getroot()
+        BRRAPPCONFIG = load_app_config_v2(BASE_PATH)
 
 
         print("readercore running from directory: ", BASE_PATH)
@@ -70,11 +68,15 @@ def main():
 
         READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
         GLOBALREADER  = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
-
-        
-
+    
 
         server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        throttle = BRRAPPCONFIG["subprocess"]["throttle"] 
+        if throttle:
+            kp = KeepCool(
+                timeout_for=BRRAPPCONFIG["subprocess"]["throttle_for"],
+                step=BRRAPPCONFIG["subprocess"]["throttle_step"]
+            )
 
         server.bind(("127.0.0.1",int(args.port)))
         server.listen(1)
@@ -84,15 +86,21 @@ def main():
             msg = (client.recv(2048*10).decode())
             data = json.loads(msg)
 
-            if data["type"] == "Speak":
+            if data["type"] == ReaderCoreEnums.SPEAK:
                 GLOBALREADER.Speak(text=data["text"])
                 client.sendall(json.dumps({"success":True}).encode())
 
-            if data["type"] == "save_audio":
+            if data["type"] == ReaderCoreEnums.SAVE_AUDIO:
+                if throttle:
+                    kp.throttle()
                 GLOBALREADER.save_audio(text=data["text"],filename=data["filename"])
+                if throttle:
+                    kp.set()
                 client.sendall(json.dumps({"success":True,"filename":data["filename"]}).encode())
  
-            if data["type"] == "terminate":
+            if data["type"] == ReaderCoreEnums.TERMINATE:
+                print(data["type"])
+                #raise KeyboardInterrupt
                 pid = os.getpid()
                 def shutdown():
                     client.sendall(json.dumps({"shutting_down":True}).encode())
@@ -101,8 +109,14 @@ def main():
                     os.kill(pid,signal.SIGINT)
                 shutdown()
 
+            if data["type"] == ReaderCoreEnums.CLASS_METHOD:
+                data_args = data.get("args")
+                data_kwargs = data.get("kwargs")
+                method_res = GLOBALREADER.__getattribute__(data["method"])(*data_args,**data_kwargs)
+                #print(method_res)
+                client.sendall(json.dumps(method_res).encode())
 
-            if data["type"] == "request_data":
+            if data["type"] == ReaderCoreEnums.REQUEST_DATA:
                 keys = data.get("keys")
                 response = {}
                 for key in keys:

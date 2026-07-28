@@ -1,6 +1,7 @@
 """if there is no connection to the server for a give time we want to turn off the server, this behavior can be turned on or off in the appconfig.json file"""
 
 import threading
+from threading import Event
 import time
 from functools import partial
 
@@ -13,6 +14,8 @@ class InactivityManager():
         self.print_on = False
         self._shutdown = None
         self.enabled = False
+
+        self.exit_event = Event()
        
 
 
@@ -48,7 +51,7 @@ class InactivityManager():
                 time.sleep(self.interval)
                 diff = time.time() - self.last_activity
                 print(f"auto_shutdown is checking | closing in {self.max_timeout- diff} if no new activity")
-                if (diff) > self.max_timeout:
+                if (diff) > self.max_timeout or self.exit_event.is_set():
                     self.shutdown()
                     break
         
@@ -56,6 +59,10 @@ class InactivityManager():
         th.start()
 
     
+    def set_exit_event(self):
+        self.interval = 1
+        self.exit_event.set()
+
     def activity_logger(self,func):
         def wrapper(*args,**kwargs):
             self.trigger()

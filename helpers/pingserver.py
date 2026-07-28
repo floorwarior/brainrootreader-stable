@@ -6,9 +6,9 @@ import urllib.request
 
 
 @pan.try_until(maxtries=60,timeout=1,default_value=False,supress=True)
-def is_server():
+def is_server(port=5003):
     """tries until it gets a connection"""
-    code = (urllib.request.urlopen("http://localhost:5003/api/alive").getcode())
+    code = (urllib.request.urlopen(f"http://localhost:{port}/api/alive").getcode())
     if code == 200:
         return True
 

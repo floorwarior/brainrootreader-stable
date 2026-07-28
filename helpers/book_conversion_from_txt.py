@@ -21,12 +21,11 @@ class ConvertFromTxt():
 
     def conversion_fail(self,*args,**kwargs):
         """if the conversion fails we call this function"""
-        print("page conversion from file:",)
         print(kwargs.get("error"))
 
 
 
-    @pan.panic(on_panic="")
+    @pan.panic(on_panic="conversion_fail",class_method=True)
     def convert_txt_file(self):
         """chunks up the text file into into 15 sentence a page chuks"""
         with open(os.path.join(self.upload_folder,self.txtfilename),"r") as txt_file:

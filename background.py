@@ -1,37 +1,37 @@
 import subprocess
-import multiprocessing
 import os
 import threading
 import signal
 import sys
-from helpers.settings import load_app_config
+from helpers.settings import BASE_PATH,BRRAPPCONFIG,load_app_config_v2
 from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
+from helpers.loadreader import all_readers
+from helpers.install_tools import is_installed,installed_where,INSTALLED_IN
+from helpers.thepanic import Pan
+
+
 from helpers.themeing import THEMES,Theme
+from api.api import api_v2
+from helpers.kv import KEYS
 
-
+loading_window_handle = None
 if getattr(sys, 'frozen', False):
     # Running as compiled executable
     ISFROZEN = True
-    BASE_PATH = sys._MEIPASS
     print(BASE_PATH)
     DEBUG = False
-    ONANDROID = False
-    BRRAPPCONFIG = load_app_config(BASE_PATH)
-    if BRRAPPCONFIG["loading_window"]:
-       subprocess.Popen(["loadingwindow.exe"]) 
+    if BRRAPPCONFIG["startup"]["loading_window"] and not BRRAPPCONFIG["shutdown"]["auto_shutdown"]:
+       loading_window_handle = subprocess.Popen(["loadingwindow.exe"]).pid
 
 
 else:
     # Running as normal Python script
     ISFROZEN = False
-    BASE_PATH = os.path.abspath(os.path.dirname(__file__))
     print(BASE_PATH)
-    DEBUG = False
-    ONANDROID = False
-    BRRAPPCONFIG = load_app_config(BASE_PATH)
+    DEBUG = BRRAPPCONFIG["app"]["debug"]
     CURRENT_PYTHON = sys.executable
-    if BRRAPPCONFIG["loading_window"]:
-        subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py")])
+    if BRRAPPCONFIG["startup"]["loading_window"] and not BRRAPPCONFIG["shutdown"]["auto_shutdown"]:
+        loading_window_handle = subprocess.Popen([CURRENT_PYTHON,os.path.join(BASE_PATH,"loadingwindow.py")]).pid
 
 
 
@@ -95,63 +95,92 @@ from helpers.increment_port import get_next_port
 from flask_socketio import SocketIO
 
 
-APPTHEME : Theme =  THEMES[BRRAPPCONFIG["theme"]]
+APPTHEME : Theme =  THEMES[BRRAPPCONFIG["style"]["theme"]]
 SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
 READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
-INACTIVITY_MANAGER.max_timeout = BRRAPPCONFIG["shutdown_after"]
+INACTIVITY_MANAGER.max_timeout = int(BRRAPPCONFIG["shutdown"]["shutdown_after"])
 INACTIVITY_MANAGER.interval = 20
 
-if BRRAPPCONFIG["audio_method"] == "threading":
+
+if BRRAPPCONFIG["app"]["audio_method"] == "threading":
     GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
 
-elif BRRAPPCONFIG["audio_method"] == "subprocess":
+elif BRRAPPCONFIG["app"]["audio_method"] == "subprocess":
     GLOBALREADER  = ReaderCoreConnector(
-        core_count = BRRAPPCONFIG["core_count"],
+        core_count = BRRAPPCONFIG["subprocess"]["core_count"],
         is_frozen = ISFROZEN,
         base_path = BASE_PATH
     )
 
-start_port = get_next_port(4222,int(BRRAPPCONFIG["core_count"]))
+start_port = get_next_port(4222,int(BRRAPPCONFIG["subprocess"]["core_count"]))
 _ = next(start_port)
 
 def re_initialize_reader():
     """sets a new global reader if there is a settings change"""
     global GLOBALREADER,BRRAPPCONFIG,ISFROZEN,BASE_PATH,READERS_CONFIG,SELECTED_READER,start_port
     starting_port = next(start_port)
-    if BRRAPPCONFIG["audio_method"] == "subprocess":
-        GLOBALREADER.clean_up()
-        GLOBALREADER  = ReaderCoreConnector(
-            core_count = BRRAPPCONFIG["core_count"],
-            is_frozen = ISFROZEN,
-            base_path = BASE_PATH,
-            starting_port = starting_port
-        )
+    try:
+        BRRAPPCONFIG = load_app_config_v2(BASE_PATH)
+        INACTIVITY_MANAGER.max_timeout = int(BRRAPPCONFIG["shutdown"]["shutdown_after"]) 
+
+        if BRRAPPCONFIG["app"]["audio_method"] == "subprocess":
+            GLOBALREADER.clean_up()
+            GLOBALREADER  = ReaderCoreConnector(
+                core_count = BRRAPPCONFIG["subprocess"]["core_count"],
+                is_frozen = ISFROZEN,
+                base_path = BASE_PATH,
+                starting_port = starting_port
+            )
 
 
-    elif BRRAPPCONFIG["audio_method"] == "threading":
-        SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
-        READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
-        GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
-
+        elif BRRAPPCONFIG["app"]["audio_method"] == "threading":
+            SELECTED_READER = load_reader(base_path=BASE_PATH,custom_readers=custom_readers,builtin_readers=builtin_readers)
+            READERS_CONFIG = get_readers_config(base_path=BASE_PATH,readername=SELECTED_READER.__name__)
+            GLOBALREADER.clean_up()
+            GLOBALREADER = SELECTED_READER(**READERS_CONFIG,base_path = BASE_PATH)
+        return True
+    except Exception as e:
+        Pan.logger.log(level=20,msg=str(e))
+        return False
 
 def shutdown():
     """stops the server from running"""
     GLOBALREADER.clean_up()
-    pid = os.getpid()
-    os.kill(pid,signal.SIGINT)
+    if loading_window_handle:
+        try:
+            os.kill(loading_window_handle,signal.SIGINT)
+        except OSError:
+            pass
+    this = os.getpid()
+    os.kill(this,signal.SIGINT)
 
 INACTIVITY_MANAGER._shutdown = shutdown
 
 
 print("this is basepath:",BASE_PATH)
-app = Flask(__name__,template_folder=os.path.join(BASE_PATH,"templates"),static_folder=os.path.join(BASE_PATH,"static"))
+app = Flask(__name__,template_folder=os.path.join(BASE_PATH,BRRAPPCONFIG["app"]["template_folder"]),static_folder=os.path.join(BASE_PATH,"static"))
+app.register_blueprint(api_v2,url_prefix="/api_v2")
+
+
+@app.context_processor
+def inject_keys():
+    return {"KEYS":KEYS}
+
+
+@app.context_processor
+def inject_books():
+    books = get_booknames(basepath=BASE_PATH)
+    return {"books":books,"int":int}
+
+
+
 app.config["UPLOAD_FOLDER"] = os.path.join(BASE_PATH,"uploads")
 socketed_app = SocketIO(app=app,async_mode="threading")
 
 @app.route("/")
 def home():
-    books = get_booknames(basepath=BASE_PATH)
-    return render_template(APPTHEME.home,books=books)
+    #books = get_booknames(basepath=BASE_PATH)
+    return render_template(APPTHEME.home)
 
 
 
@@ -208,20 +237,50 @@ def voicebag():
     )
     return render_template(APPTHEME.voicebag,voicestores=[piper_voice_store])
 
-@app.route("/settings",methods=["POST","GET"])
-def settings():
 
-    if request.method == "POST":
-        from helpers.settings import save_settings
-        data = request.form.to_dict()
-        save_settings(base_path=BASE_PATH,data=data)
+@app.route("/api/reload_app",methods=["POST"])
+def reload_app():
+    """reloads the appconfig and also reloads the reader if there are any changes it applies them"""
+    re_initialize_reader()
+    return jsonify(True)
+
+
+@app.route("/settings",methods=["GET"])
+def settings():
+    _all_readers = all_readers(custom_readers,builtin_readers).values()
+    installed = []
+    not_installed = []
+
+    full_reload = request.args.get("full_reload")
+    if full_reload:
         re_initialize_reader()
-        return redirect(url_for("home"))
-    else:
-        from helpers.loadreader import all_readers
-        from helpers.videos import get_video_list
-        # Gets all the voices from all readers except of the browser one that is handled in the browser
-        return render_template(APPTHEME.settings,all_the_readers = all_readers(custom_readers,builtin_readers),get_readers_config=get_readers_config,base_path=BASE_PATH,videos=get_video_list(BASE_PATH),selected_reader=SELECTED_READER)
+
+    for reader in _all_readers:
+        if is_installed(BASE_PATH,reader,try_cache=not full_reload):
+            installed.append(reader)
+        else:
+            not_installed.append(reader)
+    installed_there = {}
+    for reader in installed:
+        type_of_install,where = installed_where(BASE_PATH,reader)
+        installed_there[reader.__name__] = {
+            "where":where,
+            "type_of_install":type_of_install
+            }
+
+
+    data = {
+        "INSTALLED_IN":INSTALLED_IN,
+        "selected_reader":GLOBALREADER,
+        "readers":_all_readers,
+        "installed_readers":installed,
+        "not_installed":not_installed,
+        "installed_there":installed_there,
+        "config":BRRAPPCONFIG,
+    }
+    return render_template(APPTHEME.settings,**data)
+
+
 
 @app.route("/deletebook/",methods=["POST","GET"])
 @app.route("/deletebook/<book>",methods=["POST","GET"])
@@ -245,8 +304,9 @@ def test_image_quality():
     **Tests the image to convert from**
     - opens camera stream on the image and tests it
     """
-    from helpers.book_converter import get_booknames        
-    return render_template(APPTHEME.test_image_quality,books=get_booknames(basepath=BASE_PATH))
+    return "Feature Discontinued",410
+    from helpers.book_converter import get_booknames
+    return render_template(APPTHEME.test_image_quality)
 
 
 @app.route("/testnewroutes")
@@ -254,7 +314,7 @@ def check_new_routes():
     """testing the new route layouts here"""
     #from helpers.book_converter import get_booknames
     #books = get_booknames(basepath=BASE_PATH)
-    return render_template("templates_2/base.html")
+    return render_template("templates/base.html")
 
 
 @app.route("/convert",methods=["POST"])
@@ -278,10 +338,11 @@ def convert_book():
 
 
 
-@app.route("/addvideo",methods=["POST","GET"])
+@app.route("/addvideo",methods=["GET"])
 def add_video():
     """allows the user to add any video to be played by the app
     """
+    return redirect(url_for("settings"))
     if request.method == "POST":
         from helpers.videos import upload_video,add_video_link
         video = request.files.get("video",None)
@@ -300,7 +361,7 @@ def add_video():
 
 
 @app.route("/converttoaudio/<book>")
-def convert_book_to_audio(book):
+def convert_book_to_audio(book:str):
     from helpers.book_converter import get_booknames
 
     rd = ReadBook(safe_bookname=book,
@@ -313,8 +374,13 @@ def convert_book_to_audio(book):
     else:
         threading.Thread(target=lambda: rd.read_book(save=True,socketed_app=socketed_app)).start()
 
-    return render_template(APPTHEME.convert_book_to_audio,books=get_booknames(basepath=BASE_PATH),book_id=book,page_count = rd.page_count())
+    books = get_booknames(basepath=BASE_PATH)
 
+    return render_template(APPTHEME.convert_book_to_audio,
+                           book_id=book,
+                           page_count = rd.page_count(),
+                           books_name = books.get(book.removesuffix("_readable.json"))
+                           )
 
 @app.route("/openorigin/<book>")
 def open_book_origin(book):
@@ -330,7 +396,7 @@ def open_book_origin(book):
     return jsonify({"success":res})
 
 @app.route("/readbook/<book>")
-def read_book_(book):
+def read_book_(book:str):
     # load the page of the book, return it as list
     page_data,available = return_cache(book,basepath=BASE_PATH)
     from helpers.book_converter import get_booknames
@@ -339,27 +405,31 @@ def read_book_(book):
     if not available:
         return "book was not converted before"
     current_page = request.args.get("page","0")
+    if current_page == "null":
+        current_page = 0
     while page_data.get(current_page,"") == "":
         current_page = int(current_page)
         current_page +=1
         current_page = str(current_page)
 
-    return render_template(APPTHEME.read_book,page=page_data[str(current_page)],current_page=current_page,bookname=book,readable_name=books.get(book.removesuffix("_readable.json")),books=books)
+    return render_template(APPTHEME.read_book,
+                           page=page_data[str(current_page)],
+                           current_page=current_page,
+                           book_id=book.removesuffix("_readable.json"),
+                           bookname=book,
+                           safe_bookname=books.get(book.removesuffix("_readable.json")))
 
 @app.route("/api/killserver",methods=["POST","GET"])
 def kill_server():
     """stops the server from running"""
-    import signal
-    import time
-    pid = os.getpid()
-    def shutdown():
-        print("kill server called shutting down.")
-        time.sleep(10)
-        GLOBALREADER.clean_up()
-        os.kill(pid,signal.SIGINT)
-    threading.Thread(target=shutdown).start()
+    if not request.args.get("test"):
+        INACTIVITY_MANAGER.interval = 1
+        INACTIVITY_MANAGER.auto_shutdown()
+        INACTIVITY_MANAGER.set_exit_event()
+
+
     if request.method == "GET":
-        return render_template(APPTHEME.shutdownscreen,books={})
+        return render_template(APPTHEME.shutdownscreen)
     else:
         return "kill server called shutting down."
 
@@ -385,13 +455,17 @@ def make_page_of_book(book,page):
     blocking = True if request.args.get("blocking",False) == "1" else False
     success = rd.save_page_by_sentences(page,blocking=blocking)
     print("-> make page triggered")
-    return jsonify({"page":page,"book":book,"converted":success,"sentence_data":rd.save_transscript_for_page(page)})
+    return jsonify({"page":page,
+                    "book":book,
+                    "converted":success,
+                    "sentence_data":rd.save_transscript_for_page(page)})
 
 
 
 @app.route("/api/show_image/<book>/<page>")
 def show_img_from_book(book,page):
     """returns the images from the database if they exists"""
+    return "Gone",410
     from helpers.makebrr import PageImageHandler
     img_handler = PageImageHandler(
         base_path=BASE_PATH,
@@ -563,7 +637,7 @@ def test_image_api():
 
 @app.route("/api/getpage/<book>")
 def return_page_audio(book):
-    sentence = request.args.get("sentence") 
+    sentence = request.args.get("sentence")
     if not sentence:
         sentence = 0
     thisissubfolder = os.path.join("books",book.removesuffix("_readable.json"),"tmp",f"sentence_{sentence}.wav")
@@ -572,8 +646,8 @@ def return_page_audio(book):
 
 
 def run_server_just_local():
-    thehost = "localhost" if not DEBUG else "0.0.0.0"
-    app.run(host=thehost,port=5003,debug=DEBUG)
+    thehost = BRRAPPCONFIG["app"]["host"]
+    app.run(host=thehost,port=BRRAPPCONFIG["app"]["port"],debug=DEBUG)
 
 
 
@@ -583,22 +657,25 @@ def monitor_inactivity():
     INACTIVITY_MANAGER.trigger()
 
 def run_server_with_socketio():
-    if BRRAPPCONFIG.get("auto_shutdown",True):
-        INACTIVITY_MANAGER.max_timeout = BRRAPPCONFIG.get("shutdown_after",1200)
+    if BRRAPPCONFIG["shutdown"]["auto_shutdown"]:
+        #INACTIVITY_MANAGER.max_timeout = int(BRRAPPCONFIG["shutdown"]["shutdown_after"])
         INACTIVITY_MANAGER.auto_shutdown()
 
-    thehost = "0.0.0.0" if BRRAPPCONFIG.get("debug",True) else "localhost"
-    socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=False,allow_unsafe_werkzeug=True)
+    thehost = BRRAPPCONFIG["app"]["host"]
+    socketed_app.run(app=app,host=thehost,port=BRRAPPCONFIG["app"]["port"],debug=BRRAPPCONFIG["app"]["debug"],use_reloader=False,allow_unsafe_werkzeug=True)
 
 def run_server_with_reload_trouble_shoot():
-    if BRRAPPCONFIG.get("auto_shutdown",True):
-        INACTIVITY_MANAGER.max_timeout = BRRAPPCONFIG.get("shutdown_after",1200)
+    if BRRAPPCONFIG["shutdown"]["auto_shutdown"]:
+        #INACTIVITY_MANAGER.max_timeout = int(BRRAPPCONFIG["shutdown"]["shutdown_after"])
         INACTIVITY_MANAGER.auto_shutdown()
 
-    thehost = "localhost" if not DEBUG else "0.0.0.0"
-    socketed_app.run(app=app,host=thehost,port=5003,debug=DEBUG,use_reloader=True,allow_unsafe_werkzeug=False)
+    thehost = BRRAPPCONFIG["app"]["host"]
+    socketed_app.run(app=app,host=thehost,port=BRRAPPCONFIG["app"]["port"],debug=DEBUG,use_reloader=True,allow_unsafe_werkzeug=False)
 
 
 
 if __name__ == "__main__":
     run_server_with_socketio()
+
+
+    

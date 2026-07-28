@@ -1,1 +1,157 @@
+
+
 @import "tailwindcss";
+
+[x-cloak] {
+    display: none !important;
+}
+
+@theme {
+  --color-green-1: #040a03;
+  --color-green-2: #10190e;
+  --color-green-3: #162b11;
+  --color-green-4: #143c08;
+  --color-green-5: #194b08;
+  --color-green-6: #1e5b08;
+  --color-green-7: #226c04;
+  --color-green-8: #247f00;
+  --color-green-9: #215e0d;
+  --color-green-10: #1a4c0a;
+  --color-green-11: #7ad263;
+  --color-green-12: #b1f9a0;
+
+  --color-green-a1: #00c70004;
+  --color-green-a2: #5bf94013;
+  --color-green-a3: #5af93926;
+  --color-green-a4: #39fd0137;
+  --color-green-a5: #41ff0346;
+  --color-green-a6: #44fd0557;
+  --color-green-a7: #45ff0068;
+  --color-green-a8: #40fd007c;
+  --color-green-a9: #4cfd135a;
+  --color-green-a10: #44ff0a47;
+  --color-green-a11: #93ff76d1;
+  --color-green-a12: #b5ffa4f9;
+
+  --color-green-contrast: #fff;
+  --color-green-surface: #162b1280;
+  --color-green-indicator: #215e0d;
+  --color-green-track: #215e0d;
+}
+
+
+@theme {
+  --color-gray-1: #070909;
+  --color-gray-2: #161818;
+  --color-gray-3: #1f2323;
+  --color-gray-4: #262a2a;
+  --color-gray-5: #2c3232;
+  --color-gray-6: #353c3c;
+  --color-gray-7: #424a4a;
+  --color-gray-8: #576363;
+  --color-gray-9: #657171;
+  --color-gray-10: #727f7f;
+  --color-gray-11: #acb7b7;
+  --color-gray-12: #ecefef;
+
+  --color-gray-a1: #00b10003;
+  --color-gray-a2: #b4f7d112;
+  --color-gray-a3: #c3fee61d;
+  --color-gray-a4: #d0ffed24;
+  --color-gray-a5: #cbfbed2d;
+  --color-gray-a6: #d2fdf237;
+  --color-gray-a7: #d9fff745;
+  --color-gray-a8: #d9fef95f;
+  --color-gray-a9: #dffffb6d;
+  --color-gray-a10: #e0fdfb7c;
+  --color-gray-a11: #eefffeb5;
+  --color-gray-a12: #fbfffeef;
+
+  --color-gray-contrast: #FFFFFF;
+  --color-gray-surface: rgba(0, 0, 0, 0.05);
+  --color-gray-indicator: #657171;
+  --color-gray-track: #657171;
+}
+
+@theme {
+      --color-gray-1: oklch(13.5% 0.0039 196.8);
+      --color-gray-2: oklch(20.7% 0.0037 196.8);
+      --color-gray-3: oklch(25.1% 0.005 196.8);
+      --color-gray-4: oklch(28.2% 0.0068 196.8);
+      --color-gray-5: oklch(31.2% 0.008 196.8);
+      --color-gray-6: oklch(34.9% 0.009 196.8);
+      --color-gray-7: oklch(40.2% 0.0109 196.8);
+      --color-gray-8: oklch(48.9% 0.0143 196.8);
+      --color-gray-9: oklch(53.9% 0.0152 196.8);
+      --color-gray-10: oklch(58.5% 0.0149 196.8);
+      --color-gray-11: oklch(77% 0.0126 196.8);
+      --color-gray-12: oklch(94.9% 0.0023 196.8);
+
+      --color-gray-a1: color(display-p3 0 0.902 0 / 0.009);
+      --color-gray-a2: color(display-p3 0.7765 0.9922 0.8353 / 0.069);
+      --color-gray-a3: color(display-p3 0.8353 1 0.9098 / 0.113);
+      --color-gray-a4: color(display-p3 0.8667 0.9961 0.9216 / 0.142);
+      --color-gray-a5: color(display-p3 0.8471 1 0.9412 / 0.174);
+      --color-gray-a6: color(display-p3 0.8627 0.9961 0.9569 / 0.214);
+      --color-gray-a7: color(display-p3 0.8863 1 0.9686 / 0.271);
+      --color-gray-a8: color(display-p3 0.8824 1 0.9804 / 0.371);
+      --color-gray-a9: color(display-p3 0.898 1 0.9843 / 0.428);
+      --color-gray-a10: color(display-p3 0.902 1 0.9882 / 0.484);
+      --color-gray-a11: color(display-p3 0.9451 1 0.9961 / 0.71);
+      --color-gray-a12: color(display-p3 0.9882 1 0.9961 / 0.936);
+
+      --color-gray-contrast: #FFFFFF;
+      --color-gray-surface: color(display-p3 0 0 0 / 5%);
+      --color-gray-indicator: oklch(53.9% 0.0152 196.8);
+      --color-gray-track: oklch(53.9% 0.0152 196.8);
+    }
+
+
+@theme {
+  --color-background: #0a070a;
+}
+
+
+@layer base {
+  dialog::backdrop {
+    @apply bg-black/60;
+  }
+}
+
+@layer components {
+
+
+  .btn {
+    @apply md:text-base text-sm py-1 px-2 rounded-md bg-green-3 border-green-7 border hover:border-green-8 hover:bg-green-4 text-gray-11 cursor-pointer 
+  }
+
+
+  .icon-btn{
+    @apply rounded-4xl hover:bg-gray-3 text-gray-11 p-2 focus:outline-gray-8 focus:outline-2 my-auto
+  }
+
+  .cancel-btn {
+    @apply md:text-base py-1 px-2 rounded-md bg-gray-3 border-gray-7 border hover:border-gray-8 hover:bg-gray-4 text-green-11 cursor-pointer
+  }
+
+
+  .surface{
+    @apply bg-gray-2 text-gray-11 rounded-xl border-gray-6 shadow-xl
+  }
+
+  .page{
+    @apply flex flex-col p-4 h-full  
+  }
+
+  .delete-btn {
+    @apply md:text-base text-sm py-1 px-2 rounded-md bg-red-300 border-red-700 border hover:border-red-800 hover:bg-red-400 text-gray-11 cursor-pointer 
+  }
+
+
+
+}
+
+
+@theme {
+  --font-roboto: "Roboto", sans-serif; 
+}

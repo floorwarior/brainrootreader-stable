@@ -11,7 +11,7 @@ except:
 import os
 from typing import Literal
 import base64
-
+import typing
 
 class NotesHandler():
 
@@ -35,7 +35,10 @@ class NotesHandler():
                           )
         
     def remove_note(self,note_id):
-        self.db.delete(conditions=["note_id = ?"],values=[note_id])
+        try:
+            return self.db.delete(conditions=["note_id = ?"],values=[note_id])
+        except:
+            return False
 
     def add_note(self,note,page_number,sentence_number):
         """
@@ -257,8 +260,130 @@ class RemoveBrrFile():
         if os.path.exists(db_path):
             os.remove(db_path)
 
-if __name__ == "__main__":
-    # brr_GuI6C2pGbdGOSBhDgIFDPuHmP8KsUL3I92zCPTeYuDU.brr
-    text_handler = PageTextHandler(base_path=r"c:\Users\ishall\Desktop\public_brainrootreader\brainrootreader",safe_bookname="larrybird")
-    text_handler.db.get_db_state()
-    
+
+
+import datetime
+from peewee import *
+
+# An in-memory SQLite database. Or use PostgresqlDatabase or MySQLDatabase.
+
+
+BRR_DATABASE = SqliteDatabase("brr_database.db") # change to configs BASE_PATH
+class BaseModel(Model):
+    """All models inherit this to share the database connection."""
+    class Meta:
+        database = BRR_DATABASE
+
+
+
+class Notes(BaseModel):
+    page = IntegerField()
+    note = IntegerField()
+    book_id = TextField()
+
+class Cards(BaseModel):
+    question = TextField()
+    answer = TextField()
+    page = IntegerField()
+    book_id = TextField()
+
+
+
+
+TABLES = [Notes,Cards]
+
+
+class DATABASECONTEXT():
+    db = BRR_DATABASE
+
+    def __enter__(self):
+        self.db.connect()
+        self.db.create_tables(TABLES)         
+
+
+    def __exit__(self, exc_type, exc, tb):
+        if exc_type or exc or tb:
+            print(exc_type,exc,tb)
+        self.db.close()
+
+
+
+def connector_decorator(func):    
+    def wrapper(*args,**kwargs):
+        with DATABASECONTEXT() as context:
+            return func(*args,**kwargs)
+
+    return wrapper
+
+@connector_decorator
+def get_cards(page:int,book_id):
+    return [card for card in Cards.select().where((Cards.book_id == book_id) & (Cards.page == page))]
+
+@connector_decorator
+def add_card(page : int,book_id,question,answer):
+    c = Cards(page= page,
+              book_id = book_id,
+              question = question,
+              answer = answer
+              )
+    c.save()
+    return c
+
+@connector_decorator
+def update_card(card_id,new_question: str=None,new_answer:str=None):
+    c = Cards.get_by_id(card_id)
+    if new_answer:
+        c.answer = new_answer
+
+    if new_question:
+        c.question = new_question
+
+    c.save()
+    return c
+
+@connector_decorator
+def remove_card(card_id):
+    try:
+        f = Cards.delete_by_id(card_id)
+        return f
+    except:
+        return False
+
+
+@connector_decorator
+def get_card(card_id):
+    card = Cards.get_by_id(card_id)
+    return {
+        "card_id":card.id,
+        "question":card.question,
+        "answer":card.answer
+    }
+
+
+@connector_decorator
+def get_notes(page:int,book_id:str) -> typing.List[str]:
+    return [note for note in Notes.select().where((Notes.book_id == book_id) & (Notes.page == page))]
+
+@connector_decorator
+def add_note(page:int,book_id:str,note:str):
+    n = Notes(page=page,book_id=book_id,note=note)
+    n.save()
+    return n
+
+
+@connector_decorator
+def update_note(note_id,new_note):
+    n = Notes.get_by_id(note_id)
+    n.note = new_note
+    n.save()
+    return n
+
+@connector_decorator
+def remove_note(note_id):
+    try:
+        return Notes.delete_by_id(note_id)
+    except:
+        return False
+
+
+

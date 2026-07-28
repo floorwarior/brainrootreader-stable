@@ -65,6 +65,7 @@ class ConvertFromEbook():
         book_data = {}
         safe_name = token_urlsafe(32)
 
+        # WILL BE REMOVED
         # brr section
         notes_handler = NotesHandler(
             base_path=self.base_path,

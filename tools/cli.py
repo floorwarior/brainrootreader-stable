@@ -20,7 +20,7 @@ try:
 
 
     readers.update(plusreaders)
-    start_port = get_next_port(4222,1)
+    start_port = get_next_port(6222,1)
 
 
 except Exception as e:
@@ -62,7 +62,8 @@ def reader(ignore_venv):
                 base_path=base_path,
                 is_frozen = False,
                 core_count = "1",
-                forced_reader = READER.__name__
+                forced_reader = READER.__name__,
+                start_port=next(start_port)
             )
             return rd
         else:
@@ -73,13 +74,13 @@ def reader(ignore_venv):
         
         case "speak":
             rd = get_reader()
-            text = questionary.text("text to speak").ask()
+            text = questionary.text("text to speak:").ask()
             rd.Speak(text=text)
 
         case "save audio":
             rd = get_reader()
-            text = questionary.text("text to save").ask()
-            filename = questionary.text("filename to save to").ask()
+            text = questionary.text("text to save:").ask()
+            filename = questionary.text("filename to save to:").ask()
 
             rd.save_audio(filename=filename,text=text)
 

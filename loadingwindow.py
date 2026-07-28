@@ -11,7 +11,7 @@ import threading
 # ---------------------------
 from __version__ import __version__ , __released__
 from helpers.pingserver import kill_server,is_server,health_check
-from helpers.settings import load_app_config 
+from helpers.settings import load_app_config_v2 
 from helpers.stringloader import SimpleStringLoader
 from helpers.thepanic import Pan as pan
 # ---------------------------
@@ -29,7 +29,7 @@ else:
     print(BASE_PATH)
     DEBUG = False
 
-BRRAPPCONFIG = load_app_config(basepath=BASE_PATH)
+BRRAPPCONFIG = load_app_config_v2(basepath=BASE_PATH)
 
 
 def run_splash_screen():
@@ -37,14 +37,14 @@ def run_splash_screen():
     style = {
         "header":("Sans",26,"bold"),
         "bottom_texts":("Sans",16),
-        "theme_color":"#181818",
-        "text_color":"#FFFFFF"
+        "theme_color":"#070909",
+        "text_color":"#acb7b7"
     }
 
 
-    topbar = Frame(master=tkapp,bd=1,relief="flat",bg="#181818")
-    middle = Frame(master=tkapp,bd=1,relief="flat",bg="#181818")
-    bottom = Frame(master=tkapp,bd=1,relief="flat",padx=20,bg="#181818")
+    topbar = Frame(master=tkapp,bd=1,relief="flat",bg=style["theme_color"])
+    middle = Frame(master=tkapp,bd=1,relief="flat",bg=style["theme_color"])
+    bottom = Frame(master=tkapp,bd=1,relief="flat",padx=20,bg=style["theme_color"])
 
 
     topbar.pack(side="top",fill="x")
@@ -99,9 +99,9 @@ def run_splash_screen():
         """once the server is open we want to redirect the user to it"""
         nonlocal loadingbar
         def helper():
-            if is_server():
-                webbrowser.open("http://localhost:5003",new=1)
-                if BRRAPPCONFIG.get("auto_shutdown"):
+            if is_server(port=BRRAPPCONFIG["app"]["port"]):
+                webbrowser.open(f"http://localhost:{BRRAPPCONFIG["app"]["port"]}",new=1)
+                if BRRAPPCONFIG["shutdown"]["auto_shutdown"]:
                     tkapp.destroy()
                 else:
                     tkapp.protocol("WM_DELETE_WINDOW", close)

@@ -2,69 +2,40 @@
 It's a Read Aloud app that can read epub, docx, pdf and txt files.
 It can also convert to a one file audiofile that you can take with you.
 
-# Getting started:
-## For tech-savy users:
-1. Go to the [releases](https://github.com/floorwarior/brainrootreader-stable/releases) page.
-2. Open Assets.
-3. Download brainrootreadersetup-latestversion.exe
-4. Install to your **Desktop**
-5. Go to the [dependencies](#dependencies) section and check what else you might need to download
+# In Action:
+## Running:
 
-## For developers:
-# Install without the cli
+
+
+# Quickstart
 ```
-
-# clone the project: 
+# clone repo
 git clone https://github.com/floorwarior/brainrootreader-stable
 
-# move into the folder
+# navigate into folder
 cd brainrootreader-stable
 
-# make a virtual environment
+# make a venv
 python.exe -m venv .venv
 
-# activate the virtual environment
-.venv\Scripts\activate.bat
+# activate it 
+.venv\Scripts\activate
 
-# install base requirements:
+
+# install base requirements
 pip install -r requirements-[base].txt
 
-# pick a backend you want to use
+
+# pick a backend to use.
 pip install -r requirements-[piper-tts].txt
 
-# run the app
+# select it in the ./appconfig.toml file
+# [reader]
+# selected_reader = "<YourReader>" example: PiperReader
+
+
+# run the app:
 python.exe background.py
-
-
-# open localhost:5003/settings select your reader example: PiperReader save
-# start listening to books/docs
-```
-## istalling multiple tts backends at the same time can be done with the cli:
-
-```
-# clone the project: 
-git clone https://github.com/floorwarior/brainrootreader-stable
-
-# move into the folder
-cd brainrootreader-stable
-
-# make a virtual environment
-python.exe -m venv .venv
-
-# activate the virtual environment
-.venv\Scripts\activate.bat
-
-# install base requirements:
-pip install -r requirements-[base].txt -r requirements-[cli].txt
-
-
-# run the cli:
-python.exe -m tools.cli --ignore_venv
- 
-# select the root of the project . is usually fine
-# select the reader you want to install
-# use install-in-current-venv if you use *threading* in the appconfig.json
-# use install-in-dedicated-venv if you are using subprocess
 ```
 
 

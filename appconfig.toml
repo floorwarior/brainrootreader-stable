@@ -1,0 +1,36 @@
+[app]
+port = "5003"
+host = "localhost"
+debug = true
+audio_method = "subprocess"
+template_folder = "templates"
+
+
+[subprocess]
+core_count = "3"
+use = "ReaderCoreConnector"
+starting_port = 4222
+throttle = false
+throttle_for = 2
+throttle_step = 1
+# throttle makes it so your readercores take rests between cycles, this allows other apps like your browser or other application to take turns using it
+
+[style]
+theme = "NEW_THEME"
+
+[startup]
+loading_window = false
+
+
+[shutdown]
+shutdown_after = "2400"
+auto_shutdown = true
+
+
+[reader]
+selected_reader = "PiperReader"
+fallback_order = ["WinReader"]
+
+
+# ABOUT:
+# no config item can contain . 

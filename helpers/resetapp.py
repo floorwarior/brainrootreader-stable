@@ -22,9 +22,3 @@ def reset_app(base_path):
     from book_converter import get_booknames
 
 
-    
-
-
-
-
-    wipe_uploads_folder(base_path=)

@@ -27,7 +27,7 @@ always_delete_tmp = False
 
 
 class ReadBook():
-    def __init__(self,safe_bookname:str=None,starting_page=0,base_path_=None,og_bookname=None,reader_=None,alias_=None,pdf_path=None):
+    def __init__(self,safe_bookname:str=None,starting_page=0,base_path_=None,og_bookname=None,reader_=None,_alias=None,pdf_path=None):
         # pulls the first available reader no reader is specified or 
         try:
             if reader_:
@@ -60,7 +60,7 @@ class ReadBook():
             self.safe_bookname = safe_bookname
         self.book_name = safe_bookname 
 
-        self.alias_name = None if not alias_ else alias_ #this is used later for metadata and playlist naming
+        self.alias_name = _alias #this is used later for metadata and playlist naming
 
 
 
@@ -108,9 +108,9 @@ class ReadBook():
         from plusreaders import readers as plusreaders
         from helpers.loadreader import get_readers_config
         all_readers = {**builtin_readers,**plusreaders}
-        from readerconfigs import GLOBALREADERCONFIG
+        from helpers.settings import BRRAPPCONFIG
 
-        for reader in GLOBALREADERCONFIG["fallbackorder"]:
+        for reader in BRRAPPCONFIG["reader"]["fallback_order"]:
             fallbackreader_class = all_readers[reader]
             fallbackreader_config = get_readers_config(base_path,fallbackreader_class.__name__)
             fallbackreader = fallbackreader_class(**fallbackreader_config)
@@ -266,7 +266,17 @@ class ReadBook():
 
 
     def save_transscript_for_page(self,page_num):
-        """breaks the page into a sentence"""
+        """breaks the page into a sentence
+        returns something like:
+        ```
+        {
+            "1":{
+                "sentence":"hello world",
+                "filename":"helloworld.wav"
+                }
+        }
+        ```
+        """
         data, _ = self.books_data()
         filenames = []
         sentences  =  sent_tokenize(data.get(str(page_num)))
@@ -389,7 +399,11 @@ class ReadBook():
                 self.read_page_by_sentence(page)
             else:
                 pagename,filename = self.save_audio(page=page,page_number=page_num)
-                socketed_app.emit(event="progress",data={"page_num":page_num,"total_pages":int(len(list(book_data.keys()))),"page":page,"book_id":self.safe_bookname})
+                socketed_app.emit(event="progress",
+                                  data={"page_num":page_num,
+                                        "total_pages":int(len(list(book_data.keys()))),
+                                        "page":page,
+                                        "book_id":self.safe_bookname})
                 print(f"filename in read book function: {filename}")
                 filenames.append(filename)
                 if pagename:
@@ -427,7 +441,11 @@ class ReadBook():
             convert_speed = (time_since_start/(total_items-queue_size)) # per page
             print(f"convert speed per page: {convert_speed}s")
             estimated = convert_speed * queue_size
-            socketed_app.emit(event="async_progress",data={"total_items":total_items,"estimated":estimated,"current_items":total_items - queue_size,"book_id":self.safe_bookname})
+            socketed_app.emit(event="async_progress",
+                              data={"total_items":total_items,
+                                    "estimated":estimated,
+                                    "current_items":total_items - queue_size,
+                                    "book_id":self.safe_bookname})
         self.reader.on_queue_change(callback=progress)
         for page_num,page in list(book_data.items())[self.starting_page:]:
             if page == "":
@@ -447,24 +465,21 @@ class ReadBook():
 
         if os.path.exists(self.playlist_file_name):
             self.update_playlist(pages)
-        else:self.make_playlist(pages)
-        stich_playlist_to_file(self.books_folder,self.og_bookname,self.reader.output_ending)
+        else:
+            self.make_playlist(pages)
+        f = stich_playlist_to_file(self.books_folder,self.og_bookname,self.reader.output_ending)
+        socketed_app.emit("audioconversion_finished",data={"filename"})
 
 
     def save_audio(self,page,page_number):
         """based on which reader it is using it saves the audio"""
         pagename = f"page_{page_number}.{self.output_ending}"
-        if os.path.exists(os.path.join(self.books_folder,pagename)):
-            return False, ""
         filename = os.path.join(self.books_folder,pagename)
+        if os.path.exists(filename):
+            return False, filename        
         self.reader.save_audio(text=page,filename=filename,priority=int(page_number))
 
         return pagename, filename
 
 
-
-
-if __name__ == "__main__":
-    rd = ReadBook(og_bookname="This is marketing",pdf_path=r"c:/Users/ishall/Downloads/this is marketing.pdf",starting_page=168,base_path_=os.getcwd())
-    rd.read_book(save=False)
 

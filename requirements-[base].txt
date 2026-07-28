@@ -9,3 +9,5 @@ requests
 bs4
 pillow
 pydub
+peewee
+tomlkit

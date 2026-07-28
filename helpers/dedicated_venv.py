@@ -9,20 +9,26 @@ def venv_name(reader):
 
 
 
-
-
-def is_venv(base_path,reader):
+def is_venv(base_path,reader:object):
     dedicated_venv = venv_name(reader)
     os.path.join(base_path,dedicated_venv)
     return os.path.exists(dedicated_venv)
 
 
+
 def make_dedicated_venv(base_path,reader):
     """makes a dedicated venv for the reader, it also installs its dependencies"""
     dedicated_venv = venv_name(reader)
-    subprocess.run(["python.exe","-m","venv",dedicated_venv])
+    if reader.recommended_python == "any":
+        venv_ok = subprocess.run(["python.exe","-m","venv",dedicated_venv]) 
+    else:
+        venv_ok = subprocess.run(["py",f"-{reader.recommended_python}","-m","venv",dedicated_venv]) 
+    if not venv_ok.returncode == 0:
+        print(f"venv could not be created for {reader.__name__}, error: {venv_ok.stdout}")
+        return False
     that_python = os.path.join(base_path,dedicated_venv,"Scripts","python.exe")
-    subprocess.run([that_python,"-m","pip","install","-r",reader.requirements])
+    result = subprocess.run([that_python,"-m","pip","install","-r",reader.requirements])
+    return result.returncode == 0
 
 def remove_venv(base_path,reader):
     dedicated_venv = venv_name(reader)

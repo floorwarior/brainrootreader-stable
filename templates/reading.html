@@ -1,0 +1,929 @@
+{% extends "base.html"%}
+
+
+
+{% block content %}
+<dialog class="backdrop-blur-3xl mx-auto my-auto h-fit min-w-84 w-3/9 bg-gray-5 p-6 relative text-gray-11" id="jumpto_page">
+            <button onclick="document.getElementById('jumpto_page').close()" class="absolute right-2 top-2 icon-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="md:size-6 size-4 my-auto mx-auto">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        <div class="flex flex-col w-full gap-3">
+
+            <div class="flex flex-col gap-4">
+                <h1 class="text-xl text-gray-12 mr-auto">
+                    Jump to
+                </h1>
+                <div class="flex ml-auto gap-1">
+                    <button id="go_to_bookmarked_page" class="btn">
+                        bookmark
+                    </button>
+                    <button id="go_to_last_visited" class="btn">
+                        last visited page
+                    </button>
+                </div>
+                <h3 class="text-gray-11"> Selected:</h3>
+                <input autocomplete="false" class="border border-green-6 p-1 rounded-xs accent-green-6" id="jumpto_input" type="number">
+                <div class="flex ml-auto gap-1">
+                    <button onclick="document.getElementById('jumpto_page').close();jumpto_dialog_is_open = false" class="cancel-btn text-gray-11">
+                        cancel
+                    </button>
+                    <button onclick="switch_to_page(document.getElementById('jumpto_input').value)" class="btn">
+                        jump
+                    </button>
+                </div>
+            </div>
+        </div>
+</dialog>
+<!--Notes dialog-->
+<dialog class="backdrop-blur-3xl mx-auto my-auto h-fit min-w-84 w-3/9 bg-gray-5 p-6 relative text-gray-11"  id="add_new_note">
+    <div class="flex flex-col">
+        <h2 class="mb-2 text-2xl text-gray-11">
+            New Note
+        </h2>
+        <button onclick="add_new_note.close()" class="absolute top-2 right-2 icon-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <div class="flex flex-col gap-2">
+            <textarea data-no-keys="true" class="p-2 ring ring-gray-7 rounded-md bg-gray-3" name="new_note" id="new_note" autocomplete="false" placeholder="your note here"></textarea>
+            <div class="flex justify-end gap-1 mt-2">
+                <button onclick="add_new_note.close()" class="cancel-btn">
+                    cancel
+                </button>
+                <button id="add_new_note_btn" class="btn">
+                    add
+                </button>
+            </div>
+        </div>
+
+
+    </div>
+</dialog>
+<!--Notes dialog end-->
+<!--Cards dialog-->
+<dialog id="cards_dialog" x-data="cards" class="relative backdrop-blur-3xl mx-auto my-auto h-fit min-w-124 w-3/7 bg-gray-5 p-6 text-gray-11" >
+    <button alt="close cards dialog" onclick="cards_dialog.close()" class="icon-btn absolute top-2 right-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+    </button>
+
+    <h2 class="text-2xl text-gray-12">
+        Your Cards
+    </h2>
+    <h2 x-show="_cards.length === 0">
+        You have no cards
+    </h2>
+    <div class="flex w-full mx-auto">
+        <button class="icon-btn ml-auto" @click="scroll_prev">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+        </button>
+        <div id="flash_card_container" class="flex gap-4 min-w-96 w-96 overflow-x-scroll mx-auto">
+            <template x-for="c in _cards" :key="crypto.randomUUID()">
+                <div data-id="flash-card"  class="min-h-56  w-full min-w-96 rounded-md border-2 border-gray-6 gap-2 flex flex-col bg-gray-2" x-data="card(c)">
+                    <!--card edit mode-->
+                    <div class="flex flex-col gap-2 p-4 w-full h-full" x-cloak x-show="edit_mode">
+                        <div class="flex gap-4 w-min-0">
+                            <h4 class="w-min-0 text-2xl">Q:</h4>
+                            <textarea class="text-2xl w-min-0 grow" data-no-keys x-model="question" ></textarea>
+                        </div>
+                        <div class="flex gap-4 w-min-0">
+                            <h4 class="text-2xl w-min-0">A:</h4>
+                            <textarea class="text-2xl w-min-0 grow" data-no-keys x-model="answer" ></textarea>
+                        </div>
+                        <div class="flex mt-2 gap-1">
+                            <button @click="del_card" class="cancel-btn text-red-500 mr-auto">
+                                delete
+                            </button>
+                            <button class="cancel-btn text-gray-11" @click="cancel_edit">
+                                cancel
+                            </button>
+                            <button @click="save_edit" class="btn">
+                                save edit
+                            </button>
+                        </div>
+                    </div>
+                    <!--card edit mode end-->
+                    <!--card front-->
+                    <div x-cloak x-show="!is_flipped && !edit_mode" class="flex h-full w-full">
+                        <h2  x-text="`Q: ${question}`" class="text-3xl my-auto mx-auto text-center"></h2>
+                    </div>
+                    <!-- card front end-->
+                    <!-- card back -->
+                    <div x-cloak x-show="is_flipped && !edit_mode" class="flex h-full w-full">
+                        <h2  x-text="`A: ${answer}`" class="text-3xl my-auto mx-auto text-center" ></h2>
+                    </div>
+                    <div x-cloak x-show="!edit_mode" class="flex gap-2 mt-auto ml-auto mr-2 mb-2 ">
+                        <button class="btn" @click="switch_to_edit_mode">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                            </svg>
+                        </button>
+                        <button  class="btn" @click="is_flipped = !is_flipped" >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m15 15 6-6m0 0-6-6m6 6H9a6 6 0 0 0 0 12h3" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- card back end-->
+                </div>
+            </template>
+        </div>
+        <button class="icon-btn mr-auto" @click="scroll_next">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+        </button>
+    </div>
+    
+
+</dialog>
+<!--Cards dialog end-->
+<!-- Add new Card-->
+<dialog id="add_new_card_dialog" class="backdrop-blur-3xl mx-auto my-auto h-fit min-w-84 bg-gray-5 p-6 relative text-gray-11">
+    <button onclick="add_new_card_dialog.close()" class="icon-btn absolute top-2 right-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+    </button>
+    <div class="flex flex-col gap-2" x-data="new_card">
+        <h2 class="text-2xl">
+            Add new Card
+        </h2>
+        <div class="flex flex-col gap-1 my-2">
+            <div class="flex gap-4 ">
+                <h3>Q:</h3>
+                <textarea data-no-keys class="grow w-min-0 bg-gray-3 ring-gray-7 rounded-md p-2" x-model="question"></textarea>
+            </div>
+            <div class="flex gap-4">
+                <h3>A:</h3>
+                <textarea data-no-keys class="grow w-min-0 bg-gray-3 ring-gray-7 rounded-md p-2"  x-model="answer"></textarea>
+            </div>
+        </div>
+        <div class="flex gap-1 justify-end">
+            <button @click="cancel" class="cancel-btn text-gray-11">
+                cancel
+            </button>
+            <button @click="add_card" class="btn">
+                add
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<!-- Add new Card end-->
+
+<div x-data="{sentence_panel_open:false}" class="h-dvh w-full flex flex-col">
+    <!--
+    player states:
+    [ paused, playing, generating ]    
+    -->
+    <div x-data="player_state" class="flex gap-4 h-full p-4">
+        <!--video and controls-->
+        <div class="shrink flex flex-col gap-4 h-full w-130 grow">
+            <!--video container-->
+
+            <div x-data="{show_fullname:false}" class="flex flex-col surface relative h-7/10">
+                <!--last page, bookmark section-->
+                <div id="page_tracker" x-data="bookmark" class="flex justify-between text-gray-11 p-2 [&>a]:p-2">
+                    <a alt="go to last bookmarked page" id="set_bookmark" class="underline" href="about:blank"></a>
+                    <a alt="go to last visited page" id="set_lastvisited" class="underline" href="about:blank"></a>
+                </div>
+                <!--last page, bookmark section end-->
+                <h2 title="{{safe_bookname}}" class="text-center md:text-2xl text-xl text-gray-12 font-semibold">
+                    {{safe_bookname[:30]}}... <a id="page_indicator" class="cursor-pointer underline text-green-11" x-on:click="sentence_panel_open = !sentence_panel_open">
+                        [{{current_page}}]
+                    </a>
+                </h2>
+                {#
+                    the video link and video type will be moved to the backend                    
+                #}
+                <div class="flex flex-col align-middle justify-center p-4 h-8/10 aspect-video" x-data="video">
+                    <template x-if="video_type == 'video'">
+                        <video class="aspect-video h-full" muted loop autoplay :src="video"></video>
+                    </template>
+                    <template x-if="video_type == 'iframe'">
+                        <iframe 
+                            class="keep-ratio h-full w-full"
+                            :src="`${video}?autoplay=1&mute=1`"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerpolicy="strict-origin-when-cross-origin" 
+                            allowfullscreen>
+                        </iframe>
+                    </template>
+                </div>
+
+                <p id="sentence_display" class="absolute bottom-7 right-2 left-2 bg-gray-3/95 md:mx-8 mx-4 text-center lg:text-2xl md:text-xl text-base">
+                </p>
+            </div>
+            <!--video container end-->
+            <div id="player_indicator">
+                <p class="text-center text-gray-11" x-text="getplayerStateString()"></p>
+                <p x-show="muted" class="text-center text-gray-11">
+                    [muted]
+                </p>
+            </div>
+            <!--controls-->
+            <div class="flex h-15 surface justify-center mt-auto gap-4 p-2">
+                
+                <div class="flex gap-6">
+                    <div class="flex gap-2 justify-center">
+                        <button alt="set bookmark, key: b" @click="bookmarked = true" x-init="current_page.onchange(()=>{bookmarked = false})" x-data="{bookmarked:false}" id="set_bookmark_btn" class="icon-btn">
+                            <svg x-cloak x-show="!bookmarked" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                            </svg>
+                            <svg x-cloak x-show="bookmarked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                <path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button alt="go to previous page, key p" onclick="getPrevPage()" class="icon-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                            </svg>
+                        </button>
+                        <button alt="pause or start reading, key: s, key : space" id="pause_start_btn" x-on:click="startPlaying()" class="icon-btn">
+                            <svg x-cloak x-show="playerstate =='paused' " xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                            </svg>
+                            <svg x-cloak x-show="playerstate == 'playing'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                            </svg>
+                            <svg x-cloak x-show="playerstate == 'generating'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 animate-spin">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+                            </svg>
+                        </button>
+                        <button alt="go to next page, key: n" onclick="getNextPage()" class="icon-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </button>
+                        <button alt="open jump to page dialog, key: j" onclick="jumpto_dialog.showModal();jumpto_input.focus()" class="icon-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z" />
+                            </svg>  
+                        </button>
+                    </div>
+                    <div  class="flex gap-2 h-full">
+                        <button alt="mute/unmute player, key : m" x-on:click="mutePlayer()" class="icon-btn">
+                            <svg x-cloak x-show="!muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                            </svg>
+                            <svg x-cloak x-show="muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                            </svg>
+                        </button>
+                        <audio aria-hidden id="audio"></audio>
+                        <input alt="volume slider, keys +/- " x-on:input="setVolume" autocomplete="off" id="volume_input"  step="1" id="volume" value="75" min="0" max="100" class="accent-green-6" type="range">
+                    </div>
+                </div>
+            </div>
+            <!--controls end-->
+        </div>
+        <!--video and controls end-->
+        <!--tabs-->     
+        <div x-data="tabs"  x-cloak x-transition x-show="sentence_panel_open" class="w-3/10 flex flex-col h-full gap-2">
+            <div class="flex gap-1 w-full md:flex-nowrap flex-wrap">
+                <button x-bind:class="show_sentences ? 'translate-y-[calc(-4px)] bg-green-6' : '' " x-on:click="switch_to('show_sentences')" class="btn">
+                    page
+                </button>
+                <button x-bind:class="show_notes ? 'translate-y-[calc(-4px)] bg-green-6' : '' " x-on:click="switch_to('show_notes')" class="btn">
+                    notes
+                </button>
+                <button x-bind:class="show_cards ? 'translate-y-[calc(-4px)] bg-green-6' : '' " x-on:click="switch_to('show_cards')" class="btn">
+                    cards
+                </button>
+                <button x-on:click="sentence_panel_open = !sentence_panel_open" class="icon-btn ml-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <!--sentence tab-->
+            <div x-transition x-show="show_sentences" id="sentences" class="w-full flex flex-col surface overflow-y-scroll p-4">
+                <h2 id="page_indicator2" class="flex flex-col text-center text-xl mb-2 font-semibold">
+                    Current Page: {{current_page}}
+                </h2>
+                <hr class="w-8/10 mx-4 h-1 py-2">
+                <div id="page_sentences">
+                </div>
+
+            </div>
+            <!--sentence tab end-->
+            <!--notes section-->
+            <div x-transition x-show="show_notes" class="flex flex-col surface p-4 gap-1 w-full">
+                <h2 class="text-center text-xl mb-2 font-semibold">
+                    Your notes:
+                </h2>
+                <hr class="w-8/10 mx-4 h-1 py-2">
+                <div x-data="notes" id="notes" class="flex flex-col gap-2">
+                    <template x-for="n in _notes">
+                        <div class="w-full" x-data="note_component(n.note_id,n.note, n.safe_bookname)" x-show="!deleted">
+                            <p x-cloak x-show="!make_input_visible" @click="show_edit" x-text="note">
+                            </p>
+                            <div x-transition x-show="make_input_visible" class="flex flex-col gap-1 bg-gray-1 border-gray-7 border-2 rounded-md p-2 w-full">
+                                <div class="flex justify-between">
+                                    <h3 class="text-gray-11 my-2">Edit note</h3>
+                                    <button class="icon-btn" @click="hide_edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="flex w-full">
+                                    <textarea x-ref="edit" class="mt-2 accent-green-7 min-w-0 w-full" data-no-keys="true" x-model="note" >
+                                    </textarea>
+                                </div>
+                                <div class="flex gap-1 mt-2 justify-between">
+                                    <button @click="del_note" class="cancel-btn text-red-500">
+                                        delete
+                                    </button>
+                                    <button class="btn" @click="update_note">
+                                        save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <button onclick="add_new_note.showModal()" class="btn mt-1">add new note</button>
+            </div>
+            <!--end of notes section-->
+            <!--cards section-->
+            <div x-transition x-show="show_cards" class="flex flex-col surface p-4 gap-1 w-full">
+                <h2 class="text-center text-xl mb-2 font-semibold">
+                    Your Cards:
+                </h2>
+                <hr class="w-8/10 mx-4 h-1 py-2">
+                <div class="flex flex-col gap-1">
+                    <button onclick="cards_dialog.showModal()" class="btn">
+                        view cards
+                    </button>    
+                    <button onclick="add_new_card_dialog.showModal()" class="btn">
+                        add new card
+                    </button>
+                </div>
+            </div>
+            <!--end of cards section-->
+
+        </div>
+        <!--tabs end-->
+    </div>
+
+
+
+</div>
+<script>
+
+    //globals
+
+    var bookname = {{bookname|tojson}}
+    var safe_bookname = {{safe_bookname|tojson}}
+    var book_id = {{book_id|tojson}}
+
+
+    
+    const audio_elem = document.getElementById("audio")
+    const sentences_tab = document.getElementById("page_sentences")
+    const sentence_display = document.getElementById("sentence_display")
+    const flash_card_container = document.getElementById("flash_card_container")
+
+
+    var autoscroll = true
+    function getautoscroll(){
+        return autoscroll
+    }
+
+
+
+    sentences_tab.addEventListener("mouseover",()=>{
+        autoscroll = false
+    })
+    sentences_tab.addEventListener("mouseleave",()=>{
+        autoscroll = true
+    })
+
+
+
+    const volume_input = document.getElementById("volume_input")
+    const page_indicator1 = document.getElementById("page_indicator")
+    const page_indicator2 = document.getElementById("page_indicator2")
+    var jumpto_dialog_is_open = false
+
+    //dialogs
+    const add_new_note = document.getElementById("add_new_note")
+    const cards_dialog = document.getElementById("cards_dialog")
+    const jumpto_dialog = document.getElementById("jumpto_page")
+    const add_new_card_dialog = document.getElementById("add_new_card_dialog")
+
+
+    //btns
+    const go_to_bookmarked_page = document.getElementById("go_to_bookmarked_page")
+    const go_to_last_visited = document.getElementById("go_to_last_visited")
+    const set_bookmark_btn = document.getElementById("set_bookmark_btn")
+    const pause_start_btn = document.getElementById("pause_start_btn") 
+    const add_new_note_btn = document.getElementById("add_new_note_btn")
+
+
+    //inputs
+    const jumpto_input = document.getElementById("jumpto_input")
+    const new_note = document.getElementById("new_note")
+
+
+    //utils
+    const bookmark =  new VisitedPageTracker(
+        bookname
+    )
+
+    // notes and cards
+    const notes = new Notes(book_id)
+    const cards = new Cards(book_id)
+
+    add_new_note_btn.addEventListener("click",async ()=>{
+        await notes.setnote(
+            {
+                "note":new_note.value,
+                "page":current_page.getcurrent()  
+            }
+        )
+        add_new_note.close()
+        new_note.value = ""
+        var ev = new Event("notes-changed")
+        document.dispatchEvent(ev)
+    })
+
+
+    
+    const current_page = new TrackPage(
+        parseInt("{{current_page}}"),
+        page_indicator1,
+        page_indicator2
+    )
+
+
+
+    const reader = new BookReader(
+        bookname,
+        current_page,
+        audio_elem,
+        sentences_tab,
+        sentence_display,
+        getautoscroll,
+        bookmark
+    )
+
+
+    function getNextPage(){
+        // gets the next page
+        url = `/readbook/${bookname}?page=${parseInt(current_page.getcurrent())+1}`
+        window.location = url
+    }
+
+    register_key_event({
+        key:"n",
+        callback(){
+            getNextPage()
+        }
+    })
+
+
+    register_key_event({
+        key:"j",
+        callback(){
+            jumpto_dialog.showModal()
+            jumpto_input.focus()
+        }
+    })
+
+    function getPrevPage(){
+        // gets last page
+        url = `/readbook/${bookname}?page=${parseInt(current_page.getcurrent())-1}`
+        window.location = url
+    }
+
+
+    register_key_event({
+        key:"p",
+        callback(){
+            getPrevPage()
+        }
+    })
+
+    // globals end
+    document.addEventListener("alpine:init", () => {
+
+
+
+        Alpine.data("bookmark",()=>({
+            async init(){
+                var set_bookmark = document.getElementById("set_bookmark")
+                var set_lastvisited = document.getElementById("set_lastvisited")
+                var page_tracker = document.getElementById("page_tracker")
+
+                var last_bookmark = await bookmark.getbookmark() 
+                var last_visited = await bookmark.getlastvisited()
+
+
+                set_bookmark.setAttribute("href",`/readbook/${bookname}?page=${last_bookmark}`)
+                set_lastvisited.setAttribute("href",`/readbook/${bookname}?page=${last_visited}`)
+
+                
+                set_bookmark.textContent = `last bookmarked: ${last_bookmark}`
+                set_lastvisited.textContent = `last visited: ${last_visited}`
+
+                bookmark.setlastvisited(current_page.getcurrent())
+                setTimeout(()=>{
+                    page_tracker.classList.add("hidden")
+                },7000)
+            }
+        }))
+
+
+        Alpine.data("video",()=>({
+            // set the video from cache
+            video:"{{KEYS['video'].value}}",
+            video_type:"{{KEYS['video_type'].value}}",
+        }))
+
+
+        Alpine.data("tabs", ()=>({
+            show_sentences:true,
+            show_notes:false,
+            show_cards:false,
+            options :["show_sentences","show_cards","show_notes"],
+            switch_to(what) {
+                this.options.forEach(item=>{
+                    if (item != what){
+                        this[item] = false
+                    }
+                    else{
+                        this[what] = true
+                    }
+                })
+            },
+            setlastvisited(that){
+                
+                var lastvisited = bookmark.getlastvisited()
+                that.setAttribute("src",`reabook/${bookname}/page=${lastvisited}`)
+                that.textContent = `last visited page: ${lastvisited}`
+            }
+        }))
+
+        Alpine.data("player_state",()=>({
+            playerstate:"paused",
+            previous_state:"paused",
+            muted:false,
+            volume:.75,
+            reader:reader,
+            started:false,
+            last_volume:.75,
+            setState(state){
+                this.playerstate = state
+            },
+            startPlaying(){
+                //starts playing the video and the audio
+                var current_state = this.playerstate
+                if (!reader.setstate){
+                    reader.component = this
+                }
+                if (current_state == "paused"){
+                    this.previous_state = current_state
+                    this.playerstate = "playing"
+                    if (this.started){
+                        this.reader.audio_elem.play()
+                    }
+                    else{
+                        this.started = true
+                        this.reader.read()
+                    }
+                    return
+                }
+                if (current_state != "paused"){
+                    this.reader.audio_elem.pause()
+                    this.playerstate = "paused"
+                    this.previous_state = current_state
+                    return
+                }
+            },
+            getplayerStateString(){
+                if (this.playerstate != 'playing'){
+                    return `[${this.playerstate}]`
+                }
+                else{
+                    return ""
+                }
+            },
+            mutePlayer(){
+                if (this.muted === true){
+                    this.volume = this.last_volume
+                    volume_input.value = parseInt(this.volume * 100)
+                    this.reader.audio_elem.volume = this.last_volume
+                    this.muted = false
+
+                }
+                else{
+                    this.last_volume = this.volume
+                    this.volume = 0.00
+                    volume_input.value = 0
+                    this.reader.audio_elem.volume = 0
+                    this.muted = true
+                }
+            },
+            setVolume(e){
+                var vol = (parseInt(e.target.value)/100).toFixed(2)
+                this.volume = vol
+                this.reader.audio_elem.volume = vol
+                if (vol == 0.00){
+                    this.muted = true
+                }
+                else{
+                    this.muted = false
+                }
+                console.log(vol)
+            },
+            init(){
+                var alpine_elem = this
+                register_key_event({
+                    key:"m",
+                    callback(){
+                        alpine_elem.mutePlayer()
+                    }
+                })
+
+                register_key_event({
+                    key:"s",
+                    callback(){
+                        alpine_elem.startPlaying()
+                    }
+                })
+
+                register_key_event({
+                    key:" ",
+                    key_code:32,
+                    callback(){
+                        if (document.activeElement == pause_start_btn){
+                            return
+                        }
+                        alpine_elem.startPlaying()
+                    }
+                })
+
+                register_key_event({
+                    key:"+",
+                    callback(){
+                        // convert to int
+                        var vol = ((alpine_elem.volume*100) + 5)
+                        var new_vol = (vol/100).toFixed(2)
+                        alpine_elem.volume = new_vol
+                        //audio_elem.value = new_vol
+                        var e = new Event("input")
+                        volume_input.value = vol
+                        volume_input.dispatchEvent(e)
+                    }
+                })
+
+                register_key_event({
+                    key:"-",
+                    callback(){
+                        // convert to int
+                        var vol = ((alpine_elem.volume*100) - 5)
+                        var new_vol = (vol/100).toFixed(2)
+                        alpine_elem.volume = new_vol
+                        //audio_elem.value = new_vol
+                        var e = new Event("input")
+                        volume_input.value = vol
+                        volume_input.dispatchEvent(e)
+                    }
+                })
+
+            }
+
+        }
+                
+        )
+        )
+
+
+
+        Alpine.data("notes",()=>({
+            init(){
+               // add a listener to realod notes on page change
+                this.load_notes()
+                current_page.onchange((page)=>{
+                    this.load_notes()
+                })
+                document.addEventListener("notes-changed",()=>{
+                    this.load_notes()
+                })
+
+            },
+            _notes:[],
+            async load_notes(){
+                // calls the backend to get a notes list then it also adds this to the view
+                var nts = await notes.getnotes(current_page.getcurrent())
+                // put them on the page 
+                this._notes = nts
+            }
+        }))
+
+
+
+        Alpine.data("note_component",(note_id,note,safe_bookname)=>({
+            note_id : note_id,
+            note : note,
+            safe_bookname : safe_bookname,
+            deleted:false,
+            make_input_visible : false,
+            async update_note(){
+                var d = {
+                        "note":this.note,
+                        "note_id":this.note_id
+                    } 
+                    console.log(d)
+                await notes.update_note(
+                    d
+                )
+                this.make_input_visible = false 
+            },
+            show_edit(){
+                this.make_input_visible = true
+                this.$nextTick(() => 
+                {
+                    this.$refs.edit.focus()
+                    //this.$refs.edit.select()
+                });
+            },
+            hide_edit(){
+                this.make_input_visible = false
+            },
+            async del_note(){
+                // removes the note
+                var res =  notes.del_note(this.note_id)
+                this.deleted = res
+            }
+        }))
+
+
+        Alpine.data("cards",()=>({
+            async init(){
+                this._cards = await cards.getcards(current_page.getcurrent())
+                document.addEventListener("cards-changed",async ()=>{
+                    this._cards = []
+                    this.$nextTick(async () => {
+                        this._cards = await cards.getcards(current_page.getcurrent())
+                    });
+                })
+                current_page.onchange(async ()=>{
+                    this._cards = await  cards.getcards(current_page.getcurrent())
+                })
+            },
+            _cards : [],
+            current_idx :0,
+            scroll_next(){
+                var flash_cards = document.querySelectorAll("[data-id=flash-card]")
+                this.current_idx++
+                if (this.current_idx > flash_cards.length-1){
+                    this.current_idx = 0
+                }
+                flash_cards[this.current_idx].scrollIntoView({behavior:"smooth"})
+            },
+            scroll_prev(){
+                var flash_cards = document.querySelectorAll("[data-id=flash-card]")
+                this.current_idx--
+                if (this.current_idx < 0){
+                    this.current_idx = flash_cards.length-1
+                }
+                flash_cards[this.current_idx].scrollIntoView({behavior:"smooth"})
+            }
+        }))
+
+
+        Alpine.data("new_card",()=>({
+            og_question:"What is the answer to the universe and everything?",
+            question:"What is the answer to the universe and everything?",
+            answer:"42",
+            og_answer:"42",
+            async add_card(){
+                var success = await cards.setcard({
+                    "page":current_page.getcurrent(),
+                    "book_id":book_id,
+                    "question":this.question,
+                    "answer":this.answer
+                })
+                add_new_card_dialog.close()
+                if (success){
+                    var ev = new Event("cards-changed")
+                    document.dispatchEvent(ev)
+                }
+                this.question = this.og_question
+                this.answer = this.og_answer
+
+            },
+            cancel(){
+                add_new_card_dialog.close()
+                this.question = this.og_question
+                this.answer = this.og_answer
+            }
+        }))
+
+
+
+        Alpine.data("card",(data)=>({
+            is_edited:false,
+            edit_mode:false,
+            is_flipped:false,
+            card_id:data.id,
+            question:data.question,
+            answer:data.answer,
+            async save_edit(){
+                await cards.update_card(
+                    {
+                        "id":this.card_id,
+                        "question":this.question,
+                        "answer":this.answer
+                    }
+                )
+                this.is_flipped = false
+                this.edit_mode = false
+            },
+            cancel_edit(){
+                this.edit_mode = false
+            },
+            async del_card(){
+                self.visible = false,
+                await cards.del_card(this.card_id)
+                var ev = new Event("cards-changed")
+                document.dispatchEvent(ev)
+            },
+            switch_to_edit_mode(){
+                this.edit_mode = true
+
+            }
+        })
+        )
+    })
+
+
+ 
+
+    async function switch_to_page(page){
+        var url = `/readbook/${bookname}?page=${page}`
+        window.location = url
+    }
+
+    go_to_last_visited.addEventListener("click",async ()=>{
+        var target_page = await bookmark.getlastvisited()
+        switch_to_page(target_page)
+    })
+
+    go_to_bookmarked_page.addEventListener("click",async ()=>{
+        var target_page = await bookmark.getbookmark() 
+        switch_to_page(target_page)
+    })
+
+    set_bookmark_btn.addEventListener("click",async ()=>{
+        bookmark.setbookmark(current_page.getcurrent())
+    })
+
+
+    register_key_event({
+        key:"b",
+        async callback(){
+            console.log("b key is pressed")
+            if (document.activeElement == jumpto_input){
+                console.log("still here")
+                var target_page = await bookmark.getbookmark()
+                switch_to_page(target_page)
+            }
+            else{
+                console.log("setting bookmark")
+                var e = new Event("click")
+                set_bookmark_btn.dispatchEvent(e)
+            }
+        }
+    })
+
+
+
+    register_key_event({
+        key:"Enter",
+        async callback(){
+            if (document.activeElement == jumpto_input){
+                switch_to_page(jumpto_input.value)
+            }
+            else{
+                return
+            }
+        }
+    })
+
+
+</script>
+
+{% endblock %}

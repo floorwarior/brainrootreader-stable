@@ -1,48 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="h-dvh w-dvw" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brain Root Reader</title>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <link rel="icon" type="image/x-icon" href="{{url_for('static',filename='brainrootreadericon.png')}}">
-    <!--bootstrap style sheet-->
-    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="{{url_for('static',filename='bootstrap/icons/bootstrap-icons.css')}}">
-
-    
+    <!--tailwind css-->
+    <link rel="stylesheet" href="{{url_for('static', filename='css/output.css')}}">
+    <script src="{{url_for('static',filename='js/alpine.js')}}" defer></script>
+    <script src="{{url_for('static',filename='js/utils.js')}}"></script>
 </head>
-<body class="body-color">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">
-            <img src="{{url_for('static',filename='brainrootreadericon.png')}}" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
-        </a>
+<body class="w-dvw h-dvh overflow-hidden">
+    <main class="bg-background h-dvh">
+       
+        <div x-data="{ open : false}"  class="flex h-full w-full">
+            <!--sidepanel-->
+            <div x-cloak x-show="visible" x-data="{visible: true}" x-init="document.addEventListener('brr-stopping',()=>{visible = false})" class="border-r
+            border-gray-7
+            flex shrink-0 flex-col md:p-2 p-1 text-center py-4 md:w-12 w-8 h-dvh 
+            bg-gray-2 
 
-        <a class="navbar-brand" href="#">Brain Root Reader</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="{{url_for('home')}}">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="{{url_for('settings')}}">Settings</a> 
-            </li>
+            [&>button>svg]:w-full 
+            [&>button>svg]:text-gray-10 
+            [&>button]:cursor-pointer  
+            [&>button>svg]:hover:text-gray-11 gap-3
+            
+            [&>a>svg]:w-full 
+            [&>a>svg]:text-gray-10 
+            [&>a]:cursor-pointer  
+            [&>a>svg]:hover:text-gray-11            
+            ">
+                <a href="{{url_for('home')}}">  
+                    <img class="w-full" src="{{url_for('static',filename='brainrootreadericon2_white.png')}}" alt="BRR icon">
+                </a>
 
-        </ul>
+                <button alt="open menu button" title="menu" x-on:click="open = !open">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+                    </svg>
+                </button>
+
+                <a alt="application settings link" href="/settings" class="mt-auto">
+                    <svg class="mt-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                </a>
+
+                <a alt="shutdown application link" href="/api/killserver">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+                    </svg>
+                </a>
+                
+            </div>
+            <!--sidepanel end-->
+            <!--menu-->
+            <div x-cloak x-bind:class="open ? '': 'hidden'" class="flex shrink-0 flex-col w-1/5 border-gray-7 border rounded-xs bg-gray-2">
+                <h3 class="font-semibold text-gray-11 p-1 text-center bg-gray-3 rounded-md m-2">Books</h3>
+                <div class="flex flex-col text-gray-11 w-full p-2 gap-2">
+                    {% for book_key,book_name in books.items() %}
+                        {% set page_key = "bookmark-" + book_key + "_readable.json"   %}
+                        {% set p = KEYS[page_key].value or 1 %}
+                        <a class="break-all hover:text-gray-12 underline" title="{{book_name}}" href="/readbook/{{book_key}}_readable.json?page={{p}}">{{book_name[:25]}}. . .</a>
+                    {% endfor %}
+                </div>
+                <!--
+                TODO: should the user be able to change the reader directly here?
+                -->
+
+            </div>
+            <!--menu end-->
+            <!--content-->
+            <div class="flex flex-col h-full w-full">
+                {% block content %}
+
+                {% endblock %}
+            </div>
+            <!--content end-->
+
         </div>
-    </div>
-    </nav>
-    <main class="px-2 py-2">
-        {% block body %}
-        {% endblock %}
-    </main>
 
-    <!-- Bootstrap JS Bundle (includes Popper) -->
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    </main>
+   
+    <script>
+        const acc = new AccessibilitySupport()
+
+        register_key_event({
+            key:"r",
+            async callback(){
+                // TODO: connect the text reader
+                var current_item = document.activeElement
+                var has_alt = current_item.hasAttribute("alt")
+                if (has_alt){
+                    acc.read_text(current_item.getAttribute("alt"))
+                }
+                else if (current_item.textContent != ""){
+                    // reading elem text
+                    acc.read_text(current_item.textContent)
+                }
+                else{
+                    // no text to read
+                    return
+                }
+
+            }
+        })
+    </script>
 </body>
+
 </html>
