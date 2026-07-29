@@ -3,9 +3,10 @@ It's a Read Aloud app that can read epub, docx, pdf and txt files.
 It can also convert to a one file audiofile that you can take with you.
 
 # In Action:
-## Running:
 
 
+![](https://www.youtube.com/embed/WOMDvKrFd4Y)
+[![Convert and listen](https://img.youtube.com/vi/WOMDvKrFd4Y/maxresdefault.jpg)](https://www.youtube.com/watch?v=WOMDvKrFd4Y)
 
 # Quickstart
 ```

@@ -7,7 +7,7 @@ template_folder = "templates"
 
 
 [subprocess]
-core_count = "3"
+core_count = "2"
 use = "ReaderCoreConnector"
 starting_port = 4222
 throttle = false
@@ -28,7 +28,7 @@ auto_shutdown = true
 
 
 [reader]
-selected_reader = "PiperReader"
+selected_reader = "KokoroReader"
 fallback_order = ["WinReader"]
 
 
