@@ -7,18 +7,16 @@ try:
 except:
     from thepanic import Pan as pan
 
-
 import traceback
+from helpers.binary_dependencies import BinaryDependencyNotFound,SOX,FFMPEG,ESPEAK_NG,BinaryDependency
 
 IS_BUILD = False
 
-NoVoicesGetterError = "This reader does not support getting voices, make sure this is intended behavior."
-NoSpeakerError = "This reader does not support speaking on this device, make sure this is intended behavior."
-NoAudioSaveError = "This reader can not save audio, make sure this is intended behavior."
 
 
 class BaseReader(ABC):
     requirements = "requirements-[base].txt"
+    dependencies = []
     recommended_python = "any"
 
     def __init__(self,*args,speaker="there was no speaker specified",**kwargs):
@@ -56,7 +54,14 @@ class BaseReader(ABC):
         self._on_audio_save_panic(*args,**kwargs)
 
 
-
+    def check_binary_deps(self):
+        """returns None on error return an error if there is a problem"""
+        for d in self.dependencies:
+            d: BinaryDependency 
+            if not d.is_available():
+                return d.geterror()
+        return None
+    
     def clean_up(self):
         """if you reader requires some kind of clean up this is what the server is calling before shutting down"""
         print("Reader clean up, not required")
@@ -135,6 +140,7 @@ class WinReader(BaseReader):
 class CoquiReader(BaseReader):
     #requirements = "requirements-[coqui-tts].txt" TODO
     # recommended_python = "3.10"
+    dependencies = [ESPEAK_NG]
 
 
     def __init__(self, *args, speaker=None,model_folder="coquimodels",model="", **kwargs):
@@ -180,6 +186,8 @@ class CoquiReader(BaseReader):
 class PiperReader(BaseReader):
     requirements = "requirements-[piper-tts].txt"
     recommended_python = "any"
+    dependencies = [ESPEAK_NG]
+
 
     def __init__(self, speaker=None,model="en_US-amy-medium.onnx",model_folder="pipermodels",*args,**kwargs):
         super().__init__(speaker=speaker,*args,**kwargs)
@@ -196,6 +204,9 @@ class PiperReader(BaseReader):
             self.PiperVoice = PiperVoice
             self.voice = self.PiperVoice.load(os.path.join(self.model_folder,self.model),use_cuda=False)
             self.wave = wave
+            deps_not_okay = self.check_binary_deps()
+            if deps_not_okay:
+                raise deps_not_okay
             self.imported_ok = True
         except Exception as e:
             self.ready = False
@@ -293,6 +304,7 @@ class KokoroReader(BaseReader):
     """
     requirements = "requirements-[kokoro-tts].txt"
     recommended_python = "any"
+    dependencies = [ESPEAK_NG]
 
 
     def __init__(self, *args, speaker="kokoro", **kwargs):
@@ -332,6 +344,11 @@ class KokoroReader(BaseReader):
                     )
             else:
                 self.pipeline = KPipeline(lang_code=kwargs.get("lang_code"))
+
+            deps_not_okay = self.check_binary_deps()
+            if deps_not_okay:
+                raise deps_not_okay
+
             self.imported_ok = True
             self.ready = True
         except Exception as e:
@@ -411,6 +428,9 @@ class QwenTTSReader(BaseReader):
                 device_map="cuda:0",
                 dtype=torch.bfloat16,
             )
+            deps_not_okay = self.check_binary_deps()
+            if deps_not_okay:
+                raise deps_not_okay
             self.ready = True
         except Exception as e:
             self.error = e
@@ -482,6 +502,7 @@ class PocketTTSReader(BaseReader):
 class F5TTSReader(BaseReader):
     requirements = "requirements-[f5-tts].txt"
     recommended_python = "3.11"
+    dependencies = [FFMPEG]
 
     def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
@@ -496,6 +517,11 @@ class F5TTSReader(BaseReader):
             self.sd = sd
             self.sf = sf
             self.tts = F5TTS()
+            deps_not_okay = self.check_binary_deps()
+            if deps_not_okay:
+                raise deps_not_okay
+
+
             self.ready = True
             self.imported_ok = True
 
@@ -564,6 +590,9 @@ class ChatterBoxTTSReader(BaseReader):
             import torch
             from chatterbox.tts_turbo import ChatterboxTurboTTS
             import sounddevice as sd
+            deps_not_okay = self.check_binary_deps()
+            if deps_not_okay:
+                raise deps_not_okay
 
 
             self.ta = ta
@@ -571,6 +600,9 @@ class ChatterBoxTTSReader(BaseReader):
             self.ref_audio_path = kwargs.get("ref_audio")
             # Load the Turbo model
             self.tts = ChatterboxTurboTTS.from_pretrained(device=kwargs.get("device","cpu")) # should return cuda or cpu
+            
+
+           
             self.ready = True
             self.imported_ok = True
 
@@ -635,6 +667,11 @@ class SupertonicReader(BaseReader):
             self.tts = TTS(auto_download=True)
             self.style = self.tts.get_voice_style(voice_name=self.style_)
 
+
+            deps_not_okay = self.check_binary_deps()
+            if deps_not_okay:
+                raise deps_not_okay
+
             self.imported_ok = True
             self.ready = True
 
@@ -678,7 +715,6 @@ readers = {
     "KokoroReader":KokoroReader,
     "PiperReader":PiperReader,
     "WinReader":WinReader,
-    "CoquiReader":CoquiReader,
     "QwenTTSReader":QwenTTSReader,
     "F5TTSReader":F5TTSReader,
     "ChatterBoxTTSReader":ChatterBoxTTSReader,

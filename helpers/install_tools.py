@@ -5,11 +5,15 @@ from helpers.readercore_connector_v2 import ReaderCoreConnector
 from helpers.settings import all_readers
 from helpers.kv import KEYS
 
+
+
+
 from packaging.requirements import Requirement
 from importlib.metadata import version,PackageNotFoundError
 import sys
 import os
 import subprocess
+import shutil
 from enum import StrEnum
 
 j_port = get_next_port(6222,1)

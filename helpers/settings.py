@@ -3,7 +3,6 @@ import os
 from helpers.bookreaders import readers as builtin_readers
 from plusreaders import readers as plus_readers
 from helpers.get_root import getroot
-from readerconfigs import config_reader,set_global_reader
 from tomlkit.toml_document import TOMLDocument
 from tomlkit import parse as tomlkit_parse
 from tomlkit import dump as tomlkit_dumps

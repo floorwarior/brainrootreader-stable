@@ -1,3 +1,4 @@
+from helpers.binary_dependencies import BinaryDependencyNotFound,BinaryDependency,SOX,FFMPEG,ESPEAK_NG
 
 def sort_by_name(filename):
     a, b  = filename.rsplit("_")
@@ -12,6 +13,9 @@ def stich_playlist_to_file(folder_name,book_name,ext):
     - book_name the new or the original name of the book
     - ext : example wav
     """
+    if not SOX.is_available():
+        raise SOX.geterror()
+
     from pydub import AudioSegment
     import glob 
     import os
