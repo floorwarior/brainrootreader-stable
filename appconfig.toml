@@ -28,7 +28,7 @@ auto_shutdown = true
 
 
 [reader]
-selected_reader = "KokoroReader"
+selected_reader = "PocketTTSReader"
 fallback_order = ["WinReader"]
 
 

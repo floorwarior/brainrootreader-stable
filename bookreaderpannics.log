@@ -4,3 +4,7 @@
 'KokoroReader' object has no attribute 'pipeline'
 'KokoroReader' object has no attribute 'pipeline'
 'KokoroReader' object has no attribute 'pipeline'
+[WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+'PocketTTSReader' object has no attribute 'voice_state'
+'PocketTTSReader' object has no attribute 'voice_state'
+[WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted

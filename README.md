@@ -51,12 +51,16 @@ to install them you can follow these simple steps:
 8. click new 
 9. locate the dependecy that you installed ( command promt -> where yourdependency -> enter -> copy)
 10. paste the path, save and exit 
-11. verify that it is correct by opening a command promt and typing it's name with the version flag example: espeak-ng --help
+11. verify that it is correct by opening a command promt and typing it's name with the help flag, example: espeak-ng --help
 
 
-# Once BRR is running:
-- visit http://localhost:5003
+# Once BRR is running visit http://localhost:5003
+
+- load your doc:
 ![This is what that looks like](./examples/homepage_v3.png)
+
+- when converting:
+![converting](./examples/convert_page.png)
 
 - upload the book you want to listen to and start listening or converting into an audio file
 ![Listening](./examples/brr_readingpage_v2.png)
@@ -85,7 +89,8 @@ to install them you can follow these simple steps:
 | Qwen-TTS | needs a decent pc | Yes | Slow | Alright | Great/ sometimes overly expressive | Low *10* | - | https://github.com/QwenLM/Qwen3-TTS |
 | F5-TTS | needs a good pc | Yes | Slow | Poor Documentation, fragile  | Excellent, the best voice clone i have seen so far | Decent/ the community can train models for languages | [ffmpeg](https://www.ffmpeg.org/download.html) | https://github.com/swivid/f5-tts | 
 | Supertonic | okay pc with a good cpu | does not need one | Fast | Good | Good | 31 | - | https://github.com/supertone-inc/supertonic |
- 
+|Pocket-tts| any Windows that supports python 3+ | no and can not use | fast | Good | Good |  Low 6 | - |  https://github.com/kyutai-labs/pocket-tts
+
 # What can i convert with BRR?
 | Filetype              | Can it convert | Limitations |
 | :---------------- | :------: | ----: |
@@ -153,3 +158,10 @@ after this you need to define a config file that your reader needs in [readercon
 ```
 if your reader does not need a config file you still need to add one here, but you can leave it with: {}
 with all of these step your reader will be picked up by BRR, and should show up in http://localhost:5003/settings
+
+
+# Troubleshooting:
+*My reader does not appear in the settings, but it should be installed?*
+- the settings page cachees the installed readers and its updates ones value on install via GUI, since checking if an install is valid means trying to load all the readers one by one and then discarding them. you can however force a full reload by visiting http://localhost:5003/settings?full_reload=1
+this will recheck all readers and will take some time so be patient.
+
