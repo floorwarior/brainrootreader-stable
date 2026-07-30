@@ -162,6 +162,6 @@ with all of these step your reader will be picked up by BRR, and should show up 
 
 # Troubleshooting:
 *My reader does not appear in the settings, but it should be installed?*
-- the settings page cachees the installed readers and its updates ones value on install via GUI, since checking if an install is valid means trying to load all the readers one by one and then discarding them. you can however force a full reload by visiting http://localhost:5003/settings?full_reload=1
+- the settings page caches the installed readers and its updates ones value on install via GUI, since checking if an install is valid means trying to load all the readers one by one and then discarding them. you can however force a full reload by visiting http://localhost:5003/settings?full_reload=1
 this will recheck all readers and will take some time so be patient.
 
