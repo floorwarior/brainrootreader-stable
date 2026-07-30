@@ -10,6 +10,7 @@ class ThisIsTest(BaseReader):
     def __init__(self,reader="test reader",*args,**kwargs):
         super().__init__(self,reader)
         self.origin = "custom"
+        self.imported_ok = True
 
 
     def Speak(self,text):

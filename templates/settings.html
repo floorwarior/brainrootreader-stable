@@ -125,10 +125,10 @@
             <div class="flex flex-col gap-2 ">
                 <h4>Audio Method of generation:</h4>
                 <div class="flex gap-2">
-                    <button x-on:click="reset" @click="audio_method = 'subprocess'" x-bind:class="audio_method == 'subprocess' ? 'bg-green-5' : ''" class="btn">
+                    <button  @click="()=>{audio_method = 'subprocess'; reset()}" x-bind:class="audio_method == 'subprocess' ? 'bg-green-5' : ''" class="btn">
                         subprocess
                     </button>
-                    <button x-on:click="reset" @click="audio_method = 'threading'" x-bind:class="audio_method == 'threading' ? 'bg-green-5' : ''" class="btn">
+                    <button  @click="()=>{audio_method = 'threading';reset()}" x-bind:class="audio_method == 'threading' ? 'bg-green-5' : ''" class="btn">
                         threading
                     </button>
   
@@ -159,16 +159,16 @@
             <div class="flex flex-col gap-2">
                 <h4>Video Settings</h4>
                 <div class="flex gap-2">
-                    <button class="btn" x-bind:class="video_type == 'iframe' ? 'bg-green-6' : '' " @click="video_type = 'iframe' ">
+                    <button class="btn" x-bind:class="video_type == 'iframe' ? 'bg-green-6' : '' " @click="()=>{video_type = 'iframe' ;reset()} ">
                         iframe
                     </button>
-                    <button class="btn" x-bind:class="video_type == 'video' ? 'bg-green-6' : '' " @click="video_type = 'video' ">
+                    <button class="btn" x-bind:class="video_type == 'video' ? 'bg-green-6' : '' " @click="()=>{video_type = 'video';reset()} ">
                         video
                     </button>
                 </div>
                 <div class="flex gap-2">
                     <label for="video">video</label>
-                    <input class="w-86" x-model="video" type="text">
+                    <input x-on:change="reset" class="w-86" x-model="video" type="text">
                 </div>
             </div>
 

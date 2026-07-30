@@ -48,6 +48,10 @@ def kv_connect(fn):
 
 REALKEYS = ["video","video_type","playback_speed","text_size","theme","last_visited_page","last_bookmarked_page"]
 VALID_PRE = ["bookmark","last-visited","is_installed"]
+DEFAULTS = {
+        "video":{"value":"/static/videos/spinningfish.mp4"},
+        "video_type":{"value":"video"}
+    }
 
 def is_valid_key(fn):
     def wrapper(*args,**kwargs):
@@ -62,7 +66,15 @@ def is_valid_key(fn):
 
 
 class Kv():
-    
+
+
+    @is_valid_key
+    @kv_connect
+    def __delitem__(self, key):
+        item = Keys.get(Keys.key == key)
+        item.delete_instance()
+
+
 
     @is_valid_key
     @kv_connect
@@ -76,7 +88,8 @@ class Kv():
         try:
             item = [j for j in Keys.select().where(Keys.key == key)][0]
         except:
-            pass
+            if key in DEFAULTS:
+                return DEFAULTS[key]
         return item
 
     @kv_connect
@@ -101,5 +114,8 @@ if __name__ == "__main__":
     keyz["last_visited_page"] = "75"
     keyz["last_bookmarked_page"] = "67"
     print(keyz["is_installed-kokoro"])
+
+
+   
 
     print(keyz.to_dict())

@@ -6,6 +6,7 @@ class MyReader(BaseReader):
     def __init__(self, *args, speaker="there was no speaker specified", **kwargs):
         super().__init__(*args, speaker=speaker, **kwargs)
         self.origin = "custom"
+        self.imported_ok = True
 
     def Speak(self,text):
         print(text)
