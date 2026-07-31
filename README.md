@@ -161,7 +161,21 @@ with all of these step your reader will be picked up by BRR, and should show up 
 
 
 # Troubleshooting:
-*My reader does not appear in the settings, but it should be installed?*
-- the settings page caches the installed readers and its updates ones value on install via GUI, since checking if an install is valid means trying to load all the readers one by one and then discarding them. you can however force a full reload by visiting http://localhost:5003/settings?full_reload=1
+### *My reader does not appear in the settings, but it should be installed?*
+- the settings page caches the installed readers and it updates ones value on install via GUI, since checking if an install is valid means trying to load all the readers one by one and then discarding them. if you did a manual install ( `pip install -r requirements-[yourbackend]` ), you can however force a full reload by visiting http://localhost:5003/settings?full_reload=1
 this will recheck all readers and will take some time so be patient.
 
+**note**: custom venv names other then the currently active venv will always remain invisible, if they are not created by brr and it will not detect them.
+
+
+### *My reader does show up as installed, but if i select it,  throws not initialized correctly error.*
+- this happens if you selected `audio_method="threading"` but installed the reader in a Dedicated venv and not running from that venv.
+possible fixes:
+- a) set audio_method="subprocess" and change the core count to 1.
+- b) change your venv:
+    - `deactivate`
+    - `yourvenvsname\Scripts\activate # example .piperreader-venv\Scripts\activate`
+    - `python.exe background.py`
+- c) delete the venv, recheck with http://localhost:5003/settings?full_reload=1, then install into current venv *NOT RECOMMENDED*
+
+my personal recommendation is a)

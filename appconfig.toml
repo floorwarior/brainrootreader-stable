@@ -2,18 +2,18 @@
 port = "5003"
 host = "localhost"
 debug = true
-audio_method = "threading"
+audio_method = "subprocess"
 template_folder = "templates"
 
 
 [subprocess]
-core_count = "2"
+core_count = "1"
 use = "ReaderCoreConnector"
 starting_port = 4222
 throttle = false
-throttle_for = 2
-throttle_step = 1
-# throttle makes it so your readercores take rests between cycles, this allows other apps like your browser or other application to take turns using it
+throttle_for = 2 # seconds to stand down for between calls
+throttle_step = 1 # poling rate
+# throttle makes it so your readercores take rests between cycles, this allows other apps like your browser or other application to take turns using that core
 
 [style]
 theme = "NEW_THEME"
@@ -28,8 +28,8 @@ auto_shutdown = true
 
 
 [reader]
-selected_reader = "PocketTTSReader"
-fallback_order = ["WinReader"]
+selected_reader = "KokoroReader"
+fallback_order = []
 
 
 # ABOUT:
