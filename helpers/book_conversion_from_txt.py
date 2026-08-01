@@ -27,7 +27,7 @@ class ConvertFromTxt():
 
     @pan.panic(on_panic="conversion_fail",class_method=True)
     def convert_txt_file(self):
-        """chunks up the text file into into 15 sentence a page chuks"""
+        """chunks up the text file into into 15 sentence a page chunks"""
         with open(os.path.join(self.upload_folder,self.txtfilename),"r") as txt_file:
             data =  txt_file.readlines()
             cleaned_data = [i.replace("\xa0"," ").replace("\r"," ").replace("\t", " ").replace("\n"," ") for i in data]
@@ -36,12 +36,14 @@ class ConvertFromTxt():
         sentences = self.sent_tokenize(full_file)
         pages ={}
         current_page = 1
-        for i in range(0,len(sentences)-1,self.chunksize):
+        for i in range(0,len(sentences),self.chunksize):
             pages[current_page] = " ".join(sentences[i:i+self.chunksize])
             current_page += 1
 
+
         safe_name = token_urlsafe(32)
         books_json_path =os.path.join(self.base_path,"static","books",f"{safe_name}_readable.json") 
+        
         print(books_json_path)
 
         with open(books_json_path,"w") as converted:

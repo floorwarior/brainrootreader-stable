@@ -314,7 +314,12 @@ class ReadBook():
         """
 
         book,success = self.books_data()
-        page = book[str(page_number)]
+        if page_number > self.last_page:
+            return False
+        try:
+            page = book[str(page_number)]
+        except Exception as e:
+            return e
         if not success:
             raise BaseException("this book was not coverted before, make sure to convert it first")
         sentences = sent_tokenize(page)
@@ -422,7 +427,7 @@ class ReadBook():
 
 
     def async_read_book(self,socketed_app):
-        """gets called if the reader class ReaderCoreConnector"""
+        """gets called if the reader class is ReaderCoreConnector"""
         book_data,success = self.books_data()
         pages = []
         filenames = []
@@ -467,9 +472,17 @@ class ReadBook():
             self.update_playlist(pages)
         else:
             self.make_playlist(pages)
-        f = stich_playlist_to_file(self.books_folder,self.og_bookname,self.reader.output_ending)
-        socketed_app.emit("audioconversion_finished",data={"filename"})
-
+        try:
+            f = stich_playlist_to_file(self.books_folder,self.og_bookname,self.reader.output_ending)
+        except Exception as e:
+            socketed_app.emit("audioconversion_error",data={
+                "error":str(e)
+            })
+            return
+        socketed_app.emit("audioconversion_finished",data={
+            "filename":f,
+            "book_id":self.safe_bookname
+            })
 
     def save_audio(self,page,page_number):
         """based on which reader it is using it saves the audio"""

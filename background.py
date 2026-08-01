@@ -453,13 +453,18 @@ def make_page_of_book(book,page):
     rd = ReadBook(safe_bookname=book,starting_page=page,base_path_=BASE_PATH,reader_=GLOBALREADER)
     rd._on_sentence_progress = None
     blocking = True if request.args.get("blocking",False) == "1" else False
-    success = rd.save_page_by_sentences(page,blocking=blocking)
     print("-> make page triggered")
-    return jsonify({"page":page,
-                    "book":book,
-                    "converted":success,
-                    "sentence_data":rd.save_transscript_for_page(page)})
-
+    success = rd.save_page_by_sentences(int(page),blocking=blocking)
+    if success == True:
+        return jsonify({"page":page,
+                        "book":book,
+                        "converted":success,
+                        "sentence_data":rd.save_transscript_for_page(page)})
+    else:
+        res = {"success":False}
+        if success != False:
+            res["error"] = str(success)
+        return jsonify(res)
 
 
 @app.route("/api/show_image/<book>/<page>")

@@ -49,8 +49,8 @@ to install them you can follow these simple steps:
 6. click Enviroment Variables
 7. from the list double click Path
 8. click new 
-9. locate the dependecy that you installed ( command promt -> where yourdependency -> enter -> copy)
-10. paste the path, save and exit 
+9. locate the dependecy that you installed, copy the path of it's folder 
+10. paste, save and exit 
 11. verify that it is correct by opening a command promt and typing it's name with the help flag, example: espeak-ng --help
 
 

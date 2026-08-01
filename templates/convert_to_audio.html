@@ -9,7 +9,9 @@
             This will take some time
         </h3>
         <div class="flex flex-col text-gray-11">
-        <h4 class="text-green-11" x-text="`[${current_items} / ${total_items}]`"></h4>
+        <h4 x-show="state == 'in_progress' " class="text-green-11" x-text="`[${current_items} / ${total_items}]`"></h4>
+        <h4 x-cloak x-show="state == 'finished'"  x-text="()=>{return `You audio file is located at : ${file_location}`}"></h4>
+        <h4 x-cloak x-show="state == 'error'"  x-text="()=>{return `Audio conversion failed with error: ${error}`}"></h4>
         </div>
     </div>
 </div>
@@ -20,6 +22,9 @@
     document.addEventListener("alpine:init", () => {
         Alpine.data("convert",()=>({
             book_name:"",
+            state:"in_progress",
+            file_location:"",
+            error:"",
             total_items:0,
             estimated:0,
             current_items:0,
@@ -36,11 +41,27 @@
                 });
 
                 socket.on("progress",function(data) {
-                    if (data.book_id){
+                    if (data.book_id == book_id){
                         component.total_items = data.total_pages,
                         component.current_items = data.page_num
                     }
                 })
+
+                socket.on("audioconversion_finished",function (data){
+                    if (data.book_id == book_id){
+                        component.state = "finished"
+                        component.file_location = data.filename
+                    }
+                })
+
+
+                socket.on("audioconversion_error",function (data){
+                    if (data.book_id == book_id){
+                        component.state = "error"
+                        component.error = data.error
+                    }
+                })
+
             }
         }))
     })

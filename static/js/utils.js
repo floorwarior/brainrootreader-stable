@@ -360,7 +360,7 @@ class BookReader{
         }
     }
 
-    async read(){ 
+    async read(){
         while (true){
             setTimeout(()=>{
                 this.component.setState("generating")
@@ -369,6 +369,18 @@ class BookReader{
             var current_p = this.current_page.getcurrent()
             var data = await this.generate(current_p,true)
             console.log(data)
+            if (data.success == false){
+                // if the next sentence errors out we pause the reading
+                this.component.setState("paused")
+                if(data.error == undefined){
+                    //document.body.innerHTML = "<h1 class='test-center text-3xl text-gray-11 font-semibold'>The End</h1>"
+                    this.set_current_sentece("The End")
+                }
+                else{
+                    this.set_current_sentece(data.error)
+                }
+                return
+            } 
             console.log(data.sentence_data)
             setTimeout(()=>{
                 this.component.setState("playing")
