@@ -100,7 +100,7 @@ def run_splash_screen():
         nonlocal loadingbar
         def helper():
             if is_server(port=BRRAPPCONFIG["app"]["port"]):
-                webbrowser.open(f"http://localhost:{BRRAPPCONFIG["app"]["port"]}",new=1)
+                webbrowser.open(f"http://localhost:{BRRAPPCONFIG['app']['port']}",new=1)
                 if BRRAPPCONFIG["shutdown"]["auto_shutdown"]:
                     tkapp.destroy()
                 else:

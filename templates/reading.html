@@ -50,7 +50,7 @@
         <div class="flex flex-col gap-2">
             <textarea data-no-keys="true" class="p-2 ring ring-gray-7 rounded-md bg-gray-3" name="new_note" id="new_note" autocomplete="false" placeholder="your note here"></textarea>
             <div class="flex justify-end gap-1 mt-2">
-                <button onclick="add_new_note.close()" class="cancel-btn">
+                <button onclick="add_new_note.close()" class="cancel-btn text-gray-11">
                     cancel
                 </button>
                 <button id="add_new_note_btn" class="btn">
@@ -923,6 +923,21 @@
         }
     })
 
+
+    register_key_event({
+        key:"Enter",
+        async callback (){
+            add_new_note.showModal()
+            new_note.focus()
+        }
+    })
+
+    register_key_event({
+        key:"c",
+        async callback(){
+            add_new_card_dialog.showModal()
+        }
+    })
 
 </script>
 
