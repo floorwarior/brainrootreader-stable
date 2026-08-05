@@ -4,7 +4,6 @@ from secrets import token_urlsafe
 import json
 from helpers.book_converter import update_booknames
 from helpers.thepanic import Pan as pan
-from helpers.makebrr import PageTextHandler,NotesHandler,CardHandler,PageImageHandler
 
 class ConvertFromDocx():
 
@@ -57,29 +56,6 @@ class ConvertFromDocx():
 
         safe_name = token_urlsafe(32)
 
-        # brr section
-        notes_handler = NotesHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-        card_handler = CardHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-        imgs_handler = PageImageHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-
-        page_text_handler = PageTextHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-        page_text_handler.insert_all(datadict=pages)
 
         books_json_path =os.path.join(self.base_path,"static","books",f"{safe_name}_readable.json") 
         print(books_json_path)

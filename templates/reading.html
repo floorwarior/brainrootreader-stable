@@ -29,7 +29,7 @@
                     <button onclick="document.getElementById('jumpto_page').close();jumpto_dialog_is_open = false" class="cancel-btn text-gray-11">
                         cancel
                     </button>
-                    <button onclick="switch_to_page(document.getElementById('jumpto_input').value)" class="btn">
+                    <button data-no-keys onclick="switch_to_page(document.getElementById('jumpto_input').value)" class="btn">
                         jump
                     </button>
                 </div>
@@ -53,7 +53,7 @@
                 <button onclick="add_new_note.close()" class="cancel-btn text-gray-11">
                     cancel
                 </button>
-                <button id="add_new_note_btn" class="btn">
+                <button data-no-keys id="add_new_note_btn" class="btn">
                     add
                 </button>
             </div>
@@ -344,7 +344,7 @@
                                     <button @click="del_note" class="cancel-btn text-red-500">
                                         delete
                                     </button>
-                                    <button class="btn" @click="update_note">
+                                    <button data-no-keys class="btn" @click="update_note">
                                         save
                                     </button>
                                 </div>
@@ -927,8 +927,10 @@
     register_key_event({
         key:"Enter",
         async callback (){
-            add_new_note.showModal()
-            new_note.focus()
+            if (document.activeElement !== jumpto_input){
+                add_new_note.showModal()
+                new_note.focus()
+        }
         }
     })
 

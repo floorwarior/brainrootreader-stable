@@ -4,7 +4,6 @@ import threading
 import signal
 import sys
 from helpers.settings import BASE_PATH,BRRAPPCONFIG,load_app_config_v2
-from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
 from helpers.loadreader import all_readers
 from helpers.install_tools import is_installed,installed_where,INSTALLED_IN
 from helpers.thepanic import Pan
@@ -47,39 +46,6 @@ nltk.download("punkt",download_dir=nltk_folder_path)
 nltk.download("punkt_tab",download_dir=nltk_folder_path)
 nltk.data.path.append(nltk_folder_path)
 
-# this block is for pyinstaller to pick up the files correctly, you can comment this out if you are not building only using the app
-'''import helpers
-import engineio
-import plusreaders 
-import readerconfigs
-import pypdf
-import piper
-import pythoncom
-import numpy
-import sounddevice
-import win32com
-import wave
-import engineio.async_drivers
-import bs4
-import ebooklib
-from ebooklib import epub
-import zipfile
-import PIL 
-import pytesseract
-import socketio
-import docx
-import flask_socketio
-import kokoro
-import misaki # kokoros dependency
-import language_data # misakies dependency
-import language_tags # misakies dependency
-import spacy
-import spacy_legacy 
-import spacy_curated_transformers
-import en_core_web_sm
-import loguru'''
-#from TTS.api import TTS
-# -- -- -- -- -- -- -- 
 
 from helpers.book_converter import return_cache,get_booknames,make_permanent_by_page
 from helpers.generalttsreader import ReadBook
@@ -483,146 +449,146 @@ def show_img_from_book(book,page):
     })
 
 
-@app.route("/api/pull_notes/<book>/<page>")
-def pull_page_notes(book,page):
-    notes_handler = NotesHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book.removesuffix("_readable.json")
-    )
+# @app.route("/api/pull_notes/<book>/<page>")
+# def pull_page_notes(book,page):
+#     notes_handler = NotesHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book.removesuffix("_readable.json")
+#     )
 
-    res = notes_handler.get_notes_of_page(page_number=int(page))
+#     res = notes_handler.get_notes_of_page(page_number=int(page))
 
-    return jsonify({
-        "success":res
-    })
+#     return jsonify({
+#         "success":res
+#     })
 
 
-@app.route("/api/make_note/<book>/<page>",methods=["POST"])
-def make_note(book,page):
-    notes_handler = NotesHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book.removesuffix("_readable.json")
-    )
+# @app.route("/api/make_note/<book>/<page>",methods=["POST"])
+# def make_note(book,page):
+#     notes_handler = NotesHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book.removesuffix("_readable.json")
+#     )
 
-    data = request.get_json(force=True)
-    note = data["note"]
-    sentence_number= data["sentence_number"]
+#     data = request.get_json(force=True)
+#     note = data["note"]
+#     sentence_number= data["sentence_number"]
 
-    res = notes_handler.add_note(
-        note=note,
-        sentence_number=sentence_number,
-        page_number=int(page)
-    )
+#     res = notes_handler.add_note(
+#         note=note,
+#         sentence_number=sentence_number,
+#         page_number=int(page)
+#     )
     
-    return jsonify({
-        "success":res
-    })
+#     return jsonify({
+#         "success":res
+#     })
 
 
-@app.route("/api/del_note/<book>/<note_id>")
-def del_note(book,note_id):
-    """removes the note from the .brr file"""
-    notes_handler = NotesHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book.removesuffix("_readable.json")
-    )
+# @app.route("/api/del_note/<book>/<note_id>")
+# def del_note(book,note_id):
+#     """removes the note from the .brr file"""
+#     notes_handler = NotesHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book.removesuffix("_readable.json")
+#     )
 
-    res = notes_handler.remove_note(note_id=note_id)
-    return jsonify({"success":res})
+#     res = notes_handler.remove_note(note_id=note_id)
+#     return jsonify({"success":res})
 
-@app.route("/api/update_note/<book>/<note_id>",methods = ["POST"])
-def update_note(book,note_id):
-    """updated the note to a new value"""
-    notes_handler = NotesHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book.removesuffix("_readable.json")
-    )
+# @app.route("/api/update_note/<book>/<note_id>",methods = ["POST"])
+# def update_note(book,note_id):
+#     """updated the note to a new value"""
+#     notes_handler = NotesHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book.removesuffix("_readable.json")
+#     )
 
-    data = request.get_json(force=True)
-
-
-    res = notes_handler.change_note(
-        note_id=int(note_id),
-        new_note=data.get("note")
-    )
-
-    return jsonify({"success":res})
+#     data = request.get_json(force=True)
 
 
+#     res = notes_handler.change_note(
+#         note_id=int(note_id),
+#         new_note=data.get("note")
+#     )
+
+#     return jsonify({"success":res})
 
 
 
-@app.route("/api/pull_cards/<book>/<page_number>")
-def pull_cards(book,page_number):
-    notes_handler = NotesHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book
-    )
-
-    res = notes_handler.get_notes_of_page(page_number=int(page_number))
-    return jsonify({
-        "success":res
-    })
-
-@app.route("/api/update_card/<book>/card_id")
-def update_card(book,card_id):
-    card_handler = CardHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book
-    )
-    data = request.get_json(force=True)
-
-    front_side_text = data["front_side_text"]
-    back_side_text = data["back_side_text"]
-
-    res = card_handler.update_card(
-        card_id=int(card_id),
-        front_side_text=front_side_text,
-        back_side_text=back_side_text
-    )
-
-    return jsonify({
-        "success":res
-    })
-
-@app.route("/api/make_new_card/<book>/<page_number>")
-def make_card(book,page_number):
-
-    card_handler = CardHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book.removesuffix("_readable.json")
-    )
-
-    data = request.get_json(force=True)
-
-    front_side_text = data["front_side_text"]
-    back_side_text = data["back_side_text"]
-
-    res = card_handler.add_card(
-        page_number=page_number,
-        front_side_text=front_side_text,
-        back_side_text=back_side_text
-    )
-
-    return jsonify({
-        "success":res
-    })
 
 
-@app.route("/api/delete_card/<book>/<card_id>")
-def del_card(book,card_id):
-    card_handler = CardHandler(
-        base_path=BASE_PATH,
-        safe_bookname=book.removesuffix("_readable.json")
-    )
+# @app.route("/api/pull_cards/<book>/<page_number>")
+# def pull_cards(book,page_number):
+#     notes_handler = NotesHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book
+#     )
 
-    res = card_handler.remove_card(
-        card_id=int(card_id)
-    )
+#     res = notes_handler.get_notes_of_page(page_number=int(page_number))
+#     return jsonify({
+#         "success":res
+#     })
 
-    return jsonify({
-        "success":res
-    })
+# @app.route("/api/update_card/<book>/card_id")
+# def update_card(book,card_id):
+#     card_handler = CardHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book
+#     )
+#     data = request.get_json(force=True)
+
+#     front_side_text = data["front_side_text"]
+#     back_side_text = data["back_side_text"]
+
+#     res = card_handler.update_card(
+#         card_id=int(card_id),
+#         front_side_text=front_side_text,
+#         back_side_text=back_side_text
+#     )
+
+#     return jsonify({
+#         "success":res
+#     })
+
+# @app.route("/api/make_new_card/<book>/<page_number>")
+# def make_card(book,page_number):
+
+#     card_handler = CardHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book.removesuffix("_readable.json")
+#     )
+
+#     data = request.get_json(force=True)
+
+#     front_side_text = data["front_side_text"]
+#     back_side_text = data["back_side_text"]
+
+#     res = card_handler.add_card(
+#         page_number=page_number,
+#         front_side_text=front_side_text,
+#         back_side_text=back_side_text
+#     )
+
+#     return jsonify({
+#         "success":res
+#     })
+
+
+# @app.route("/api/delete_card/<book>/<card_id>")
+# def del_card(book,card_id):
+#     card_handler = CardHandler(
+#         base_path=BASE_PATH,
+#         safe_bookname=book.removesuffix("_readable.json")
+#     )
+
+#     res = card_handler.remove_card(
+#         card_id=int(card_id)
+#     )
+
+#     return jsonify({
+#         "success":res
+#     })
 
 
 @app.route("/api/testimage",methods = ["POST"])

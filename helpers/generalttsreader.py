@@ -12,7 +12,7 @@ try:
     from helpers.remove_book import remove_bookname,remove_doc
     from helpers.book_converter import update_booknames
     from helpers.stich_it import stich_playlist_to_file
-    from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
+    #from helpers.makebrr import NotesHandler,CardHandler,PageImageHandler,PageTextHandler
 
 except:
     from book_converter import return_cache

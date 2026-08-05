@@ -65,39 +65,12 @@ class ConvertFromEbook():
         book_data = {}
         safe_name = token_urlsafe(32)
 
-        # WILL BE REMOVED
-        # brr section
-        notes_handler = NotesHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-        card_handler = CardHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-        imgs_handler = PageImageHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-        page_text_handler = PageTextHandler(
-            base_path=self.base_path,
-            safe_bookname=safe_name
-        )
-
-
-
         for item in chapters.get_items_of_type(ITEM_DOCUMENT):
             soup = BeautifulSoup(item.get_content(), "html.parser")
             #print("this is page:", soup.get_text().strip())
             page, data = self._chunker(page,soup.get_text())
             print("this is page data: ",data)
             book_data.update(data)
-
-        
-        page_text_handler.insert_all(datadict=book_data)
 
         books_json_path =os.path.join(self.base_path,"static","books",f"{safe_name}_readable.json") 
         print(books_json_path)
